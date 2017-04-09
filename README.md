@@ -14,22 +14,23 @@ npm i fastify-multipart --save
 
 ```js
 const fastify = require('fastify')
+const concat = require('concat-stream')
 
 fastify.register(require('fastify-multipart'), err => {
   if (err) throw err
 })
 
-fastify.get('/user/:id', (req, reply) => {
-  const { db } = fastify.mongo
-  db.collection('users', onCollection)
-
-  function onCollection (err, col) {
-    if (err) return reply.send(err)
-
-    col.findOne({ id: req.params.id }, (err, user) => {
-      reply.send(user)
-    })
+fastify.post('/', function (req, reply) {
+  req.multipart(handler, function (err) {
+    console.log('upload completed')
+    reply.code(200).send()
   })
+
+  function handler (field, file, filename, encoding, mimetype) {
+    file.pipe(concat(function (buf) {
+      console.log('received', filename, 'size', buf.length)
+    }))
+  }
 })
 
 fastify.listen(3000, err => {

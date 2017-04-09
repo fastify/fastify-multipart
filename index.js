@@ -25,11 +25,20 @@ function fastifyMultipart (fastify, options, done) {
       throw new Error('the callback must be a function')
     }
 
+    const log = this.log
+
+    log.debug('starting multipart parsing')
+
     const req = this.req
 
-    const stream = multipartReadStream(req.headers, handler)
+    const stream = multipartReadStream(req.headers, wrap)
 
     pump(req, stream, done)
+
+    function wrap (field, file, filename, encoding, mimetype) {
+      log.debug({ field, filename, encoding, mimetype }, 'parsing part')
+      handler(field, file, filename, encoding, mimetype)
+    }
   }
 }
 

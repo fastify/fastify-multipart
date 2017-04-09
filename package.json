@@ -11,6 +11,7 @@
   "devDependencies": {
     "concat-stream": "^1.6.0",
     "fastify": "^0.15.0",
+    "form-data": "^2.1.4",
     "pre-commit": "^1.2.2",
     "snazzy": "^7.0.0",
     "standard": "^10.0.1",
