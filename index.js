@@ -3,14 +3,17 @@
 const fp = require('fastify-plugin')
 const multipartReadStream = require('multipart-read-stream')
 const pump = require('pump')
+const kMultipart = Symbol('multipart')
 
 function fastifyMultipart (fastify, options, done) {
   fastify.addContentTypeParser('multipart', function (req, done) {
     // nothing to do, it will be done by the Request.multipart object
+    req[kMultipart] = true
     done()
   })
 
   fastify.decorateRequest('multipart', multipart)
+  fastify.decorateRequest('isMultipart', isMultipart)
 
   done()
 
@@ -23,6 +26,11 @@ function fastifyMultipart (fastify, options, done) {
 
     if (typeof done !== 'function') {
       throw new Error('the callback must be a function')
+    }
+
+    if (!this.isMultipart()) {
+      done(new Error('the request is not multipart'))
+      return
     }
 
     const log = this.log
@@ -39,6 +47,10 @@ function fastifyMultipart (fastify, options, done) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
       handler(field, file, filename, encoding, mimetype)
     }
+  }
+
+  function isMultipart () {
+    return this.req[kMultipart] || false
   }
 }
 
