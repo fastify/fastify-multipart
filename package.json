@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "concat-stream": "^1.6.0",
-    "fastify": "^0.17.0",
+    "fastify": "^0.18.0",
     "form-data": "^2.1.4",
     "pre-commit": "^1.2.2",
     "snazzy": "^7.0.0",
