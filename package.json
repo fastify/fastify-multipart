@@ -5,17 +5,17 @@
   "main": "index.js",
   "dependencies": {
     "fastify-plugin": "^0.1.0",
-    "multipart-read-stream": "^3.0.0",
+    "multipart-read-stream": "^3.0.1",
     "pump": "^1.0.2"
   },
   "devDependencies": {
     "concat-stream": "^1.6.0",
     "fastify": "^0.17.0",
-    "form-data": "^2.1.4",
+    "form-data": "^2.2.0",
     "pre-commit": "^1.2.2",
     "snazzy": "^7.0.0",
-    "standard": "^10.0.1",
-    "tap": "^10.3.2"
+    "standard": "^10.0.2",
+    "tap": "^10.7.0"
   },
   "scripts": {
     "test": "standard | snazzy && tap test.js"

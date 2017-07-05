@@ -13,7 +13,7 @@ const concat = require('concat-stream')
 const filePath = path.join(__dirname, 'README.md')
 
 test('should parse forms', function (t) {
-  t.plan(8)
+  t.plan(10)
 
   const fastify = Fastify()
 
@@ -22,8 +22,13 @@ test('should parse forms', function (t) {
   fastify.post('/', function (req, reply) {
     t.ok(req.isMultipart())
 
-    req.multipart(handler, function (err) {
+    const mp = req.multipart(handler, function (err) {
       t.error(err)
+    })
+
+    mp.on('field', function (name, value) {
+      t.equal(name, 'hello')
+      t.equal(value, 'world')
     })
 
     function handler (field, file, filename, encoding, mimetype) {
@@ -54,6 +59,7 @@ test('should parse forms', function (t) {
     var req = http.request(opts, fastify.close.bind(fastify))
     var rs = fs.createReadStream(filePath)
     form.append('upload', rs)
+    form.append('hello', 'world')
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
     })

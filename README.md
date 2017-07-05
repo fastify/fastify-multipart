@@ -21,9 +21,16 @@ fastify.register(require('fastify-multipart'), err => {
 })
 
 fastify.post('/', function (req, reply) {
-  req.multipart(handler, function (err) {
+  const mp = req.multipart(handler, function (err) {
     console.log('upload completed')
     reply.code(200).send()
+  })
+
+  // mp is an instance of
+  // https://www.npmjs.com/package/multipart-read-stream
+
+  mp.on('field', function (key, value) {
+    console.log('form-data', key, value)
   })
 
   function handler (field, file, filename, encoding, mimetype) {
