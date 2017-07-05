@@ -47,6 +47,8 @@ function fastifyMultipart (fastify, options, done) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
       handler(field, file, filename, encoding, mimetype)
     }
+
+    return stream
   }
 
   function isMultipart () {
