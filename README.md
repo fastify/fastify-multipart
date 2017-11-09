@@ -13,7 +13,7 @@ npm i fastify-multipart --save
 ## Usage
 
 ```js
-const fastify = require('fastify')
+const fastify = require('fastify')()
 const concat = require('concat-stream')
 
 fastify.register(require('fastify-multipart'), err => {
