@@ -5,12 +5,14 @@ const multipartReadStream = require('multipart-read-stream')
 const pump = require('pump')
 const kMultipart = Symbol('multipart')
 
+function setMultipart (req, done) {
+  // nothing to do, it will be done by the Request.multipart object
+  req[kMultipart] = true
+  done()
+}
+
 function fastifyMultipart (fastify, options, done) {
-  fastify.addContentTypeParser('multipart', function (req, done) {
-    // nothing to do, it will be done by the Request.multipart object
-    req[kMultipart] = true
-    done()
-  })
+  fastify.addContentTypeParser('multipart', setMultipart)
 
   fastify.decorateRequest('multipart', multipart)
   fastify.decorateRequest('isMultipart', isMultipart)
@@ -56,4 +58,4 @@ function fastifyMultipart (fastify, options, done) {
   }
 }
 
-module.exports = fp(fastifyMultipart, '>= 0.15.0')
+module.exports = fp(fastifyMultipart, '>= 0.33.0')

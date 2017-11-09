@@ -35,7 +35,7 @@ test('should parse forms', function (t) {
       t.equal(filename, 'README.md')
       t.equal(field, 'upload')
       t.equal(encoding, '7bit')
-      t.equal(mimetype, 'text/x-markdown')
+      t.equal(mimetype, 'text/markdown')
       var original = fs.readFileSync(filePath, 'utf8')
       file.pipe(concat(function (buf) {
         t.equal(buf.toString(), original)
@@ -56,7 +56,7 @@ test('should parse forms', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, fastify.close.bind(fastify))
+    var req = http.request(opts, () => { fastify.close(noop) })
     var rs = fs.createReadStream(filePath)
     form.append('upload', rs)
     form.append('hello', 'world')
@@ -100,7 +100,9 @@ test('should error if it is not multipart', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, fastify.close.bind(fastify))
+    var req = http.request(opts, () => { fastify.close(noop) })
     req.end(JSON.stringify({ hello: 'world' }))
   })
 })
+
+function noop () {}
