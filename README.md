@@ -16,9 +16,7 @@ npm i fastify-multipart --save
 const fastify = require('fastify')()
 const concat = require('concat-stream')
 
-fastify.register(require('fastify-multipart'), err => {
-  if (err) throw err
-})
+fastify.register(require('fastify-multipart'))
 
 fastify.post('/', function (req, reply) {
   const mp = req.multipart(handler, function (err) {
