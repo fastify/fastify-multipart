@@ -6,7 +6,7 @@
   "dependencies": {
     "fastify-plugin": "^0.1.1",
     "multipart-read-stream": "^3.0.1",
-    "pump": "^1.0.2"
+    "pump": "^2.0.0"
   },
   "devDependencies": {
     "concat-stream": "^1.6.0",
