@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "y"
+    "url": "git+https://github.com/fastify/fastify-multipart.git"
   },
   "keywords": [
     "fastify",
