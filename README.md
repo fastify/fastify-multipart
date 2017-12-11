@@ -32,9 +32,18 @@ fastify.post('/', function (req, reply) {
   })
 
   function handler (field, file, filename, encoding, mimetype) {
-    file.pipe(concat(function (buf) {
-      console.log('received', filename, 'size', buf.length)
-    }))
+    // to accumulate the file in memory! Be careful!
+    //
+    // file.pipe(concat(function (buf) {
+    //   console.log('received', filename, 'size', buf.length)
+    // }))
+    //
+    // or
+
+    pump(file, fs.createWriteStream('a-destination'))
+
+    // be careful of permission issues on disk and not overwrite
+    // sensitive files that could cause security risks
   }
 })
 
