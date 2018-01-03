@@ -4,11 +4,12 @@
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "dependencies": {
+    "busboy": "^0.2.14",
     "fastify-plugin": "^0.2.1",
-    "multipart-read-stream": "^3.0.1",
     "pump": "^2.0.0"
   },
   "devDependencies": {
+    "climem": "^1.0.3",
     "concat-stream": "^1.6.0",
     "fastify": "^0.36.0",
     "form-data": "^2.3.1",
@@ -18,7 +19,9 @@
     "tap": "^11.0.0"
   },
   "scripts": {
-    "test": "standard | snazzy && tap test.js"
+    "test": "standard | snazzy && tap test.js",
+    "start": "CLIMEM=8999 node -r climem example",
+    "climem": "climem 8999 localhost"
   },
   "repository": {
     "type": "git",
