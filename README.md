@@ -4,7 +4,7 @@
 
 Fastify plugin to parse the multipart content-type.
 
-Under the hood it uses [multipart-read-stream](https://github.com/yoshuawuyts/multipart-read-stream).
+Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 
 ## Install
 ```
@@ -15,6 +15,8 @@ npm i fastify-multipart --save
 ```js
 const fastify = require('fastify')()
 const concat = require('concat-stream')
+const fs = require('fs')
+const pump = require('pump')
 
 fastify.register(require('fastify-multipart'))
 
@@ -25,7 +27,7 @@ fastify.post('/', function (req, reply) {
   })
 
   // mp is an instance of
-  // https://www.npmjs.com/package/multipart-read-stream
+  // https://www.npmjs.com/package/busboy
 
   mp.on('field', function (key, value) {
     console.log('form-data', key, value)
