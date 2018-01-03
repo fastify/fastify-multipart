@@ -118,6 +118,8 @@ if (!process.env.TRAVIS) {
     const fastify = Fastify()
     const hashInput = crypto.createHash('sha256')
 
+    t.tearDown(fastify.close.bind(fastify))
+
     fastify.register(multipart)
 
     fastify.post('/', function (req, reply) {

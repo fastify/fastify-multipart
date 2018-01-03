@@ -1,7 +1,7 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const multipartReadStream = require('multipart-read-stream')
+const Busboy = require('busboy')
 const pump = require('pump')
 const kMultipart = Symbol('multipart')
 
@@ -41,9 +41,11 @@ function fastifyMultipart (fastify, options, done) {
 
     const req = this.req
 
-    const stream = multipartReadStream(req.headers, wrap)
+    const stream = new Busboy({ headers: req.headers })
 
     pump(req, stream, done)
+
+    stream.on('file', wrap)
 
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
