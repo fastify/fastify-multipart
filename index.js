@@ -60,4 +60,7 @@ function fastifyMultipart (fastify, options, done) {
   }
 }
 
-module.exports = fp(fastifyMultipart, '>= 0.33.0')
+module.exports = fp(fastifyMultipart, {
+  fastify: '>= 0.39.0',
+  name: 'fastify-multipart'
+})
