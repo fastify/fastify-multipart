@@ -6,7 +6,7 @@
   "dependencies": {
     "busboy": "^0.2.14",
     "fastify-plugin": "^0.2.1",
-    "pump": "^2.0.0"
+    "pump": "^3.0.0"
   },
   "devDependencies": {
     "climem": "^1.0.3",
