@@ -2,7 +2,6 @@
 
 const fp = require('fastify-plugin')
 const Busboy = require('busboy')
-const pump = require('pump')
 const kMultipart = Symbol('multipart')
 
 function setMultipart (req, done) {
@@ -43,9 +42,19 @@ function fastifyMultipart (fastify, options, done) {
 
     const stream = new Busboy({ headers: req.headers })
 
-    pump(req, stream, done)
+    req.on('error', function (err) {
+      stream.destroy()
+      done(err)
+    })
+
+    stream.on('finish', function () {
+      log.debug('finished multipart parsing')
+      done()
+    })
 
     stream.on('file', wrap)
+
+    req.pipe(stream)
 
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
