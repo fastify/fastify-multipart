@@ -16,9 +16,10 @@ const crypto = require('crypto')
 const filePath = path.join(__dirname, 'README.md')
 
 test('should parse forms', function (t) {
-  t.plan(10)
+  t.plan(12)
 
   const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -27,6 +28,7 @@ test('should parse forms', function (t) {
 
     const mp = req.multipart(handler, function (err) {
       t.error(err)
+      reply.code(200).send()
     })
 
     mp.on('field', function (name, value) {
@@ -42,7 +44,6 @@ test('should parse forms', function (t) {
       var original = fs.readFileSync(filePath, 'utf8')
       file.pipe(concat(function (buf) {
         t.equal(buf.toString(), original)
-        reply.code(200).send()
       }))
     }
   })
@@ -59,7 +60,13 @@ test('should parse forms', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, () => { fastify.close(noop) })
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
     var rs = fs.createReadStream(filePath)
     form.append('upload', rs)
     form.append('hello', 'world')
@@ -70,10 +77,11 @@ test('should parse forms', function (t) {
 })
 
 test('should error if it is not multipart', function (t) {
-  t.plan(3)
+  t.plan(4)
 
   const fastify = Fastify()
 
+  t.tearDown(fastify.close.bind(fastify))
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
@@ -103,7 +111,9 @@ test('should error if it is not multipart', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, () => { fastify.close(noop) })
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+    })
     req.end(JSON.stringify({ hello: 'world' }))
   })
 })
