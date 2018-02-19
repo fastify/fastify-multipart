@@ -15,7 +15,7 @@
     "form-data": "^2.3.2",
     "pre-commit": "^1.2.2",
     "snazzy": "^7.0.0",
-    "standard": "^10.0.3",
+    "standard": "^11.0.0",
     "tap": "^11.1.0"
   },
   "scripts": {
