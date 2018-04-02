@@ -57,6 +57,39 @@ fastify.listen(3000, err => {
 })
 ```
 
+You can also pass optional arguments to busboy when registering with fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
+
+```js
+fastify.register(require('fastify-multipart'), {
+  limits: {
+    fieldNameSize: 100, // Max field name size in bytes
+    fieldSize: 1000000, // Max field value size in bytes
+    fields: 10,         // Max number of non-file fields
+    fileSize: 100,      // For multipart forms, the max file size
+    files: 1,           // Max number of file fields
+    headerPairs: 2000   // Max number of header key=>value pairs
+  }
+});
+```
+
+If you do set upload limits, be sure to listen for limit events in the handler method. An error or exception will not occur if a limit is reached, but rather the stream will be truncated. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
+
+```js
+function handler (field, file, filename, encoding, mimetype) {
+
+  file.on('limit', () => console.log('File size limit reached'));
+
+  file.on('partsLimit', () => console.log('Maximum number of form parts reached'));
+
+  file.on('filesLimit', () => console.log('Maximum number of files reached'));
+
+  file.on('fieldsLimit', () => console.log('Maximim number of fields reached'));
+
+}              
+```
+
+
+
 ## Acknowledgements
 
 This project is kindly sponsored by:
