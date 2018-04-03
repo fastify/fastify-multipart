@@ -40,7 +40,11 @@ function fastifyMultipart (fastify, options, done) {
 
     const req = this.req
 
-    const stream = new Busboy(Object.assign({ headers: req.headers }, options))
+    const busboyOptions = { headers: req.headers }
+    for (let opt of Object.keys(options)) {
+      busboyOptions[opt] = options[opt]
+    }
+    const stream = new Busboy(busboyOptions)
 
     req.on('error', function (err) {
       stream.destroy()
