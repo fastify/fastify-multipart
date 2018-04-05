@@ -1,6 +1,6 @@
 {
   "name": "fastify-multipart",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "dependencies": {
@@ -11,7 +11,7 @@
     "climem": "^1.0.3",
     "concat-stream": "^1.6.0",
     "pump": "^3.0.0",
-    "fastify": "^1.0.0-rc.1",
+    "fastify": "^1.2.0",
     "form-data": "^2.3.2",
     "pre-commit": "^1.2.2",
     "snazzy": "^7.0.0",
