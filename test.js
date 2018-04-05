@@ -16,12 +16,12 @@ const crypto = require('crypto')
 const filePath = path.join(__dirname, 'README.md')
 
 test('should parse forms', function (t) {
-  t.plan(12)
+  t.plan(14)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  fastify.register(multipart, {limits: {fields: 1}})
 
   fastify.post('/', function (req, reply) {
     t.ok(req.isMultipart())
@@ -32,6 +32,8 @@ test('should parse forms', function (t) {
     })
 
     mp.on('field', function (name, value) {
+      t.notEqual(name, 'willbe', 'Busboy fields limit ignored')
+      t.notEqual(value, 'dropped', 'Busboy fields limit ignored')
       t.equal(name, 'hello')
       t.equal(value, 'world')
     })
@@ -41,6 +43,7 @@ test('should parse forms', function (t) {
       t.equal(field, 'upload')
       t.equal(encoding, '7bit')
       t.equal(mimetype, 'text/markdown')
+      file.on('fieldsLimit', () => t.ok('field limit reached'))
       var original = fs.readFileSync(filePath, 'utf8')
       file.pipe(concat(function (buf) {
         t.equal(buf.toString(), original)
@@ -70,6 +73,7 @@ test('should parse forms', function (t) {
     var rs = fs.createReadStream(filePath)
     form.append('upload', rs)
     form.append('hello', 'world')
+    form.append('willbe', 'dropped')
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
     })
