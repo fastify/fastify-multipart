@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "busboy": "^0.2.14",
-    "fastify-plugin": "^0.2.2"
+    "fastify-plugin": "^1.0.0"
   },
   "devDependencies": {
     "climem": "^1.0.3",
