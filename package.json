@@ -9,12 +9,12 @@
   },
   "devDependencies": {
     "climem": "^1.0.3",
-    "concat-stream": "^1.6.0",
-    "pump": "^3.0.0",
-    "fastify": "^1.2.0",
+    "concat-stream": "^1.6.2",
+    "fastify": "^1.7.0",
     "form-data": "^2.3.2",
     "pre-commit": "^1.2.2",
-    "snazzy": "^7.0.0",
+    "pump": "^3.0.0",
+    "snazzy": "^7.1.1",
     "standard": "^11.0.0",
     "tap": "^12.0.0"
   },
