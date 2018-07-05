@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "busboy": "^0.2.14",
+    "end-of-stream": "^1.4.1",
     "fastify-plugin": "^1.0.0"
   },
   "devDependencies": {

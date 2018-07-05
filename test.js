@@ -1,5 +1,5 @@
 'use strict'
-
+const os = require('os')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -72,6 +72,62 @@ test('should parse forms', function (t) {
     })
     var rs = fs.createReadStream(filePath)
     form.append('upload', rs)
+    form.append('hello', 'world')
+    form.append('willbe', 'dropped')
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('should call finished when both files are pumped', function (t) {
+  t.plan(8)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', function (req, reply) {
+    var fileCount = 0
+    t.ok(req.isMultipart())
+
+    req.multipart(handler, function (err) {
+      t.error(err)
+      t.equal(fileCount, 2)
+      reply.code(200).send()
+    })
+
+    function handler (field, file, filename, encoding, mimetype) {
+      const saveTo = path.join(os.tmpdir(), path.basename(filename))
+      pump(file, fs.createWriteStream(saveTo), function (err) {
+        t.error(err)
+        fileCount++
+      })
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    form.append('upload', fs.createReadStream(filePath))
+    form.append('upload2', fs.createReadStream(filePath))
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
     pump(form, req, function (err) {

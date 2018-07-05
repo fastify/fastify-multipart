@@ -3,6 +3,7 @@
 const fp = require('fastify-plugin')
 const Busboy = require('busboy')
 const kMultipart = Symbol('multipart')
+const eos = require('end-of-stream')
 
 function setMultipart (req, done) {
   // nothing to do, it will be done by the Request.multipart object
@@ -46,15 +47,27 @@ function fastifyMultipart (fastify, options, done) {
       busboyOptions[keys[i]] = options[keys[i]]
     }
     const stream = new Busboy(busboyOptions)
+    var completed = false
+    var files = 0
+    var count = 0
+    var callDoneOnNextEos = false
 
     req.on('error', function (err) {
       stream.destroy()
-      done(err)
+      if (!completed) {
+        completed = true
+        done(err)
+      }
     })
 
     stream.on('finish', function () {
       log.debug('finished multipart parsing')
-      done()
+      if (!completed && count === files) {
+        completed = true
+        setImmediate(done)
+      } else {
+        callDoneOnNextEos = true
+      }
     })
 
     stream.on('file', wrap)
@@ -63,7 +76,27 @@ function fastifyMultipart (fastify, options, done) {
 
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
+      files++
+      eos(file, waitForFiles)
       handler(field, file, filename, encoding, mimetype)
+    }
+
+    function waitForFiles (err) {
+      if (err) {
+        completed = true
+        done(err)
+        return
+      }
+
+      if (completed) {
+        return
+      }
+
+      ++count
+      if (callDoneOnNextEos && count === files) {
+        completed = true
+        done()
+      }
     }
 
     return stream
