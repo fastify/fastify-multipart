@@ -75,16 +75,15 @@ fastify.register(require('fastify-multipart'), {
 If you do set upload limits, be sure to listen for limit events in the handler method. An error or exception will not occur if a limit is reached, but rather the stream will be truncated. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
 
 ```js
+
+mp.on('partsLimit', () => console.log('Maximum number of form parts reached'));
+
+mp.on('filesLimit', () => console.log('Maximum number of files reached'));
+
+mp.on('fieldsLimit', () => console.log('Maximim number of fields reached'));
+
 function handler (field, file, filename, encoding, mimetype) {
-
   file.on('limit', () => console.log('File size limit reached'));
-
-  file.on('partsLimit', () => console.log('Maximum number of form parts reached'));
-
-  file.on('filesLimit', () => console.log('Maximum number of files reached'));
-
-  file.on('fieldsLimit', () => console.log('Maximim number of fields reached'));
-
 }              
 ```
 
