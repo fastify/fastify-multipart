@@ -6,12 +6,12 @@
   "dependencies": {
     "busboy": "^0.2.14",
     "end-of-stream": "^1.4.1",
-    "fastify-plugin": "^1.0.0"
+    "fastify-plugin": "^1.2.1"
   },
   "devDependencies": {
     "climem": "^1.0.3",
     "concat-stream": "^1.6.2",
-    "fastify": "^1.7.0",
+    "fastify": "^1.11.2",
     "form-data": "^2.3.2",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
