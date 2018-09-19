@@ -21,7 +21,7 @@ test('should parse forms', function (t) {
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart, {limits: {fields: 1}})
+  fastify.register(multipart, { limits: { fields: 1 } })
 
   fastify.post('/', function (req, reply) {
     t.ok(req.isMultipart())
