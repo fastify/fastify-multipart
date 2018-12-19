@@ -43,7 +43,7 @@ function fastifyMultipart (fastify, options, done) {
 
     const req = this.req
 
-    const busboyOptions = deepmerge.all([{ headers: req.headers }, options, opts])
+    const busboyOptions = deepmerge.all([{ headers: req.headers }, options || {}, opts || {}])
     const stream = new Busboy(busboyOptions)
     var completed = false
     var files = 0
