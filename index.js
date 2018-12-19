@@ -4,6 +4,7 @@ const fp = require('fastify-plugin')
 const Busboy = require('busboy')
 const kMultipart = Symbol('multipart')
 const eos = require('end-of-stream')
+const deepmerge = require('deepmerge')
 
 function setMultipart (req, done) {
   // nothing to do, it will be done by the Request.multipart object
@@ -21,7 +22,8 @@ function fastifyMultipart (fastify, options, done) {
 
   // handler definition is in multipart-readstream
   // handler(field, file, filename, encoding, mimetype)
-  function multipart (handler, done) {
+  // opts is a per-request override for the options object
+  function multipart (handler, done, opts) {
     if (typeof handler !== 'function') {
       throw new Error('handler must be a function')
     }
@@ -41,11 +43,7 @@ function fastifyMultipart (fastify, options, done) {
 
     const req = this.req
 
-    const busboyOptions = { headers: req.headers }
-    const keys = Object.keys(options)
-    for (var i = 0; i < keys.length; i++) {
-      busboyOptions[keys[i]] = options[keys[i]]
-    }
+    const busboyOptions = deepmerge.all([{ headers: req.headers }, options, opts])
     const stream = new Busboy(busboyOptions)
     var completed = false
     var files = 0
