@@ -178,6 +178,55 @@ test('should error if it is not multipart', function (t) {
   })
 })
 
+test('should override options', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { limits: { fileSize: 1 } })
+
+  fastify.post('/', function (req, reply) {
+    const mp = req.multipart(handler, function (err) {
+      t.error(err)
+      reply.code(200).send()
+    }, { limits: { fileSize: 2 } })
+
+    t.equal(mp.opts.limits.fileSize, 2, 'options.limits.fileSize was updated successfully')
+
+    function handler (field, file, filename, encoding, mimetype) {
+      file.pipe(concat(function (buf) { }))
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('upload', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 function noop () {}
 
 // skipping on Travis because it takes too long

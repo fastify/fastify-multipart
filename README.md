@@ -87,6 +87,23 @@ function handler (field, file, filename, encoding, mimetype) {
 }              
 ```
 
+Additionally, you can pass per-request options to the req.multipart function
+
+```js
+fastify.post('/', function (req, reply) {
+  const options = { limits: { fileSize: 1000 } };
+  const mp = req.multipart(handler, done, options)
+
+  function done (err) {
+    console.log('upload completed')
+    reply.code(200).send()
+  }
+
+  function handler (field, file, filename, encoding, mimetype) {
+    pump(file, fs.createWriteStream('a-destination'))
+  }
+})
+```
 
 
 ## Acknowledgements
