@@ -1,8 +1,18 @@
 language: node_js
+
 node_js:
   - "8"
   - "6"
   - "10"
+  - "11"
+
+os:
+  - linux
+  - windows
+
+script:
+  - npm run lint && npm run coveralls && npm run typescript
+
 notifications:
   email:
     on_success: never
