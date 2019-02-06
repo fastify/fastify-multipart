@@ -7,7 +7,7 @@
     "deepmerge": "^3.0.0",
     "busboy": "^0.3.0",
     "end-of-stream": "^1.4.1",
-    "fastify-plugin": "^1.2.1"
+    "fastify-plugin": "^1.5.0"
   },
   "devDependencies": {
     "climem": "^1.0.3",
