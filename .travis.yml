@@ -11,7 +11,7 @@ os:
   - windows
 
 script:
-  - npm run lint && npm run coveralls && npm run typescript
+  - npm run lint && npm run typescript
 
 notifications:
   email:
