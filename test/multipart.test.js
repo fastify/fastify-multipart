@@ -3,7 +3,7 @@ const os = require('os')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
-const multipart = require('.')
+const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
@@ -13,7 +13,7 @@ const Readable = require('stream').Readable
 const Writable = require('stream').Writable
 const crypto = require('crypto')
 
-const filePath = path.join(__dirname, 'README.md')
+const filePath = path.join(__dirname, '../README.md')
 
 test('should parse forms', function (t) {
   t.plan(14)
