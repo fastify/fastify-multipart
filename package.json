@@ -14,7 +14,7 @@
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^1.14.1",
+    "fastify": "^2.0.0",
     "form-data": "^2.3.2",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
