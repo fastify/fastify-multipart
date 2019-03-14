@@ -319,3 +319,113 @@ if (!process.env.TRAVIS) {
     })
   })
 }
+
+test('append to body option', t => {
+  t.plan(7)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { addToBody: true })
+
+  fastify.post('/', function (req, reply) {
+    t.equal(req.body.myField, 'hello')
+    t.equal(req.body.myCheck, 'true')
+    t.like(req.body.myFile, {
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    })
+    t.type(req.body.myFile.data, Buffer)
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myField', 'hello')
+    form.append('myCheck', 'true')
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('append to body option and custom data event', t => {
+  t.plan(7)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    onData: (fieldName, data) => {
+      t.equal(fieldName, 'myFile')
+    }
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.equal(req.body.myField, 'hello')
+    t.equal(req.body.myCheck, 'true')
+    t.like(req.body.myFile, {
+      data: [],
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    })
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myField', 'hello')
+    form.append('myCheck', 'true')
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})

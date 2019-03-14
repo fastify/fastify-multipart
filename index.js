@@ -12,7 +12,50 @@ function setMultipart (req, done) {
   done()
 }
 
+function attachToBody (options, req, reply, next) {
+  req[kMultipart] = true
+
+  const body = { }
+  const mp = req.multipart((field, file, filename, encoding, mimetype) => {
+    body[field] = {
+      // stream: file,
+      data: [],
+      filename,
+      encoding,
+      mimetype,
+      limit: false
+    }
+
+    const fileData = []
+    const isCustomDataConsumer = typeof options.onData === 'function'
+    const onData = isCustomDataConsumer
+      ? options.onData
+      : (fieldName, data) => { fileData.push(data) }
+
+    file.on('data', (data) => { onData(field, data) })
+    file.on('limit', () => { body[field].limit = true })
+
+    file.on('end', () => {
+      if (!isCustomDataConsumer) {
+        body[field].data = Buffer.concat(fileData.map((part) => Buffer.isBuffer(part) ? part : Buffer.from(part)))
+      }
+    })
+  }, function (err) {
+    req.body = body
+    next(err)
+  })
+
+  mp.on('field', (key, value) => {
+    body[key] = value
+  })
+}
+
 function fastifyMultipart (fastify, options, done) {
+  if (options.addToBody === true) {
+    fastify.addHook('preValidation', function (req, reply, next) {
+      attachToBody(options, req, reply, next)
+    })
+  }
   fastify.addContentTypeParser('multipart', setMultipart)
 
   fastify.decorateRequest('multipart', multipart)

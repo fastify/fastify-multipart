@@ -105,6 +105,68 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
+You can also use all the parsed HTTP request parametes to the body:
+
+```js
+const options = {
+  addToBody: true,
+  onData: (fieldName, data) => {
+    // Manage the file stream like you need
+    // By default the data will be added in a Buffer
+    // Be careful to accumulate the file in memory!
+  }
+  limit: { /*...*/ } // You can the limit options in any case
+}
+
+fastify.register(require('fastify-multipart'), options)
+
+fastify.post('/', function (req, reply) {
+  console.log(req.body)
+  // This will print out:
+  // {
+  //   myStringField: 'example',
+  //   anotherOne: 'example',
+  //   myFilenameField: {
+  //     data: <Buffer>,
+  //     encoding: '7bit',
+  //     filename: 'README.md',
+  //     limit: false,
+  //     mimetype: 'text/markdown'
+  //   }
+  // }
+
+  reply.code(200).send()
+})
+```
+
+NB: The `req.body.<fieldName>.data` will be an empty array if you configure the `onData` option.
+
+With this setting you will be able to apply the validation to your service like this:
+
+```js
+fastify.post('/upload', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['myStringField', 'myFilenameField'],
+      properties: {
+        myStringField: { type: 'string' },
+        myFilenameField: {
+          type: 'object',
+          properties: {
+            encoding: { type: 'string' },
+            filename: { type: 'string' },
+            limit: { type: 'boolean' },
+            mimetype: { type: 'string' }
+          }
+        }
+      }
+    }
+  }
+}, function (req, reply) {
+  reply.send('done')
+})
+```
 
 ## Acknowledgements
 
