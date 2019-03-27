@@ -52,6 +52,19 @@ function attachToBody (options, req, reply, next) {
 
 function fastifyMultipart (fastify, options, done) {
   if (options.addToBody === true) {
+    if (typeof options.sharedSchemaId === 'string') {
+      fastify.addSchema({
+        $id: options.sharedSchemaId,
+        type: 'object',
+        properties: {
+          encoding: { type: 'string' },
+          filename: { type: 'string' },
+          limit: { type: 'boolean' },
+          mimetype: { type: 'string' }
+        }
+      })
+    }
+
     fastify.addHook('preValidation', function (req, reply, next) {
       attachToBody(options, req, reply, next)
     })

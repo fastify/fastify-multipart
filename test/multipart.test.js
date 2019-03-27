@@ -429,3 +429,127 @@ test('append to body option and custom data event', t => {
     })
   })
 })
+
+test('append to body with shared schema', t => {
+  t.plan(6)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    sharedSchemaId: 'mySharedSchema',
+    onData: (fieldName, data) => {
+      t.equal(fieldName, 'myFile')
+    }
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['myField', 'myFile'],
+        properties: {
+          myField: { type: 'string' },
+          myFile: 'mySharedSchema#'
+        }
+      }
+    }
+  }, function (req, reply) {
+    t.equal(req.body.myField, 'hello')
+    t.like(req.body.myFile, {
+      data: [],
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    })
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myField', 'hello')
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('append to body with shared schema error', t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    sharedSchemaId: 'mySharedSchema',
+    onData: (fieldName, data) => {}
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['myField', 'myFile'],
+        properties: {
+          myField: { type: 'string' },
+          myFile: 'mySharedSchema#'
+        }
+      }
+    }
+  }, function (req, reply) {
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 400)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})

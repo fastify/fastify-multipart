@@ -21,6 +21,21 @@ declare module "fastify" {
 }
 
 declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerResponse, {
+    /**
+     * Append the multipart parameters to the body object
+     */
+    addToBody?: boolean;
+
+    /**
+     * Add a shered schema to validate the input fields
+     */
+    sharedSchemaId?: string;
+
+    /**
+     * Manage the file stream like you need
+     */
+    onData?: (fieldName: string, data: Buffer) => void;
+
     limits?: {
         /**
          * Max field name size in bytes

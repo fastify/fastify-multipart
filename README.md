@@ -110,6 +110,7 @@ You can also use all the parsed HTTP request parametes to the body:
 ```js
 const options = {
   addToBody: true,
+  sharedSchemaId: 'MultipartFileType', // Optional shared schema id
   onData: (fieldName, data) => {
     // Manage the file stream like you need
     // By default the data will be added in a Buffer
@@ -141,7 +142,7 @@ fastify.post('/', function (req, reply) {
 
 NB: The `req.body.<fieldName>.data` will be an empty array if you configure the `onData` option.
 
-With this setting you will be able to apply the validation to your service like this:
+Only if you set `addToBody: true` and the `sharedSchemaId` parameter with a string ID a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
 
 ```js
 fastify.post('/upload', {
@@ -151,21 +152,26 @@ fastify.post('/upload', {
       required: ['myStringField', 'myFilenameField'],
       properties: {
         myStringField: { type: 'string' },
-        myFilenameField: {
-          type: 'object',
-          properties: {
-            encoding: { type: 'string' },
-            filename: { type: 'string' },
-            limit: { type: 'boolean' },
-            mimetype: { type: 'string' }
-          }
-        }
-      }
+        myFilenameField: 'MultipartFileType#'
     }
   }
 }, function (req, reply) {
   reply.send('done')
 })
+```
+
+The shared schema added will be like this:
+
+```js
+{
+  type: 'object',
+  properties: {
+    encoding: { type: 'string' },
+    filename: { type: 'string' },
+    limit: { type: 'boolean' },
+    mimetype: { type: 'string' }
+  }
+}
 ```
 
 ## Acknowledgements
