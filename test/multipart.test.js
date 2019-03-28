@@ -89,7 +89,7 @@ test('should call finished when both files are pumped', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
-    var fileCount = 0
+    let fileCount = 0
     t.ok(req.isMultipart())
 
     req.multipart(handler, function (err) {
@@ -378,10 +378,14 @@ test('append to body option and custom data event', t => {
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
+  let consumed = false
   const opts = {
     addToBody: true,
     onData: (fieldName, data) => {
-      t.equal(fieldName, 'myFile')
+      if (!consumed) {
+        t.equal(fieldName, 'myFile')
+        consumed = true
+      }
     }
   }
   fastify.register(multipart, opts)
@@ -436,11 +440,15 @@ test('append to body with shared schema', t => {
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
+  let consumed = false
   const opts = {
     addToBody: true,
     sharedSchemaId: 'mySharedSchema',
     onData: (fieldName, data) => {
-      t.equal(fieldName, 'myFile')
+      if (!consumed) {
+        t.equal(fieldName, 'myFile')
+        consumed = true
+      }
     }
   }
   fastify.register(multipart, opts)
@@ -548,6 +556,64 @@ test('append to body with shared schema error', t => {
 
     var rs = fs.createReadStream(filePath)
     form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('append to body without files and shared schema', t => {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    sharedSchemaId: 'mySharedSchema'
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['myField', 'myField2'],
+        properties: {
+          myField: { type: 'string' },
+          myField2: { type: 'string' }
+        }
+      }
+    }
+  }, function (req, reply) {
+    t.equal(req.body.myField, 'hello')
+    t.equal(req.body.myField2, 'world')
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('myField', 'hello')
+    form.append('myField2', 'world')
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
     })

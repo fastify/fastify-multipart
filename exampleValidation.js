@@ -2,24 +2,20 @@
 
 const fastify = require('fastify')({ logger: true })
 
-fastify.register(require('.'), { addToBody: true })
+const opts = {
+  addToBody: true,
+  sharedSchemaId: 'mySharedSchema'
+}
+fastify.register(require('.'), opts)
 
 fastify.post('/upload', {
   schema: {
     body: {
       type: 'object',
-      required: ['myStringField', 'myFilenameField'],
+      required: ['myStringField'],
       properties: {
         myStringField: { type: 'string' },
-        myFilenameField: {
-          type: 'object',
-          properties: {
-            encoding: { type: 'string' },
-            filename: { type: 'string' },
-            limit: { type: 'boolean' },
-            mimetype: { type: 'string' }
-          }
-        }
+        myFilenameField: 'mySharedSchema#'
       }
     }
   }
