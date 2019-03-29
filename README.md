@@ -111,10 +111,12 @@ You can also use all the parsed HTTP request parametes to the body:
 const options = {
   addToBody: true,
   sharedSchemaId: 'MultipartFileType', // Optional shared schema id
-  onData: (fieldName, data) => {
+  manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
     // Manage the file stream like you need
     // By default the data will be added in a Buffer
     // Be careful to accumulate the file in memory!
+    // It is MANDATORY consume the stream, otherwise the response will not be processed!
+    stream.resume()
   }
   limit: { /*...*/ } // You can the limit options in any case
 }
@@ -140,9 +142,13 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
-NB: The `req.body.<fieldName>.data` will be an empty array if you configure the `onData` option.
+The options `manageUploadStream` and `sharedSchemaId` will be used only when `addToBody: true`.
 
-Only if you set `addToBody: true` and the `sharedSchemaId` parameter with a string ID a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
+The `manageUploadStream` option define how the file streams are manage:
++ if you don't set it the `req.body.<fieldName>.data` will be a Buffer with the data loaded in memory
++ if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>.data` will be an empty array
+
+The `sharedSchemaId` parameter must provide a string ID and a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
 
 ```js
 fastify.post('/upload', {

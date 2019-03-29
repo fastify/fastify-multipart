@@ -4,6 +4,7 @@ import busboy = require("busboy");
 import fastify = require("fastify");
 
 import { Server, IncomingMessage, ServerResponse } from 'http';
+import { Readable } from "stream";
 
 type MultipartHandler = (
     field: string,
@@ -34,7 +35,7 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
     /**
      * Manage the file stream like you need
      */
-    onData?: (fieldName: string, data: Buffer) => void;
+    manageUploadStream?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string) => void;
 
     limits?: {
         /**
