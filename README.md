@@ -111,7 +111,7 @@ You can also use all the parsed HTTP request parametes to the body:
 const options = {
   addToBody: true,
   sharedSchemaId: 'MultipartFileType', // Optional shared schema id
-  manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
+  onFile: (fieldName, stream, filename, encoding, mimetype) => {
     // Manage the file stream like you need
     // By default the data will be added in a Buffer
     // Be careful to accumulate the file in memory!
@@ -142,9 +142,9 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
-The options `manageUploadStream` and `sharedSchemaId` will be used only when `addToBody: true`.
+The options `onFile` and `sharedSchemaId` will be used only when `addToBody: true`.
 
-The `manageUploadStream` option define how the file streams are manage:
+The `onFile` option define how the file streams are managed:
 + if you don't set it the `req.body.<fieldName>.data` will be a Buffer with the data loaded in memory
 + if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>.data` will be an empty array
 

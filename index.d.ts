@@ -35,7 +35,7 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
     /**
      * Manage the file stream like you need
      */
-    manageUploadStream?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string) => void;
+    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string) => void;
 
     limits?: {
         /**

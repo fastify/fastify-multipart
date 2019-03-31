@@ -72,7 +72,7 @@ test('append to body option and custom stream management', t => {
   let fileCounter = 0
   const opts = {
     addToBody: true,
-    manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
       fileCounter++
       stream.resume()
     }
@@ -148,7 +148,7 @@ test('append to body option and multiple files', t => {
 
   const opts = {
     addToBody: true,
-    manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
       t.equal(fieldName, 'myFile')
       stream.resume()
     }
@@ -208,7 +208,7 @@ test('append to body with shared schema', t => {
   const opts = {
     addToBody: true,
     sharedSchemaId: 'mySharedSchema',
-    manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
       t.equal(fieldName, 'myFile')
       t.equal(filename, 'README.md')
       t.equal(encoding, '7bit')
@@ -336,7 +336,7 @@ test('append to body without files and shared schema', t => {
   const opts = {
     addToBody: true,
     sharedSchemaId: 'mySharedSchema',
-    manageUploadStream: (fieldName, stream, filename, encoding, mimetype) => {
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
       t.fail('there are not stream')
     }
   }

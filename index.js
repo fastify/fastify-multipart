@@ -15,9 +15,16 @@ function setMultipart (req, done) {
 function attachToBody (options, req, reply, next) {
   req[kMultipart] = true
 
-  const userWantConsumeStream = typeof options.manageUploadStream === 'function'
-  const consumerStream = options.manageUploadStream
+  const defaultConsumer = (field, file, filename, encoding, mimetype) => {
+    const fileData = []
+    file.on('data', data => { fileData.push(data) })
+    file.on('limit', () => { body[field].limit = true })
+    file.on('end', () => {
+      body[field].data = Buffer.concat(fileData)
+    })
+  }
 
+  const consumerStream = options.onFile || defaultConsumer
   const body = { }
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
     body[field] = {
@@ -27,21 +34,7 @@ function attachToBody (options, req, reply, next) {
       mimetype,
       limit: false
     }
-
-    const fileData = []
-
-    if (userWantConsumeStream) {
-      consumerStream(field, file, filename, encoding, mimetype)
-    } else {
-      file.on('data', data => { fileData.push(data) })
-    }
-    file.on('limit', () => { body[field].limit = true })
-
-    file.on('end', () => {
-      if (!userWantConsumeStream) {
-        body[field].data = Buffer.concat(fileData)
-      }
-    })
+    consumerStream(field, file, filename, encoding, mimetype)
   }, function (err) {
     req.body = body
     next(err)
