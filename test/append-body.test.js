@@ -63,7 +63,7 @@ test('append to body option', t => {
   })
 })
 
-test('append to body option and custom stream management', t => {
+test('append to body option and multiple files', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -140,7 +140,7 @@ test('append to body option and custom stream management', t => {
   })
 })
 
-test('append to body option and multiple files', t => {
+test('append to body option and custom stream management', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -192,6 +192,108 @@ test('append to body option and multiple files', t => {
     var rs = fs.createReadStream(filePath)
     form.append('myField', 'hello')
     form.append('myCheck', 'true')
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('append to body option with promise', t => {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    onFile: async (fieldName, stream, filename, encoding, mimetype) => {
+      await new Promise(resolve => setTimeout(resolve, 10))
+      t.equal(fieldName, 'myFile')
+      stream.resume()
+    }
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.like(req.body.myFile, {
+      data: [],
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    })
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('append to body option with promise in error', t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
+      return Promise.reject(new Error('my error'))
+    }
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.fail('should not execute the handler')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
     form.append('myFile', rs)
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
