@@ -111,11 +111,12 @@ You can also use all the parsed HTTP request parametes to the body:
 const options = {
   addToBody: true,
   sharedSchemaId: 'MultipartFileType', // Optional shared schema id
-  onFile: (fieldName, stream, filename, encoding, mimetype) => {
+  onFile: (fieldName, stream, filename, encoding, mimetype, body) => {
     // Manage the file stream like you need
     // By default the data will be added in a Buffer
     // Be careful to accumulate the file in memory!
     // It is MANDATORY consume the stream, otherwise the response will not be processed!
+    // The body parameter is the object that will be added to the request
     stream.resume()
   }
   limit: { /*...*/ } // You can the limit options in any case
