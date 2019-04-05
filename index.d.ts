@@ -4,6 +4,7 @@ import busboy = require("busboy");
 import fastify = require("fastify");
 
 import { Server, IncomingMessage, ServerResponse } from 'http';
+import { Readable } from "stream";
 
 type MultipartHandler = (
     field: string,
@@ -21,6 +22,21 @@ declare module "fastify" {
 }
 
 declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerResponse, {
+    /**
+     * Append the multipart parameters to the body object
+     */
+    addToBody?: boolean;
+
+    /**
+     * Add a shered schema to validate the input fields
+     */
+    sharedSchemaId?: string;
+
+    /**
+     * Manage the file stream like you need
+     */
+    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string) => void;
+
     limits?: {
         /**
          * Max field name size in bytes

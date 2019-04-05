@@ -12,7 +12,68 @@ function setMultipart (req, done) {
   done()
 }
 
+function attachToBody (options, req, reply, next) {
+  req[kMultipart] = true
+
+  const consumerStream = options.onFile || defaultConsumer
+  const body = { }
+  const mp = req.multipart((field, file, filename, encoding, mimetype) => {
+    body[field] = {
+      data: [],
+      filename,
+      encoding,
+      mimetype,
+      limit: false
+    }
+
+    const result = consumerStream(field, file, filename, encoding, mimetype, body)
+    if (result && typeof result.then === 'function') {
+      result.catch((err) => {
+        // continue with the workflow
+        err.statusCode = 500
+        file.destroy(err)
+      })
+    }
+  }, function (err) {
+    if (!err) {
+      req.body = body
+    }
+    next(err)
+  }, options)
+
+  mp.on('field', (key, value) => {
+    body[key] = value
+  })
+}
+
+function defaultConsumer (field, file, filename, encoding, mimetype, body) {
+  const fileData = []
+  file.on('data', data => { fileData.push(data) })
+  file.on('limit', () => { body[field].limit = true })
+  file.on('end', () => {
+    body[field].data = Buffer.concat(fileData)
+  })
+}
+
 function fastifyMultipart (fastify, options, done) {
+  if (options.addToBody === true) {
+    if (typeof options.sharedSchemaId === 'string') {
+      fastify.addSchema({
+        $id: options.sharedSchemaId,
+        type: 'object',
+        properties: {
+          encoding: { type: 'string' },
+          filename: { type: 'string' },
+          limit: { type: 'boolean' },
+          mimetype: { type: 'string' }
+        }
+      })
+    }
+
+    fastify.addHook('preValidation', function (req, reply, next) {
+      attachToBody(options, req, reply, next)
+    })
+  }
   fastify.addContentTypeParser('multipart', setMultipart)
 
   fastify.decorateRequest('multipart', multipart)

@@ -28,6 +28,7 @@ function next () {
     }
   })
 
+  form.append('my_field', 'my value')
   form.append('upload', rs, {
     filename: 'random-data',
     contentType: 'binary/octect-stream',

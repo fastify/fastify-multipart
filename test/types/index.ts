@@ -4,6 +4,9 @@ import * as fastifyMultipart from '../..'
 const app = fastify()
 
 app.register(fastifyMultipart, {
+  addToBody: true,
+  sharedSchemaId: 'sharedId',
+  onFile: () => {},
   limits: {
     fieldNameSize: 200,
     fieldSize: 200,

@@ -89,7 +89,7 @@ test('should call finished when both files are pumped', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
-    var fileCount = 0
+    let fileCount = 0
     t.ok(req.isMultipart())
 
     req.multipart(handler, function (err) {

@@ -105,6 +105,81 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
+You can also use all the parsed HTTP request parametes to the body:
+
+```js
+const options = {
+  addToBody: true,
+  sharedSchemaId: 'MultipartFileType', // Optional shared schema id
+  onFile: (fieldName, stream, filename, encoding, mimetype, body) => {
+    // Manage the file stream like you need
+    // By default the data will be added in a Buffer
+    // Be careful to accumulate the file in memory!
+    // It is MANDATORY consume the stream, otherwise the response will not be processed!
+    // The body parameter is the object that will be added to the request
+    stream.resume()
+  }
+  limit: { /*...*/ } // You can the limit options in any case
+}
+
+fastify.register(require('fastify-multipart'), options)
+
+fastify.post('/', function (req, reply) {
+  console.log(req.body)
+  // This will print out:
+  // {
+  //   myStringField: 'example',
+  //   anotherOne: 'example',
+  //   myFilenameField: {
+  //     data: <Buffer>,
+  //     encoding: '7bit',
+  //     filename: 'README.md',
+  //     limit: false,
+  //     mimetype: 'text/markdown'
+  //   }
+  // }
+
+  reply.code(200).send()
+})
+```
+
+The options `onFile` and `sharedSchemaId` will be used only when `addToBody: true`.
+
+The `onFile` option define how the file streams are managed:
++ if you don't set it the `req.body.<fieldName>.data` will be a Buffer with the data loaded in memory
++ if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>.data` will be an empty array
+
+The `sharedSchemaId` parameter must provide a string ID and a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
+
+```js
+fastify.post('/upload', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['myStringField', 'myFilenameField'],
+      properties: {
+        myStringField: { type: 'string' },
+        myFilenameField: 'MultipartFileType#'
+    }
+  }
+}, function (req, reply) {
+  reply.send('done')
+})
+```
+
+The shared schema added will be like this:
+
+```js
+{
+  type: 'object',
+  properties: {
+    encoding: { type: 'string' },
+    filename: { type: 'string' },
+    limit: { type: 'boolean' },
+    mimetype: { type: 'string' }
+  }
+}
+```
 
 ## Acknowledgements
 
