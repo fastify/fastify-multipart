@@ -13,7 +13,10 @@ function setMultipart (req, done) {
 }
 
 function attachToBody (options, req, reply, next) {
-  req[kMultipart] = true
+  if (req.raw[kMultipart] !== true) {
+    next()
+    return
+  }
 
   const consumerStream = options.onFile || defaultConsumer
   const body = { }
