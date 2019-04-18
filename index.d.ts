@@ -14,14 +14,7 @@ type MultipartHandler = (
     mimetype: string,
 ) => void;
 
-declare module "fastify" {
-    interface FastifyRequest<HttpRequest> {
-        isMultipart: () => boolean;
-        multipart: (handler: MultipartHandler, next: (err: Error) => void) => busboy.Busboy;
-    }
-}
-
-declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerResponse, {
+type MultipartOptions = {
     /**
      * Append the multipart parameters to the body object
      */
@@ -68,6 +61,15 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
          */
         headerPairs?: number;
     }
-}>;
+};
+
+declare module "fastify" {
+    interface FastifyRequest<HttpRequest> {
+        isMultipart: () => boolean;
+        multipart: (handler: MultipartHandler, next: (err: Error) => void, options: MultipartOptions) => busboy.Busboy;
+    }
+}
+
+declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerResponse, MultipartOptions>;
 
 export = fastifyMultipart;
