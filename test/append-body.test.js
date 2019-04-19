@@ -489,3 +489,25 @@ test('append to body without files and shared schema', t => {
     })
   })
 })
+
+test('append to body option does not change behaviour on not-multipart request', t => {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { addToBody: true })
+  fastify.get('/', async (req, rep) => { rep.send('hello') })
+  fastify.post('/', function (req, reply) {})
+
+  fastify.listen(0, function () {
+    fastify.inject({
+      method: 'GET',
+      url: '/',
+      port: fastify.server.address().port
+    }, (err, res) => {
+      t.error(err)
+      t.strictEqual(res.payload, 'hello')
+    })
+  })
+})
