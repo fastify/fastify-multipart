@@ -20,8 +20,11 @@ function attachToBody (options, req, reply, next) {
 
   const consumerStream = options.onFile || defaultConsumer
   const body = { }
+  const fileCount = { }
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
-    body[field] = {
+    fileCount[field] = fileCount[field] || 0
+    body[field] = body[field] || []
+    body[field][fileCount[field]] = {
       data: [],
       filename,
       encoding,
@@ -29,7 +32,8 @@ function attachToBody (options, req, reply, next) {
       limit: false
     }
 
-    const result = consumerStream(field, file, filename, encoding, mimetype, body)
+    const result = consumerStream(field, file, filename, encoding, mimetype, body, fileCount[field])
+    fileCount[field]++
     if (result && typeof result.then === 'function') {
       result.catch((err) => {
         // continue with the workflow
@@ -49,12 +53,12 @@ function attachToBody (options, req, reply, next) {
   })
 }
 
-function defaultConsumer (field, file, filename, encoding, mimetype, body) {
+function defaultConsumer (field, file, filename, encoding, mimetype, body, fileCount) {
   const fileData = []
   file.on('data', data => { fileData.push(data) })
-  file.on('limit', () => { body[field].limit = true })
+  file.on('limit', () => { body[field][fileCount].limit = true })
   file.on('end', () => {
-    body[field].data = Buffer.concat(fileData)
+    body[field][fileCount].data = Buffer.concat(fileData)
   })
 }
 
