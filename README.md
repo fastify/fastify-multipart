@@ -130,13 +130,13 @@ fastify.post('/', function (req, reply) {
   // {
   //   myStringField: 'example',
   //   anotherOne: 'example',
-  //   myFilenameField: {
+  //   myFilenameField: [{
   //     data: <Buffer>,
   //     encoding: '7bit',
   //     filename: 'README.md',
   //     limit: false,
   //     mimetype: 'text/markdown'
-  //   }
+  //   }]
   // }
 
   reply.code(200).send()
@@ -146,8 +146,10 @@ fastify.post('/', function (req, reply) {
 The options `onFile` and `sharedSchemaId` will be used only when `addToBody: true`.
 
 The `onFile` option define how the file streams are managed:
-+ if you don't set it the `req.body.<fieldName>.data` will be a Buffer with the data loaded in memory
-+ if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>.data` will be an empty array
++ if you don't set it the `req.body.<fieldName>[index].data` will be a Buffer with the data loaded in memory
++ if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>[index].data` will be an empty array
+
+**Note**: By default values in fields with files have array type, so if there's only one file uploaded, you can access it via `req.body.<fieldName>[0].data`
 
 The `sharedSchemaId` parameter must provide a string ID and a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
 
@@ -159,7 +161,7 @@ fastify.post('/upload', {
       required: ['myStringField', 'myFilenameField'],
       properties: {
         myStringField: { type: 'string' },
-        myFilenameField: 'MultipartFileType#'
+        myFilenameField: { type: 'array', items: 'MultipartFileType#' }
     }
   }
 }, function (req, reply) {
