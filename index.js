@@ -22,15 +22,15 @@ function attachToBody (options, req, reply, next) {
   const body = { }
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
     body[field] = body[field] || []
-    const fileIndex = body[field].push({
+    body[field].push({
       data: [],
       filename,
       encoding,
       mimetype,
       limit: false
-    }) - 1
+    })
 
-    const result = consumerStream(field, file, filename, encoding, mimetype, body, fileIndex)
+    const result = consumerStream(field, file, filename, encoding, mimetype, body)
     if (result && typeof result.then === 'function') {
       result.catch((err) => {
         // continue with the workflow
@@ -50,8 +50,9 @@ function attachToBody (options, req, reply, next) {
   })
 }
 
-function defaultConsumer (field, file, filename, encoding, mimetype, body, fileIndex) {
+function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   const fileData = []
+  const fileIndex = body[field].length - 1
   file.on('data', data => { fileData.push(data) })
   file.on('limit', () => { body[field][fileIndex].limit = true })
   file.on('end', () => {
