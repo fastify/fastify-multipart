@@ -52,11 +52,11 @@ function attachToBody (options, req, reply, next) {
 
 function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   const fileData = []
-  const fileIndex = body[field].length - 1
+  const lastFile = body[field][body[field].length - 1]
   file.on('data', data => { fileData.push(data) })
-  file.on('limit', () => { body[field][fileIndex].limit = true })
+  file.on('limit', () => { lastFile.limit = true })
   file.on('end', () => {
-    body[field][fileIndex].data = Buffer.concat(fileData)
+    lastFile.data = Buffer.concat(fileData)
   })
 }
 
