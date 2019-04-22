@@ -66,7 +66,7 @@ type MultipartOptions = {
 declare module "fastify" {
     interface FastifyRequest<HttpRequest> {
         isMultipart: () => boolean;
-        multipart: (handler: MultipartHandler, next: (err: Error) => void, options: MultipartOptions) => busboy.Busboy;
+        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: MultipartOptions) => busboy.Busboy;
     }
 }
 
