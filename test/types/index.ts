@@ -6,7 +6,9 @@ const app = fastify()
 app.register(fastifyMultipart, {
   addToBody: true,
   sharedSchemaId: 'sharedId',
-  onFile: () => {},
+  onFile: (fieldName: string, stream: import('stream').Readable, filename: string, encoding: string, mimetype: string, body: any) => {
+    console.log(fieldName, stream, filename, encoding, mimetype, body)
+  },
   limits: {
     fieldNameSize: 200,
     fieldSize: 200,
