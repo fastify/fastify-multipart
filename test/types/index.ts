@@ -1,12 +1,13 @@
 import * as fastify from 'fastify'
 import * as fastifyMultipart from '../..'
+import { Readable } from 'stream'
 
 const app = fastify()
 
 app.register(fastifyMultipart, {
   addToBody: true,
   sharedSchemaId: 'sharedId',
-  onFile: (fieldName: string, stream: import('stream').Readable, filename: string, encoding: string, mimetype: string, body: any) => {
+  onFile: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: any) => {
     console.log(fieldName, stream, filename, encoding, mimetype, body)
   },
   limits: {
