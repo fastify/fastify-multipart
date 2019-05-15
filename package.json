@@ -1,6 +1,6 @@
 {
   "name": "fastify-multipart",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "dependencies": {
@@ -28,7 +28,7 @@
     "pump": "^3.0.0",
     "snazzy": "^8.0.0",
     "standard": "^12.0.1",
-    "tap": "^12.5.2",
+    "tap": "^12.6.5",
     "typescript": "^3.3.3"
   },
   "scripts": {
@@ -51,5 +51,10 @@
     "form"
   ],
   "author": "Matteo Collina <hello@matteocollina.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "greenkeeper": {
+    "ignore": [
+      "tap"
+    ]
+  }
 }
