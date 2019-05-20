@@ -4,7 +4,7 @@ import busboy = require("busboy");
 import fastify = require("fastify");
 
 import { Server, IncomingMessage, ServerResponse } from 'http';
-import { Readable } from "stream";
+import { Readable } from 'stream';
 
 type MultipartHandler = (
     field: string,
@@ -14,6 +14,14 @@ type MultipartHandler = (
     mimetype: string,
 ) => void;
 
+export interface BodyEntry {
+    data: Buffer,
+    filename: string,
+    encoding: string,
+    mimetype: string,
+    limit: false
+}
+    
 declare module "fastify" {
     interface FastifyRequest<HttpRequest> {
         isMultipart: () => boolean;
@@ -35,7 +43,7 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
     /**
      * Manage the file stream like you need
      */
-    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string) => void;
+    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void;
 
     limits?: {
         /**
@@ -70,4 +78,4 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
     }
 }>;
 
-export = fastifyMultipart;
+export default fastifyMultipart;
