@@ -10,7 +10,7 @@ const pump = require('pump')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('append to body option', t => {
+test('addToBody option', t => {
   t.plan(8)
 
   const fastify = Fastify()
@@ -63,7 +63,7 @@ test('append to body option', t => {
   })
 })
 
-test('append to body option and multiple files', t => {
+test('addToBody option and multiple files', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -140,7 +140,7 @@ test('append to body option and multiple files', t => {
   })
 })
 
-test('append to body option and multiple files in one field', t => {
+test('addToBody option and multiple files in one field', t => {
   t.plan(4)
 
   const fastify = Fastify()
@@ -207,7 +207,7 @@ test('append to body option and multiple files in one field', t => {
   })
 })
 
-test('append to body option and custom stream management', t => {
+test('addToBody option and custom stream management', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -266,7 +266,7 @@ test('append to body option and custom stream management', t => {
   })
 })
 
-test('append to body option with promise', t => {
+test('addToBody option with promise', t => {
   t.plan(5)
 
   const fastify = Fastify()
@@ -322,7 +322,7 @@ test('append to body option with promise', t => {
   })
 })
 
-test('append to body option with promise in error', t => {
+test('addToBody option with promise in error', t => {
   t.plan(3)
 
   const fastify = Fastify()
@@ -368,7 +368,7 @@ test('append to body option with promise in error', t => {
   })
 })
 
-test('append to body with shared schema', t => {
+test('addToBody with shared schema', t => {
   t.plan(9)
 
   const fastify = Fastify()
@@ -440,7 +440,7 @@ test('append to body with shared schema', t => {
   })
 })
 
-test('append to body with shared schema error', t => {
+test('addToBody with shared schema error', t => {
   t.plan(3)
 
   const fastify = Fastify()
@@ -496,7 +496,7 @@ test('append to body with shared schema error', t => {
   })
 })
 
-test('append to body without files and shared schema', t => {
+test('addToBody without files and shared schema', t => {
   t.plan(5)
 
   const fastify = Fastify()
@@ -557,7 +557,7 @@ test('append to body without files and shared schema', t => {
   })
 })
 
-test('append to body option does not change behaviour on not-multipart request', t => {
+test('addToBody option does not change behaviour on not-multipart request', t => {
   t.plan(2)
 
   const fastify = Fastify()
