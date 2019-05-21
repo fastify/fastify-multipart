@@ -105,7 +105,7 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
-You can also use all the parsed HTTP request parametes to the body:
+You can also use all the parsed HTTP request parameters to the body:
 
 ```js
 const options = {
