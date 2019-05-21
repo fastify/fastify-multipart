@@ -118,7 +118,7 @@ const options = {
     // It is MANDATORY consume the stream, otherwise the response will not be processed!
     // The body parameter is the object that will be added to the request
     stream.resume()
-  }
+  },
   limit: { /*...*/ } // You can the limit options in any case
 }
 
