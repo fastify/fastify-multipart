@@ -21,13 +21,14 @@ function attachToBody (options, req, reply, next) {
   const consumerStream = options.onFile || defaultConsumer
   const body = { }
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
-    body[field] = {
+    body[field] = body[field] || []
+    body[field].push({
       data: [],
       filename,
       encoding,
       mimetype,
       limit: false
-    }
+    })
 
     const result = consumerStream(field, file, filename, encoding, mimetype, body)
     if (result && typeof result.then === 'function') {
@@ -51,10 +52,11 @@ function attachToBody (options, req, reply, next) {
 
 function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   const fileData = []
+  const lastFile = body[field][body[field].length - 1]
   file.on('data', data => { fileData.push(data) })
-  file.on('limit', () => { body[field].limit = true })
+  file.on('limit', () => { lastFile.limit = true })
   file.on('end', () => {
-    body[field].data = Buffer.concat(fileData)
+    lastFile.data = Buffer.concat(fileData)
   })
 }
 

@@ -10,7 +10,7 @@ const pump = require('pump')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('append to body option', t => {
+test('addToBody option', t => {
   t.plan(8)
 
   const fastify = Fastify()
@@ -21,14 +21,14 @@ test('append to body option', t => {
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, {
+    t.like(req.body.myFile, [{
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
-    t.type(req.body.myFile.data, Buffer)
-    t.equal(req.body.myFile.data.toString('utf8').substr(0, 19), '# fastify-multipart')
+    }])
+    t.type(req.body.myFile[0].data, Buffer)
+    t.equal(req.body.myFile[0].data.toString('utf8').substr(0, 19), '# fastify-multipart')
 
     reply.send('ok')
   })
@@ -63,7 +63,7 @@ test('append to body option', t => {
   })
 })
 
-test('append to body option and multiple files', t => {
+test('addToBody option and multiple files', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -80,29 +80,29 @@ test('append to body option and multiple files', t => {
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, {
+    t.like(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
-    t.like(req.body.myFileTwo, {
+    t.like(req.body.myFileTwo, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
-    t.like(req.body.myFileThree, {
+    t.like(req.body.myFileThree, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
     t.equal(fileCounter, 3, 'We must receive 3 file events')
     reply.send('ok')
@@ -140,7 +140,74 @@ test('append to body option and multiple files', t => {
   })
 })
 
-test('append to body option and custom stream management', t => {
+test('addToBody option and multiple files in one field', t => {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.like(req.body.myFile, [{
+      data: [],
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    }, {
+      data: [],
+      encoding: '7bit',
+      filename: 'LICENSE',
+      limit: false,
+      mimetype: 'application/octet-stream'
+    }, {
+      data: [],
+      encoding: '7bit',
+      filename: 'form.html',
+      limit: false,
+      mimetype: 'text/html'
+    }])
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs1 = fs.createReadStream(path.join(__dirname, '../README.md'))
+    var rs2 = fs.createReadStream(path.join(__dirname, '../LICENSE'))
+    var rs3 = fs.createReadStream(path.join(__dirname, '../form.html'))
+    form.append('myFile', rs1)
+    form.append('myFile', rs2)
+    form.append('myFile', rs3)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('addToBody option and custom stream management', t => {
   t.plan(7)
 
   const fastify = Fastify()
@@ -158,13 +225,13 @@ test('append to body option and custom stream management', t => {
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, {
+    t.like(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
     reply.send('ok')
   })
@@ -199,7 +266,7 @@ test('append to body option and custom stream management', t => {
   })
 })
 
-test('append to body option with promise', t => {
+test('addToBody option with promise', t => {
   t.plan(5)
 
   const fastify = Fastify()
@@ -216,13 +283,13 @@ test('append to body option with promise', t => {
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, {
+    t.like(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
     reply.send('ok')
   })
@@ -255,7 +322,7 @@ test('append to body option with promise', t => {
   })
 })
 
-test('append to body option with promise in error', t => {
+test('addToBody option with promise in error', t => {
   t.plan(3)
 
   const fastify = Fastify()
@@ -301,7 +368,7 @@ test('append to body option with promise in error', t => {
   })
 })
 
-test('append to body with shared schema', t => {
+test('addToBody with shared schema', t => {
   t.plan(9)
 
   const fastify = Fastify()
@@ -327,19 +394,19 @@ test('append to body with shared schema', t => {
         required: ['myField', 'myFile'],
         properties: {
           myField: { type: 'string' },
-          myFile: 'mySharedSchema#'
+          myFile: { type: 'array', items: 'mySharedSchema#' }
         }
       }
     }
   }, function (req, reply) {
     t.equal(req.body.myField, 'hello')
-    t.like(req.body.myFile, {
+    t.like(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
-    })
+    }])
 
     reply.send('ok')
   })
@@ -373,7 +440,7 @@ test('append to body with shared schema', t => {
   })
 })
 
-test('append to body with shared schema error', t => {
+test('addToBody with shared schema error', t => {
   t.plan(3)
 
   const fastify = Fastify()
@@ -392,7 +459,7 @@ test('append to body with shared schema error', t => {
         required: ['myField', 'myFile'],
         properties: {
           myField: { type: 'string' },
-          myFile: 'mySharedSchema#'
+          myFile: { type: 'array', items: 'mySharedSchema#' }
         }
       }
     }
@@ -429,7 +496,7 @@ test('append to body with shared schema error', t => {
   })
 })
 
-test('append to body without files and shared schema', t => {
+test('addToBody without files and shared schema', t => {
   t.plan(5)
 
   const fastify = Fastify()
@@ -490,7 +557,7 @@ test('append to body without files and shared schema', t => {
   })
 })
 
-test('append to body option does not change behaviour on not-multipart request', t => {
+test('addToBody option does not change behaviour on not-multipart request', t => {
   t.plan(2)
 
   const fastify = Fastify()
