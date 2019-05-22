@@ -147,7 +147,7 @@ The options `onFile` and `sharedSchemaId` will be used only when `addToBody: tru
 
 The `onFile` option define how the file streams are managed:
 + if you don't set it the `req.body.<fieldName>[index].data` will be a Buffer with the data loaded in memory
-+ if you set it with a function you **must** consume the stream and the an the `req.body.<fieldName>[index].data` will be an empty array
++ if you set it with a function you **must** consume the stream, and the `req.body.<fieldName>[index].data` will be an empty array
 
 **Note**: By default values in fields with files have array type, so if there's only one file uploaded, you can access it via `req.body.<fieldName>[0].data`
 
