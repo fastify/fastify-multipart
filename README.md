@@ -105,7 +105,7 @@ fastify.post('/', function (req, reply) {
 })
 ```
 
-You can also use all the parsed HTTP request parametes to the body:
+You can also use all the parsed HTTP request parameters to the body:
 
 ```js
 const options = {
@@ -118,7 +118,7 @@ const options = {
     // It is MANDATORY consume the stream, otherwise the response will not be processed!
     // The body parameter is the object that will be added to the request
     stream.resume()
-  }
+  },
   limit: { /*...*/ } // You can the limit options in any case
 }
 
