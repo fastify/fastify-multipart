@@ -14,7 +14,7 @@ type MultipartHandler = (
     mimetype: string,
 ) => void;
 
-export interface BodyEntry {
+interface BodyEntry {
     data: Buffer,
     filename: string,
     encoding: string,
@@ -78,4 +78,4 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
     }
 }>;
 
-export default fastifyMultipart;
+export = fastifyMultipart;
