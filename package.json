@@ -6,7 +6,7 @@
   "typings": "index.d.ts",
   "dependencies": {
     "busboy": "^0.3.0",
-    "deepmerge": "^3.0.0",
+    "deepmerge": "^4.0.0",
     "end-of-stream": "^1.4.1",
     "fastify-plugin": "^1.5.0"
   },
