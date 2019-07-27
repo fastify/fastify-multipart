@@ -5,6 +5,7 @@ const Busboy = require('busboy')
 const kMultipart = Symbol('multipart')
 const eos = require('end-of-stream')
 const deepmerge = require('deepmerge')
+const { PassThrough } = require('stream')
 
 function setMultipart (req, done) {
   // nothing to do, it will be done by the Request.multipart object
@@ -60,6 +61,18 @@ function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   })
 }
 
+function busboy (options) {
+  try {
+    return new Busboy(options)
+  } catch (error) {
+    const errorEmitter = new PassThrough()
+    process.nextTick(function () {
+      errorEmitter.emit('error', error)
+    })
+    return errorEmitter
+  }
+}
+
 function fastifyMultipart (fastify, options, done) {
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
@@ -110,7 +123,7 @@ function fastifyMultipart (fastify, options, done) {
     const req = this.req
 
     const busboyOptions = deepmerge.all([{ headers: req.headers }, options || {}, opts || {}])
-    const stream = new Busboy(busboyOptions)
+    const stream = busboy(busboyOptions)
     var completed = false
     var files = 0
     var count = 0
@@ -137,6 +150,9 @@ function fastifyMultipart (fastify, options, done) {
     stream.on('file', wrap)
 
     req.pipe(stream)
+      .on('error', function (error) {
+        req.emit('error', error)
+      })
 
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
