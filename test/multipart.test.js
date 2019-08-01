@@ -178,6 +178,51 @@ test('should error if it is not multipart', function (t) {
   })
 })
 
+test('should error if it is invalid multipart', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+
+  t.tearDown(fastify.close.bind(fastify))
+  fastify.register(multipart)
+
+  fastify.post('/', function (req, reply) {
+    t.ok(req.isMultipart())
+
+    req.multipart(handler, function (err) {
+      t.ok(err)
+      t.equal(err.message, 'Multipart: Boundary not found')
+      reply.code(500).send()
+    })
+
+    function handler (field, file, filename, encoding, mimetype) {
+      t.fail('this should never be called')
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      headers: {
+        'content-type': 'multipart/form-data'
+      },
+      path: '/',
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+    })
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 test('should override options', function (t) {
   t.plan(5)
 
