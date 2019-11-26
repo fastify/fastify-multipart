@@ -55,9 +55,15 @@ function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   const fileData = []
   const lastFile = body[field][body[field].length - 1]
   file.on('data', data => { fileData.push(data) })
-  file.on('limit', () => { lastFile.limit = true })
+  file.on('limit', () => {
+    lastFile.limit = true
+  })
   file.on('end', () => {
-    lastFile.data = Buffer.concat(fileData)
+    if (!lastFile.limit) {
+      lastFile.data = Buffer.concat(fileData)
+    } else {
+      delete lastFile.data
+    }
   })
 }
 
@@ -138,7 +144,7 @@ function fastifyMultipart (fastify, options, done) {
     })
 
     stream.on('finish', function () {
-      log.debug('finished multipart parsing')
+      log.debug('finished multipart parsing', files)
       if (!completed && count === files) {
         completed = true
         setImmediate(done)
