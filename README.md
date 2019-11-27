@@ -87,6 +87,8 @@ function handler (field, file, filename, encoding, mimetype) {
 }              
 ```
 
+Note, if the file size limit is exceeded the file will not be attached to the body. 
+
 Additionally, you can pass per-request options to the req.multipart function
 
 ```js

@@ -72,8 +72,8 @@ test('addToBody with limit exceeded', t => {
   fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
 
   fastify.post('/', function (req, reply) {
-    t.type(req.body.myFile[0].limit, true)
-    t.type(req.body.myFile[0].data, undefined)
+    t.equals(req.body.myFile[0].limit, true)
+    t.equals(req.body.myFile[0].data, undefined)
 
     reply.send('ok')
   })
