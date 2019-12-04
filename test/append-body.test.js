@@ -63,6 +63,49 @@ test('addToBody option', t => {
   })
 })
 
+test('addToBody with limit exceeded', t => {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
+
+  fastify.post('/', function (req, reply) {
+    t.equals(req.body.myFile[0].limit, true)
+    t.equals(req.body.myFile[0].data, undefined)
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    var rs = fs.createReadStream(filePath)
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 test('addToBody option and multiple files', t => {
   t.plan(7)
 
