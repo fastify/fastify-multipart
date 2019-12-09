@@ -23,16 +23,18 @@ const pump = require('pump')
 fastify.register(require('fastify-multipart'))
 
 fastify.post('/', function (req, reply) {
-  const mp = req.multipart(handler, function (err) {
-    console.log('upload completed')
-    reply.code(200).send()
-  })
-
+  const mp = req.multipart(handler, onEnd)
+  
   // mp is an instance of
   // https://www.npmjs.com/package/busboy
 
   mp.on('field', function (key, value) {
     console.log('form-data', key, value)
+  })
+
+  function onEnd(err) {
+    console.log('upload completed')
+    reply.code(200).send()
   })
 
   function handler (field, file, filename, encoding, mimetype) {
@@ -48,6 +50,9 @@ fastify.post('/', function (req, reply) {
 
     // be careful of permission issues on disk and not overwrite
     // sensitive files that could cause security risks
+    
+    // also, consider that if the file stream is not consumed, the 
+    // onEnd callback won't be called
   }
 })
 
@@ -58,6 +63,9 @@ fastify.listen(3000, err => {
 ```
 
 You can also pass optional arguments to busboy when registering with fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
+
+**Note**: if the file stream that is provided to the handler function is not consumed (like in the example above with the usage of pump) the onEnd callback won't be called at the end of the multipart processing.
+This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 ```js
 fastify.register(require('fastify-multipart'), {
