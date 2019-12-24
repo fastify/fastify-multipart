@@ -34,6 +34,10 @@ const runServer = async () => {
       console.log(field, file, filename, encoding, mimetype, isMultiPart)
     }, (err) => {
       throw err
+    }, {
+      limits: {
+        fileSize: 10000
+      }
     })
   })
 
