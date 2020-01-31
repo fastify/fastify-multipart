@@ -1,8 +1,8 @@
 # fastify-multipart
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/fastify/fastify-multipart.svg)](https://greenkeeper.io/)
-
-[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)  [![Build Status](https://travis-ci.org/fastify/fastify-multipart.svg?branch=master)](https://travis-ci.org/fastify/fastify-multipart)
+[![Greenkeeper badge](https://badges.greenkeeper.io/fastify/fastify-multipart.svg)](https://greenkeeper.io/) 
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)
+[![Build Status](https://travis-ci.org/fastify/fastify-multipart.svg?branch=master)](https://travis-ci.org/fastify/fastify-multipart)
 
 Fastify plugin to parse the multipart content-type.
 
@@ -10,8 +10,9 @@ Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 
 ## Install
 ```
-npm i fastify-multipart --save
+npm i fastify-multipart
 ```
+
 ## Usage
 
 ```js
@@ -23,6 +24,12 @@ const pump = require('pump')
 fastify.register(require('fastify-multipart'))
 
 fastify.post('/', function (req, reply) {
+  // you can use this request's decorator to check if the request is multipart
+  if (!req.isMultipart()) {
+    reply.code(400).send(new Error('Request is not multipart'))
+    return
+  }
+
   const mp = req.multipart(handler, onEnd)
   
   // mp is an instance of
@@ -35,7 +42,7 @@ fastify.post('/', function (req, reply) {
   function onEnd(err) {
     console.log('upload completed')
     reply.code(200).send()
-  })
+  }
 
   function handler (field, file, filename, encoding, mimetype) {
     // to accumulate the file in memory! Be careful!
