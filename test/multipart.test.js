@@ -7,10 +7,12 @@ const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const pump = require('pump')
 const concat = require('concat-stream')
-const Readable = require('stream').Readable
-const Writable = require('stream').Writable
+const stream = require('readable-stream')
+const Readable = stream.Readable
+const Writable = stream.Writable
+const pump = stream.pipeline
+const eos = stream.finished
 const crypto = require('crypto')
 
 const filePath = path.join(__dirname, '../README.md')
@@ -81,7 +83,7 @@ test('should parse forms', function (t) {
 })
 
 test('should call finished when both files are pumped', function (t) {
-  t.plan(8)
+  t.plan(10)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -100,9 +102,13 @@ test('should call finished when both files are pumped', function (t) {
 
     function handler (field, file, filename, encoding, mimetype) {
       const saveTo = path.join(os.tmpdir(), path.basename(filename))
-      pump(file, fs.createWriteStream(saveTo), function (err) {
+      eos(file, function (err) {
         t.error(err)
         fileCount++
+      })
+
+      pump(file, fs.createWriteStream(saveTo), function (err) {
+        t.error(err)
       })
     }
   })
@@ -281,6 +287,7 @@ if (!process.env.TRAVIS) {
 
     const fastify = Fastify()
     const hashInput = crypto.createHash('sha256')
+    let sent = false
 
     t.tearDown(fastify.close.bind(fastify))
 
@@ -303,6 +310,13 @@ if (!process.env.TRAVIS) {
         pump(file, hashOutput, new Writable({
           objectMode: true,
           write (chunk, enc, cb) {
+            if (!sent) {
+              eos(hashInput, () => {
+                this._write(chunk, enc, cb)
+              })
+              return
+            }
+
             t.equal(hashInput.digest('hex'), chunk.toString('hex'))
             cb()
           }
@@ -327,9 +341,7 @@ if (!process.env.TRAVIS) {
             n = total
           }
 
-          // poor man random data
-          // do not use in prod, it can leak sensitive informations
-          var buf = Buffer.allocUnsafe(n)
+          var buf = Buffer.alloc(n).fill('x')
           hashInput.update(buf)
           this.push(buf)
 
@@ -337,6 +349,8 @@ if (!process.env.TRAVIS) {
 
           if (total === 0) {
             t.pass('finished generating')
+            sent = true
+            hashInput.end()
             this.push(null)
           }
         }
@@ -364,3 +378,57 @@ if (!process.env.TRAVIS) {
     })
   })
 }
+
+test('should not allow __proto__', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { limits: { fields: 1 } })
+
+  fastify.post('/', function (req, reply) {
+    t.ok(req.isMultipart())
+
+    const mp = req.multipart(handler, function (err) {
+      t.is(err.message, '__proto__ is not allowed as field name')
+      reply.code(500).send()
+    })
+
+    mp.on('field', function (name, value) {
+      t.fail('should not be called')
+    })
+
+    function handler (field, file, filename, encoding, mimetype) {
+      t.fail('should not be called')
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    var rs = fs.createReadStream(filePath)
+    form.append('__proto__', rs)
+    // form.append('hello', 'world')
+    // form.append('willbe', 'dropped')
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})

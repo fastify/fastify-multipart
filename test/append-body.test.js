@@ -621,3 +621,49 @@ test('addToBody option does not change behaviour on not-multipart request', t =>
     })
   })
 })
+
+test('addToBody with __proto__ field', t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true,
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
+      t.fail('there are not stream')
+    }
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.fail('should not be called')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('myField', 'hello')
+    form.append('__proto__', 'world')
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
