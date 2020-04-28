@@ -1,9 +1,5 @@
-// Definitions by: Jannik Keye <https://github.com/jannikkeye>
-
-import busboy = require("busboy");
-import fastify = require("fastify");
-
-import { Server, IncomingMessage, ServerResponse } from 'http';
+import * as busboy from "busboy";
+import { FastifyPlugin } from "fastify";
 import { Readable } from 'stream';
 
 type MultipartHandler = (
@@ -23,13 +19,13 @@ interface BodyEntry {
 }
 
 declare module "fastify" {
-    interface FastifyRequest<HttpRequest> {
+    interface FastifyRequestInterface {
         isMultipart: () => boolean;
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
     }
 }
 
-declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerResponse, {
+export interface FastifyMultipartOptions {
     /**
      * Append the multipart parameters to the body object
      */
@@ -76,6 +72,7 @@ declare const fastifyMultipart: fastify.Plugin<Server, IncomingMessage, ServerRe
          */
         headerPairs?: number;
     }
-}>;
+}
 
-export = fastifyMultipart;
+declare const fastifyMultipart: FastifyPlugin<FastifyMultipartOptions>;
+export default fastifyMultipart;

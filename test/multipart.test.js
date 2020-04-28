@@ -1,5 +1,6 @@
 'use strict'
 const os = require('os')
+// const t = require('tap');
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -16,6 +17,8 @@ const eos = stream.finished
 const crypto = require('crypto')
 
 const filePath = path.join(__dirname, '../README.md')
+
+// const test = () => { };
 
 test('should parse forms', function (t) {
   t.plan(14)
@@ -278,7 +281,7 @@ test('should override options', function (t) {
   })
 })
 
-function noop () {}
+function noop () { }
 
 // skipping on Travis because it takes too long
 if (!process.env.TRAVIS) {

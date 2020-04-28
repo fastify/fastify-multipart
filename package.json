@@ -3,12 +3,12 @@
   "version": "1.0.5",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
-  "typings": "index.d.ts",
+  "types": "index.d.ts",
   "dependencies": {
     "busboy": "^0.3.0",
     "deepmerge": "^4.0.0",
     "end-of-stream": "^1.4.1",
-    "fastify-plugin": "^1.5.0"
+    "fastify-plugin": "^2.0.0"
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",
@@ -23,7 +23,7 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^2.0.0",
+    "fastify": "^3.0.0-alpha.1",
     "form-data": "^3.0.0",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
@@ -31,14 +31,13 @@
     "snazzy": "^8.0.0",
     "standard": "^14.0.2",
     "tap": "^12.7.0",
+    "tsd": "^0.11.0",
     "typescript": "^3.4.5"
   },
   "scripts": {
-    "lint": "npm run lint:standard && npm run lint:typescript",
-    "lint:standard": "standard | snazzy",
-    "lint:typescript": "standard --parser @typescript-eslint/parser --plugin typescript test/types/*.ts",
+    "lint": "standard | snazzy",
     "unit": "tap test/*.test.js",
-    "typescript": "tsc --project ./test/types/tsconfig.json",
+    "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
     "start": "CLIMEM=8999 node -r climem example",
     "climem": "climem 8999 localhost"
@@ -54,9 +53,7 @@
   ],
   "author": "Matteo Collina <hello@matteocollina.com>",
   "license": "MIT",
-  "greenkeeper": {
-    "ignore": [
-      "tap"
-    ]
+  "tsd": {
+    "directory": "test"
   }
 }

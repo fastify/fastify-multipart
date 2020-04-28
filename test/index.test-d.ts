@@ -1,11 +1,5 @@
-import * as fastify from 'fastify'
-import fastifyMultipart = require('../..')
-
-/** TODO This import must be decommented when this
- *  https://github.com/standard/standard/pull/1101
- *  PR will be merged and released
- */
-// import { Readable } from 'stream'
+import fastify from 'fastify'
+import fastifyMultipart from '..'
 
 const runServer = async () => {
   const app = fastify()
