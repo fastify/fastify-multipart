@@ -51,7 +51,13 @@ function attachToBody (options, req, reply, next) {
       mp.destroy(new Error('__proto__ is not allowed as field name'))
       return
     }
-    body[key] = value
+    if (body[key] === undefined) {
+      body[key] = value
+    } else if (Array.isArray(body[key])) {
+      body[key].push(value)
+    } else {
+      body[key] = [body[key], value]
+    }
   })
 }
 
