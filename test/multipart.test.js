@@ -380,7 +380,7 @@ if (!process.env.TRAVIS) {
 }
 
 test('should not allow __proto__', function (t) {
-  t.plan(3)
+  t.plan(5)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
