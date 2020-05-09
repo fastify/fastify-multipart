@@ -250,6 +250,52 @@ test('addToBody option and multiple files in one field', t => {
   })
 })
 
+test('addToBody option and multiple strings in one field', t => {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.like(req.body.myField, ['1', '2', '3'])
+
+    reply.send('ok')
+  })
+
+  fastify.listen(0, function () {
+    // request
+    var form = new FormData()
+    var opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    var req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('myField', '1')
+    form.append('myField', '2')
+    form.append('myField', '3')
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 test('addToBody option and custom stream management', t => {
   t.plan(7)
 

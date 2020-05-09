@@ -166,7 +166,7 @@ The `onFile` option define how the file streams are managed:
 + if you don't set it the `req.body.<fieldName>[index].data` will be a Buffer with the data loaded in memory
 + if you set it with a function you **must** consume the stream, and the `req.body.<fieldName>[index].data` will be an empty array
 
-**Note**: By default values in fields with files have array type, so if there's only one file uploaded, you can access it via `req.body.<fieldName>[0].data`
+**Note**: By default values in fields with files have array type, so if there's only one file uploaded, you can access it via `req.body.<fieldName>[0].data`. Regular fields become an array only when multiple values are provided.
 
 The `sharedSchemaId` parameter must provide a string ID and a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
 
