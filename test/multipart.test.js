@@ -42,7 +42,7 @@ test('should parse forms', function (t) {
       t.equal(value, 'world')
     })
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       t.equal(filename, 'README.md')
       t.equal(field, 'upload')
       t.equal(encoding, '7bit')
@@ -102,7 +102,7 @@ test('should call finished when both files are pumped', function (t) {
       reply.code(200).send()
     })
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       const saveTo = path.join(os.tmpdir(), path.basename(filename))
       eos(file, function (err) {
         t.error(err)
@@ -161,7 +161,7 @@ test('should error if it is not multipart', function (t) {
       reply.code(500).send()
     })
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       t.fail('this should never be called')
     }
   })
@@ -203,7 +203,7 @@ test('should error if it is invalid multipart', function (t) {
       reply.code(500).send()
     })
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       t.fail('this should never be called')
     }
   })
@@ -247,7 +247,7 @@ test('should override options', function (t) {
 
     t.equal(mp.opts.limits.fileSize, 2, 'options.limits.fileSize was updated successfully')
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       file.pipe(concat(function (buf) { }))
     }
   })
@@ -280,7 +280,7 @@ test('should override options', function (t) {
   })
 })
 
-function noop() { }
+function noop () { }
 
 // skipping on Github Actions because it takes too long
 if (!process.env.CI) {
@@ -302,7 +302,7 @@ if (!process.env.CI) {
         t.error(err)
       })
 
-      function handler(field, file, filename, encoding, mimetype) {
+      function handler (field, file, filename, encoding, mimetype) {
         t.equal(filename, 'random-data')
         t.equal(field, 'upload')
         t.equal(encoding, '7bit')
@@ -311,7 +311,7 @@ if (!process.env.CI) {
 
         pump(file, hashOutput, new Writable({
           objectMode: true,
-          write(chunk, enc, cb) {
+          write (chunk, enc, cb) {
             if (!sent) {
               eos(hashInput, () => {
                 this._write(chunk, enc, cb)
@@ -338,7 +338,7 @@ if (!process.env.CI) {
       var total = knownLength
       var form = new FormData({ maxDataSize: total })
       var rs = new Readable({
-        read(n) {
+        read (n) {
           if (n > total) {
             n = total
           }
@@ -401,7 +401,7 @@ test('should not allow __proto__', function (t) {
       t.fail('should not be called')
     })
 
-    function handler(field, file, filename, encoding, mimetype) {
+    function handler (field, file, filename, encoding, mimetype) {
       t.fail('should not be called')
     }
   })
