@@ -1,6 +1,5 @@
 'use strict'
 const os = require('os')
-// const t = require('tap');
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
