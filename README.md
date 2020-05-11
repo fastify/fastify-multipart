@@ -1,8 +1,8 @@
 # fastify-multipart
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/fastify/fastify-multipart.svg)](https://greenkeeper.io/) 
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](http://standardjs.com/)
-[![Build Status](https://travis-ci.org/fastify/fastify-multipart.svg?branch=master)](https://travis-ci.org/fastify/fastify-multipart)
+![Continuous
+Integration](https://github.com/fastify/fastify-multipart/workflows/Continuous%20Integration/badge.svg)
 
 Fastify plugin to parse the multipart content-type.
 
