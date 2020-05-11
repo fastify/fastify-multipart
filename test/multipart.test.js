@@ -17,6 +17,8 @@ const crypto = require('crypto')
 
 const filePath = path.join(__dirname, '../README.md')
 
+// const test = () => { };
+
 test('should parse forms', function (t) {
   t.plan(14)
 
@@ -278,10 +280,10 @@ test('should override options', function (t) {
   })
 })
 
-function noop () {}
+function noop () { }
 
-// skipping on Travis because it takes too long
-if (!process.env.TRAVIS) {
+// skipping on Github Actions because it takes too long
+if (!process.env.CI) {
   test('should upload a big file in constant memory', function (t) {
     t.plan(12)
 

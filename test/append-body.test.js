@@ -457,13 +457,13 @@ test('addToBody option with promise in error', t => {
   })
 })
 
-test('addToBody with shared schema', t => {
+test('addToBody with shared schema', (t) => {
   t.plan(9)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  const opts = {
+  fastify.register(multipart, {
     addToBody: true,
     sharedSchemaId: 'mySharedSchema',
     onFile: (fieldName, stream, filename, encoding, mimetype) => {
@@ -473,31 +473,31 @@ test('addToBody with shared schema', t => {
       t.equal(mimetype, 'text/markdown')
       stream.resume()
     }
-  }
-  fastify.register(multipart, opts)
+  })
 
-  fastify.post('/', {
-    schema: {
-      body: {
-        type: 'object',
-        required: ['myField', 'myFile'],
-        properties: {
-          myField: { type: 'string' },
-          myFile: { type: 'array', items: 'mySharedSchema#' }
+  fastify.after(() => {
+    fastify.post('/', {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['myField', 'myFile'],
+          properties: {
+            myField: { type: 'string' },
+            myFile: { type: 'array', items: fastify.getSchema('mySharedSchema') }
+          }
         }
       }
-    }
-  }, function (req, reply) {
-    t.equal(req.body.myField, 'hello')
-    t.like(req.body.myFile, [{
-      data: [],
-      encoding: '7bit',
-      filename: 'README.md',
-      limit: false,
-      mimetype: 'text/markdown'
-    }])
-
-    reply.send('ok')
+    }, function (req, reply) {
+      t.equal(req.body.myField, 'hello')
+      t.like(req.body.myFile, [{
+        data: [],
+        encoding: '7bit',
+        filename: 'README.md',
+        limit: false,
+        mimetype: 'text/markdown'
+      }])
+      reply.send('ok')
+    })
   })
 
   fastify.listen(0, function () {
@@ -517,6 +517,8 @@ test('addToBody with shared schema', t => {
       res.resume()
       res.on('end', () => {
         t.pass('res ended successfully')
+        fastify.close()
+        t.end()
       })
     })
 
@@ -529,17 +531,21 @@ test('addToBody with shared schema', t => {
   })
 })
 
-test('addToBody with shared schema error', t => {
-  t.plan(3)
-
+test('addToBody with shared schema (async/await)', async (t) => {
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  const opts = {
+  await fastify.register(multipart, {
     addToBody: true,
-    sharedSchemaId: 'mySharedSchema'
-  }
-  fastify.register(multipart, opts)
+    sharedSchemaId: 'mySharedSchema',
+    onFile: (fieldName, stream, filename, encoding, mimetype) => {
+      t.equal(fieldName, 'myFile')
+      t.equal(filename, 'README.md')
+      t.equal(encoding, '7bit')
+      t.equal(mimetype, 'text/markdown')
+      stream.resume()
+    }
+  })
 
   fastify.post('/', {
     schema: {
@@ -548,39 +554,106 @@ test('addToBody with shared schema error', t => {
         required: ['myField', 'myFile'],
         properties: {
           myField: { type: 'string' },
-          myFile: { type: 'array', items: 'mySharedSchema#' }
+          myFile: { type: 'array', items: fastify.getSchema('mySharedSchema') }
         }
       }
     }
   }, function (req, reply) {
+    t.equal(req.body.myField, 'hello')
+    t.like(req.body.myFile, [{
+      data: [],
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: false,
+      mimetype: 'text/markdown'
+    }])
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
-    // request
-    var form = new FormData()
-    var opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
 
+  // request
+  var form = new FormData()
+  var opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  return new Promise((resolve, reject) => {
     var req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 400)
+      t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
         t.pass('res ended successfully')
+        fastify.close()
+        resolve()
       })
     })
 
     var rs = fs.createReadStream(filePath)
-    // missing the myField parameter
+    form.append('myField', 'hello')
     form.append('myFile', rs)
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('addToBody with shared schema error', (t) => {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, {
+    addToBody: true,
+    sharedSchemaId: 'mySharedSchema'
+  }).then(() => {
+    fastify.post('/', {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['myField', 'myFile'],
+          properties: {
+            myField: { type: 'string' },
+            myFile: { type: 'array', items: fastify.getSchema('mySharedSchema') }
+          }
+        }
+      }
+    }, function (req, reply) {
+      reply.send('ok')
+    })
+
+    fastify.listen(0, function () {
+      // request
+      var form = new FormData()
+      var opts = {
+        protocol: 'http:',
+        hostname: 'localhost',
+        port: fastify.server.address().port,
+        path: '/',
+        headers: form.getHeaders(),
+        method: 'POST'
+      }
+
+      var req = http.request(opts, (res) => {
+        t.equal(res.statusCode, 400)
+        res.resume()
+        res.on('end', () => {
+          t.pass('res ended successfully')
+        })
+      })
+
+      var rs = fs.createReadStream(filePath)
+      // missing the myField parameter
+      form.append('myFile', rs)
+      pump(form, req, function (err) {
+        t.error(err, 'client pump: no err')
+      })
     })
   })
 })
@@ -654,7 +727,7 @@ test('addToBody option does not change behaviour on not-multipart request', t =>
 
   fastify.register(multipart, { addToBody: true })
   fastify.get('/', async (req, rep) => { rep.send('hello') })
-  fastify.post('/', function (req, reply) {})
+  fastify.post('/', function (req, reply) { })
 
   fastify.listen(0, function () {
     fastify.inject({

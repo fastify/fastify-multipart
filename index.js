@@ -20,7 +20,7 @@ function attachToBody (options, req, reply, next) {
   }
 
   const consumerStream = options.onFile || defaultConsumer
-  const body = { }
+  const body = {}
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
     body[field] = body[field] || []
     body[field].push({
@@ -134,7 +134,7 @@ function fastifyMultipart (fastify, options, done) {
 
     log.debug('starting multipart parsing')
 
-    const req = this.req
+    const req = this.raw
 
     const busboyOptions = deepmerge.all([{ headers: req.headers }, options || {}, opts || {}])
     const stream = busboy(busboyOptions)
@@ -201,7 +201,7 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   function isMultipart () {
-    return this.req[kMultipart] || false
+    return this.raw[kMultipart] || false
   }
 }
 
