@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",
-    "@types/node": "^13.13.4",
+    "@types/node": "^14.0.1",
     "@typescript-eslint/parser": "^2.30.0",
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
