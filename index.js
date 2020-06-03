@@ -7,9 +7,9 @@ const eos = require('end-of-stream')
 const deepmerge = require('deepmerge')
 const { PassThrough } = require('stream')
 
-function setMultipart (req, done) {
+function setMultipart (req, payload, done) {
   // nothing to do, it will be done by the Request.multipart object
-  req[kMultipart] = true
+  req.raw[kMultipart] = true
   done()
 }
 
