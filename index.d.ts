@@ -19,7 +19,7 @@ interface BodyEntry {
 }
 
 declare module "fastify" {
-    interface FastifyRequestInterface {
+    interface FastifyRequest {
         isMultipart: () => boolean;
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
     }
