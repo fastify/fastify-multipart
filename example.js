@@ -12,26 +12,41 @@ fastify.get('/', function (req, reply) {
   reply.type('text/html').send(fs.createReadStream(form))
 })
 
-fastify.post('/upload', function (req, reply) {
-  const mp = req.multipart(handler, function (err) {
-    if (err) {
-      reply.send(err)
-      return
-    }
-    console.log('upload completed', process.memoryUsage().rss)
-    reply.code(200).send()
-  })
-
-  mp.on('field', function (key, value) {
-    console.log('form-data', key, value)
-  })
-
-  function handler (field, file, filename, encoding, mimetype) {
-    pump(file, fs.createWriteStream('a-destination'))
-  }
+fastify.post('/upload/stream/single', async function (req, reply) {
+  const data = await req.file()
+  pump(data.file, fs.createWriteStream(data.filename))
+  reply.send()
 })
 
-fastify.listen(3000, err => {
+fastify.post('/upload/stream/files', async function (req, reply) {
+  const parts = await req.files()
+  for await (const part of parts) {
+    pump(part.file, fs.createWriteStream(part.filename))
+  }
+  reply.send()
+})
+
+fastify.post('/upload/raw/any', async function (req, reply) {
+  const parts = await req.multipart()
+  for await (const part of parts) {
+    if (part.file) {
+      pump(part.file, fs.createWriteStream(part.filename))
+    } else {
+      console.log(part)
+    }
+  }
+  reply.send()
+})
+
+fastify.post('/upload/files', async function (req, reply) {
+  // stores files to tmp dir and return paths
+  const files = await req.saveRequestFiles()
+  console.log(files.map(f => f.filepath))
+  // tmp files cleaned up automatically
+  reply.send()
+})
+
+fastify.listen(3000, (err) => {
   if (err) throw err
   console.log(`server listening on ${fastify.server.address().port}`)
 })
