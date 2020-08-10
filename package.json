@@ -6,9 +6,8 @@
   "types": "index.d.ts",
   "dependencies": {
     "busboy": "^0.3.1",
-    "chan": "^0.6.1",
     "deepmerge": "^4.2.2",
-    "fastify-plugin": "^2.0.0",
+    "fastify-plugin": "^2.3.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
