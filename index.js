@@ -1,5 +1,4 @@
 const Busboy = require('busboy')
-const chan = require('chan')
 const os = require('os')
 const fp = require('fastify-plugin')
 const fs = require('fs')
@@ -63,13 +62,26 @@ function fastifyMultipart (fastify, options = {}, done) {
       throw new Error('the request is not multipart')
     }
 
-    const ch = chan()
-    const parts = function (fn) {
-      if (fn) return ch(fn)
-      return new Promise(function (resolve, reject) {
-        ch(function (err, res) {
-          if (err) return reject(err)
-          resolve(res)
+    const workers = []
+    const buffer = []
+
+    // It's a FIFO. Worker is removed after completion.
+    const ch = (val) => {
+      if (typeof val === 'function') {
+        workers.push(val)
+      } else {
+        buffer.push(val)
+      }
+      if (workers.length > 0 && buffer.length > 0) {
+        const val = buffer.shift()
+        workers.shift()(val)
+      }
+    }
+    const parts = () => {
+      return new Promise((resolve, reject) => {
+        ch((val) => {
+          if (val instanceof Error) return reject(val)
+          resolve(val)
         })
       })
     }
