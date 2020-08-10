@@ -1,14 +1,14 @@
 const Busboy = require('busboy')
 const os = require('os')
 const fp = require('fastify-plugin')
-const fs = require('fs')
+const { createWriteStream } = require('fs')
+const { unlink } = require('fs').promises
 const path = require('path')
 const uuid = require('uuid')
 const util = require('util')
 const deepmerge = require('deepmerge')
 const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
-const unlink = util.promisify(fs.unlink)
 
 const kMultipart = Symbol('multipart')
 const kMultipartFilePaths = Symbol('multipart.filePaths')
@@ -212,7 +212,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     const files = await this.files()
     for await (const file of files) {
       const filepath = path.join(os.tmpdir(), uuid.v4() + path.extname(file.filename))
-      const target = fs.createWriteStream(filepath)
+      const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)
         this[kMultipartFilePaths].push(filepath)
