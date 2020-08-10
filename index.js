@@ -11,6 +11,8 @@ const pump = util.promisify(pipeline)
 const unlink = util.promisify(fs.unlink)
 
 const kMultipart = Symbol('multipart')
+const kMultipartFilePaths = Symbol('multipart.filePaths')
+const kMultipartHasParsed = Symbol('multipart.hasParsed')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
 function setMultipart (req, payload, done) {
@@ -36,7 +38,8 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('handleMultipart', handleMultipart)
   fastify.decorateRequest('multipart', getMultipartIterator)
   fastify.decorateRequest('isMultipart', isMultipart)
-  fastify.decorateRequest('savedRequestFilePaths', [])
+  fastify.decorateRequest(kMultipartFilePaths, [])
+  fastify.decorateRequest(kMultipartHasParsed, false)
 
   // Stream mode
   fastify.decorateRequest('file', getMultipartFile)
@@ -61,6 +64,12 @@ function fastifyMultipart (fastify, options = {}, done) {
     if (!this.isMultipart()) {
       throw new Error('the request is not multipart')
     }
+
+    if (this[kMultipartHasParsed]) {
+      throw new Error('multipart can not be called twice on the same request')
+    }
+
+    this[kMultipartHasParsed] = true
 
     let worker
     let lastValue
@@ -206,7 +215,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       const target = fs.createWriteStream(filepath)
       try {
         await pump(file.file, target)
-        this.savedRequestFilePaths.push(filepath)
+        this[kMultipartFilePaths].push(filepath)
         requestFiles.push({ ...file, filepath })
       } catch (error) {
         this.log.error(error)
@@ -218,7 +227,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function cleanRequestFiles () {
-    for (const filepath of this.savedRequestFilePaths) {
+    for (const filepath of this[kMultipartFilePaths]) {
       try {
         await unlink(filepath)
       } catch (error) {
@@ -227,7 +236,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
   }
 
-  async function getMultipartFile (options) {
+  function getMultipartFile (options) {
     const parts = this.handleMultipart(options)
     return parts()
   }

@@ -2,8 +2,10 @@
 
 const fastify = require('fastify')()
 const fs = require('fs')
+const util = require('util')
 const path = require('path')
-const pump = require('pump')
+const { pipeline } = require('stream')
+const pump = util.promisify(pipeline)
 const form = path.join(__dirname, 'form.html')
 
 fastify.register(require('.'))
@@ -14,14 +16,14 @@ fastify.get('/', function (req, reply) {
 
 fastify.post('/upload/stream/single', async function (req, reply) {
   const data = await req.file()
-  pump(data.file, fs.createWriteStream(data.filename))
+  await pump(data.file, fs.createWriteStream(data.filename))
   reply.send()
 })
 
 fastify.post('/upload/stream/files', async function (req, reply) {
   const parts = await req.files()
   for await (const part of parts) {
-    pump(part.file, fs.createWriteStream(part.filename))
+    await pump(part.file, fs.createWriteStream(part.filename))
   }
   reply.send()
 })
@@ -30,7 +32,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = await req.multipart()
   for await (const part of parts) {
     if (part.file) {
-      pump(part.file, fs.createWriteStream(part.filename))
+      await pump(part.file, fs.createWriteStream(part.filename))
     } else {
       console.log(part)
     }
