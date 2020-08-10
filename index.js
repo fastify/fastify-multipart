@@ -62,19 +62,21 @@ function fastifyMultipart (fastify, options = {}, done) {
       throw new Error('the request is not multipart')
     }
 
-    const workers = []
-    const buffer = []
+    let worker
+    let lastValue
 
-    // It's a FIFO. Worker is removed after completion.
+    // only one file / field can be processed at a time
+    // "null" will close the consumer side
     const ch = (val) => {
       if (typeof val === 'function') {
-        workers.push(val)
+        worker = val
       } else {
-        buffer.push(val)
+        lastValue = val
       }
-      if (workers.length > 0 && buffer.length > 0) {
-        const val = buffer.shift()
-        workers.shift()(val)
+      if (worker && lastValue !== undefined) {
+        worker(lastValue)
+        worker = undefined
+        lastValue = undefined
       }
     }
     const parts = () => {
@@ -87,7 +89,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
 
     const body = {}
-    let lastError
+    let lastError = null
     const request = this.raw
     const busboyOptions = deepmerge.all([
       { headers: request.headers },
