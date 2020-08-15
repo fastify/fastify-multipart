@@ -8,6 +8,7 @@
     "busboy": "^0.3.1",
     "deepmerge": "^4.2.2",
     "fastify-plugin": "^2.3.0",
+    "stream-wormhole": "^1.1.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
@@ -30,7 +31,6 @@
     "readable-stream": "^3.6.0",
     "snazzy": "^8.0.0",
     "standard": "^14.0.2",
-    "stream-wormhole": "^1.1.0",
     "tap": "^14.10.7",
     "tsd": "^0.13.1",
     "typescript": "^3.4.5"
@@ -38,6 +38,7 @@
   "scripts": {
     "lint": "standard | snazzy",
     "unit": "tap test/*.test.js",
+    "prof": "ndb --prof node test/multipart-stream.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
     "start": "CLIMEM=8999 node -r climem example",

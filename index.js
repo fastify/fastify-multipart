@@ -6,6 +6,7 @@ const { unlink } = require('fs').promises
 const path = require('path')
 const uuid = require('uuid')
 const util = require('util')
+const sendToWormhole = require('stream-wormhole')
 const deepmerge = require('deepmerge')
 const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
@@ -145,7 +146,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
-        bb.destroy(new Error('prototype property is not allowed as field name'))
+        onError(new Error('prototype property is not allowed as field name'))
         return
       }
 
@@ -171,7 +172,9 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onFile (name, file, filename, encoding, mimetype) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
-        bb.destroy(new Error('prototype property is not allowed as field name'))
+        // ignore all data
+        sendToWormhole(file)
+        onError(new Error('prototype property is not allowed as field name'))
         return
       }
 
@@ -286,7 +289,13 @@ function fastifyMultipart (fastify, options = {}, done) {
       if (part.file) {
         const file = part.file
 
-        this[kMultipartHandleFileStreamLimit](file)
+        try {
+          this[kMultipartHandleFileStreamLimit](file)
+        } catch (error) {
+          // make sure request stream's data has been read
+          await sendToWormhole(file)
+          throw error
+        }
 
         yield part
       }
