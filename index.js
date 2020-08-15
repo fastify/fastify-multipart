@@ -142,7 +142,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
       // don't overwrite prototypes
-      if (getDescriptor(Object.prototype, name)) return this.emit('error', new Error('attempt to overwrite the prototype'))
+      if (getDescriptor(Object.prototype, name)) return bb.destroy(new Error('prototype property is not allowed as field name'))
 
       const value = {
         fieldname: name,

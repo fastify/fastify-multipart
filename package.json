@@ -30,6 +30,7 @@
     "readable-stream": "^3.6.0",
     "snazzy": "^8.0.0",
     "standard": "^14.0.2",
+    "stream-wormhole": "^1.1.0",
     "tap": "^14.10.7",
     "tsd": "^0.13.1",
     "typescript": "^3.4.5"
