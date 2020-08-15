@@ -37,7 +37,7 @@
   },
   "scripts": {
     "lint": "standard | snazzy",
-    "unit": "tap test/*.test.js",
+    "unit": "tap --jobs=8 test/*.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
     "start": "CLIMEM=8999 node -r climem example",

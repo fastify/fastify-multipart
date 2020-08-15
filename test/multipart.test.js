@@ -49,7 +49,7 @@ test('should parse forms', function (t) {
 
   fastify.listen(0, async function () {
     // request
-    var form = new FormData()
+    const form = new FormData()
     var opts = {
       protocol: 'http:',
       hostname: 'localhost',
@@ -59,7 +59,7 @@ test('should parse forms', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       // consume all data without processing
       res.resume()
@@ -67,10 +67,11 @@ test('should parse forms', function (t) {
         t.pass('res ended successfully')
       })
     })
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('upload', rs)
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
+
     await pump(form, req)
   })
 })
@@ -94,8 +95,8 @@ test('should respond when all files are processed', function (t) {
 
   fastify.listen(0, async function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -104,7 +105,7 @@ test('should respond when all files are processed', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -115,6 +116,7 @@ test('should respond when all files are processed', function (t) {
     form.append('upload2', fs.createReadStream(filePath))
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
+
     await pump(form, req)
   })
 })
@@ -153,7 +155,7 @@ test('should error if it is not multipart', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
     })
     req.end(JSON.stringify({ hello: 'world' }))
@@ -185,8 +187,8 @@ test('should error if boundary is empty', function (t) {
 
   fastify.listen(0, async function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -197,9 +199,10 @@ test('should error if boundary is empty', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
     })
+
     await pump(form, req)
   })
 })
@@ -229,8 +232,8 @@ test('should throw fileSize limitation error on small payload', function (t) {
 
   fastify.listen(0, async function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -239,7 +242,7 @@ test('should throw fileSize limitation error on small payload', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
@@ -247,6 +250,7 @@ test('should throw fileSize limitation error on small payload', function (t) {
       })
     })
     form.append('upload', fs.createReadStream(filePath))
+
     await pump(form, req)
   })
 })
@@ -276,10 +280,10 @@ test('should emit fileSize limitation error during streaming', function (t) {
 
   fastify.listen(0, async function () {
     // request
-    var knownLength = 1024 * 1024 // 1MB
-    var total = knownLength
-    var form = new FormData({ maxDataSize: total })
-    var rs = new Readable({
+    const knownLength = 1024 * 1024 // 1MB
+    let total = knownLength
+    const form = new FormData({ maxDataSize: total })
+    const rs = new Readable({
       read (n) {
         if (n > total) {
           n = total
@@ -304,7 +308,7 @@ test('should emit fileSize limitation error during streaming', function (t) {
       knownLength
     })
 
-    var opts = {
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -313,7 +317,7 @@ test('should emit fileSize limitation error during streaming', function (t) {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
@@ -321,102 +325,6 @@ test('should emit fileSize limitation error during streaming', function (t) {
       })
     })
 
-    await pump(form, req)
-  })
-})
-
-test('should not allow __proto__ as file name', function (t) {
-  t.plan(4)
-
-  const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
-
-  fastify.register(multipart)
-
-  fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
-
-    try {
-      // eslint-disable-next-line
-      for await (const _ of req.files()) {
-        t.fail('should not be called')
-      }
-      reply.code(200).send()
-    } catch (error) {
-      t.equal(error.message, 'prototype property is not allowed as field name')
-      reply.code(500).send()
-    }
-  })
-
-  fastify.listen(0, async function () {
-    // request
-    var form = new FormData()
-    var opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
-
-    var req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    var rs = fs.createReadStream(filePath)
-    form.append('__proto__', rs)
-
-    await pump(form, req)
-  })
-})
-
-test('should not allow __proto__ as field name', function (t) {
-  t.plan(4)
-
-  const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
-
-  fastify.register(multipart)
-
-  fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
-
-    try {
-      // eslint-disable-next-line
-      for await (const _ of req.multipart()) {
-        t.fail('should not be called')
-      }
-      reply.code(200).send()
-    } catch (error) {
-      t.equal(error.message, 'prototype property is not allowed as field name')
-      reply.code(500).send()
-    }
-  })
-
-  fastify.listen(0, async function () {
-    // request
-    var form = new FormData()
-    var opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
-
-    var req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('__proto__', 'world')
     await pump(form, req)
   })
 })
