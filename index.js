@@ -13,6 +13,7 @@ const pump = util.promisify(pipeline)
 const kMultipart = Symbol('multipart')
 const kMultipartFilePaths = Symbol('multipart.filePaths')
 const kMultipartHasParsed = Symbol('multipart.hasParsed')
+const kMultipartHandleFileStreamLimit = Symbol('multipart.handleFileStreamLimit')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
 function setMultipart (req, payload, done) {
@@ -40,6 +41,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest(kMultipartFilePaths, [])
   fastify.decorateRequest(kMultipartHasParsed, false)
+  fastify.decorateRequest(kMultipartHandleFileStreamLimit, handleFileStreamLimit)
 
   // Stream mode
   fastify.decorateRequest('file', getMultipartFile)
@@ -142,7 +144,10 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
       // don't overwrite prototypes
-      if (getDescriptor(Object.prototype, name)) return bb.destroy(new Error('prototype property is not allowed as field name'))
+      if (getDescriptor(Object.prototype, name)) {
+        bb.destroy(new Error('prototype property is not allowed as field name'))
+        return
+      }
 
       const value = {
         fieldname: name,
@@ -164,6 +169,12 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
 
     function onFile (name, file, filename, encoding, mimetype) {
+      // don't overwrite prototypes
+      if (getDescriptor(Object.prototype, name)) {
+        bb.destroy(new Error('prototype property is not allowed as field name'))
+        return
+      }
+
       const value = {
         fieldname: name,
         filename,
@@ -187,11 +198,11 @@ function fastifyMultipart (fastify, options = {}, done) {
       lastError = err
     }
 
-    function onEnd () {
+    function onEnd (error) {
       cleanup()
       bb.removeListener('finish', onEnd)
       bb.removeListener('error', onEnd)
-      ch(lastError)
+      ch(error || lastError)
     }
 
     function cleanup () {
@@ -204,6 +215,32 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
 
     return parts
+  }
+
+  function handleFileStreamLimit (stream) {
+    if (stream.truncated) {
+      const err = new Error('Request file too large, please check multipart config')
+      err.name = 'MultipartFileTooLargeError'
+      err.status = 413
+      throw err
+    }
+
+    stream.once('limit', () => {
+      const err = new Error('Request file too large, please check multipart config')
+      err.name = 'MultipartFileTooLargeError'
+      err.status = 413
+
+      if (stream.listenerCount('error') > 0) {
+        stream.emit('error', err)
+        this.log.warn(err)
+      } else {
+        this.log.error(err)
+        // ignore next error event
+        stream.on('error', () => { })
+      }
+      // ignore all data
+      stream.resume()
+    })
   }
 
   async function saveRequestFiles () {
@@ -247,6 +284,10 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
+        const file = part.file
+
+        this[kMultipartHandleFileStreamLimit](file)
+
         yield part
       }
     }
