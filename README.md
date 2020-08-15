@@ -124,7 +124,7 @@ fastify.post('/', function (req, reply) {
 
 You can also use all the parsed HTTP request parameters to the body:
 
-**Note**: Options for `addToBody` and `onFile` are NOT currently available on per-request handlers via options, and so will not work if included as above with `const mp = req.multipart(handler, done, options)`. See these two related issues with examples of how to implement per-handler multipart with fields-to-body schema validation and all stream event handlers - https://github.com/fastify/fastify-multipart/issues/131, https://github.com/fastify/fastify-multipart/issues/129 
+**Note**: Options for `addToBody` and `onFile` are NOT currently available on per-request handlers via options, and so will not work if included as above with `const mp = req.multipart(handler, done, options)`. See these two related issues with examples of how to implement per-handler multipart with fields-to-body schema validation and all stream event handlers - [#131](https://github.com/fastify/fastify-multipart/issues/131), [#129](https://github.com/fastify/fastify-multipart/issues/129)
 
 ```js
 const options = {
