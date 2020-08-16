@@ -200,7 +200,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
 
     function onEnd (error) {
-      console.log('####################', error, lastError)
       cleanup()
       bb.removeListener('finish', onEnd)
       bb.removeListener('error', onEnd)
