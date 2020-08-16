@@ -79,9 +79,12 @@ test('should emit fileSize limitation error during streaming', function (t) {
 
     try {
       const part = await req.file({ limits: { fileSize: 16500 } })
+      console.log('#######--BEFORE-sendToWormhole--######')
       await sendToWormhole(part.file, true)
+      console.log('#######--AFTER-sendToWormhole--######')
       reply.code(200).send()
     } catch (error) {
+      console.log('#######--CATCH--######')
       t.equal(error.message, 'Request file too large, please check multipart config')
       reply.code(500).send()
     }
@@ -127,6 +130,7 @@ test('should emit fileSize limitation error during streaming', function (t) {
     }
 
     const req = http.request(opts, (res) => {
+      console.log('#######--RESPONSE--######', res.statusCode)
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
