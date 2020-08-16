@@ -28,10 +28,7 @@ test('should throw fileSize limitation error on small payload', function (t) {
     t.ok(req.isMultipart())
 
     try {
-      // eslint-disable-next-line
-      for await (const _ of req.files({ limits: { fileSize: 2 } })) {
-        t.fail('should not be called')
-      }
+      await req.file({ limits: { fileSize: 2 } })
       reply.code(200).send()
     } catch (error) {
       t.equal(error.message, 'Request file too large, please check multipart config')
@@ -81,9 +78,8 @@ test('should emit fileSize limitation error during streaming', function (t) {
     t.ok(req.isMultipart())
 
     try {
-      for await (const part of req.files({ limits: { fileSize: 16500 } })) {
-        await sendToWormhole(part.file, true)
-      }
+      const part = await req.file({ limits: { fileSize: 16500 } })
+      await sendToWormhole(part.file, true)
       reply.code(200).send()
     } catch (error) {
       t.equal(error.message, 'Request file too large, please check multipart config')

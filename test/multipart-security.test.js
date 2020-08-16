@@ -25,10 +25,7 @@ test('should not allow __proto__ as file name', function (t) {
     t.ok(req.isMultipart())
 
     try {
-      // eslint-disable-next-line
-      for await (const _ of req.files()) {
-        t.fail('should not be called')
-      }
+      await req.file()
       reply.code(200).send()
     } catch (error) {
       t.equal(error.message, 'prototype property is not allowed as field name')
@@ -78,10 +75,7 @@ test('should not allow __proto__ as field name', function (t) {
     t.ok(req.isMultipart())
 
     try {
-      // eslint-disable-next-line
-      for await (const _ of req.multipart()) {
-        t.fail('should not be called')
-      }
+      await req.file()
       reply.code(200).send()
     } catch (error) {
       t.equal(error.message, 'prototype property is not allowed as field name')
