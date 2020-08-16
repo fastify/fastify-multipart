@@ -274,7 +274,16 @@ function fastifyMultipart (fastify, options = {}, done) {
             err.name = 'MultipartFileTooLargeError'
             err.status = 413
 
-            file.emit('error', err)
+            if (file.listenerCount('error') > 0) {
+              file.emit('error', err)
+              this.log.warn(err)
+            } else {
+              this.log.error(err)
+              // ignore next error event
+              file.on('error', () => { })
+            }
+            // ignore all data
+            file.resume()
           })
 
           yield part
