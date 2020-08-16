@@ -13,6 +13,7 @@ const { Readable } = require('readable-stream')
 const stream = require('stream')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
+const eos = util.promisify(stream.finished)
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -77,15 +78,14 @@ test('should emit fileSize limitation error during streaming', function (t) {
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
+    let part
     try {
-      const part = await req.file({ limits: { fileSize: 16500 } })
-      console.log('#######--BEFORE-sendToWormhole--######')
+      part = await req.file({ limits: { fileSize: 16500 } })
       await sendToWormhole(part.file, true)
-      console.log('#######--AFTER-sendToWormhole--######')
       reply.code(200).send()
     } catch (error) {
-      console.log('#######--CATCH--######')
       t.equal(error.message, 'Request file too large, please check multipart config')
+      await eos(part.file)
       reply.code(500).send()
     }
   })
@@ -130,7 +130,6 @@ test('should emit fileSize limitation error during streaming', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      console.log('#######--RESPONSE--######', res.statusCode)
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
