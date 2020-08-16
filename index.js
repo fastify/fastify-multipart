@@ -12,7 +12,6 @@ const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
 
 const kMultipart = Symbol('multipart')
-const kMultipartFilePaths = Symbol('multipart.filePaths')
 const kMultipartHasParsed = Symbol('multipart.hasParsed')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
@@ -39,7 +38,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('handleMultipart', handleMultipart)
   fastify.decorateRequest('multipart', getMultipartIterator)
   fastify.decorateRequest('isMultipart', isMultipart)
-  fastify.decorateRequest(kMultipartFilePaths, [])
+  fastify.decorateRequest('tmpUploads', [])
   fastify.decorateRequest(kMultipartHasParsed, false)
 
   // Stream mode
@@ -50,9 +49,6 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('saveRequestFiles', saveRequestFiles)
   fastify.decorateRequest('cleanRequestFiles', cleanRequestFiles)
 
-  fastify.addHook('onError', async (request, reply, error) => {
-    await request.cleanRequestFiles()
-  })
   fastify.addHook('onResponse', async (request, reply) => {
     await request.cleanRequestFiles()
   })
@@ -249,16 +245,16 @@ function fastifyMultipart (fastify, options = {}, done) {
     return part
   }
 
-  async function saveRequestFiles () {
+  async function saveRequestFiles (options) {
     const requestFiles = []
 
-    const files = await this.files()
+    const files = await this.files(options)
     for await (const file of files) {
       const filepath = path.join(os.tmpdir(), uuid.v4() + path.extname(file.filename))
       const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)
-        this[kMultipartFilePaths].push(filepath)
+        this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
       } catch (error) {
         this.log.error(error)
@@ -270,7 +266,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function cleanRequestFiles () {
-    for (const filepath of this[kMultipartFilePaths]) {
+    for (const filepath of this.tmpUploads) {
       try {
         await unlink(filepath)
       } catch (error) {
