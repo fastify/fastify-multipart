@@ -87,7 +87,7 @@ test('should emit fileSize limitation error during streaming', function (t) {
       reply.code(200).send()
     } catch (error) {
       t.equal(error.message, 'Request file too large, please check multipart config')
-      setImmediate(() => reply.code(500).send())
+      reply.code(500).send()
     }
   })
 
