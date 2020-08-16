@@ -1,8 +1,10 @@
 name: Continuous Integration
 on: [push, pull_request]
 
-jobs:
+env:
+  CI: true
 
+jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -10,12 +12,15 @@ jobs:
         node-version: [10.x, 12.x, 14.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     name: Node ${{ matrix.node-version }}
+
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
+
       - name: Setup node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+
       - run: npm install
       - run: npm run lint
       - run: npm run unit
