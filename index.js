@@ -1,5 +1,6 @@
 const Busboy = require('busboy')
 const os = require('os')
+const concat = require('concat-stream')
 const fp = require('fastify-plugin')
 const { createWriteStream } = require('fs')
 const { unlink } = require('fs').promises
@@ -178,7 +179,12 @@ function fastifyMultipart (fastify, options = {}, done) {
         encoding,
         mimetype,
         file,
-        fields: body
+        fields: body,
+        get content () {
+          return new Promise((resolve, reject) => {
+            pump(this.file, concat(resolve)).catch(reject)
+          })
+        }
       }
       if (body[name] === undefined) {
         body[name] = value
