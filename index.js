@@ -266,6 +266,7 @@ function fastifyMultipart (fastify, options = {}, done) {
           err.name = 'MultipartFileTooLargeError'
           err.status = 413
           await sendToWormhole(file)
+          // throw on consumer side
           yield Promise.reject(err)
         } else {
           file.once('limit', () => {
@@ -282,7 +283,7 @@ function fastifyMultipart (fastify, options = {}, done) {
               file.on('error', () => { })
             }
             // ignore all data
-            file.resume()
+            process.nextTick(() => file.resume())
           })
 
           yield part
