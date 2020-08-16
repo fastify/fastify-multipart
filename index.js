@@ -14,7 +14,6 @@ const pump = util.promisify(pipeline)
 const kMultipart = Symbol('multipart')
 const kMultipartFilePaths = Symbol('multipart.filePaths')
 const kMultipartHasParsed = Symbol('multipart.hasParsed')
-const kMultipartHandleFileStreamLimit = Symbol('multipart.handleFileStreamLimit')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
 function setMultipart (req, payload, done) {
@@ -42,7 +41,6 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest(kMultipartFilePaths, [])
   fastify.decorateRequest(kMultipartHasParsed, false)
-  fastify.decorateRequest(kMultipartHandleFileStreamLimit, handleFileStreamLimit)
 
   // Stream mode
   fastify.decorateRequest('file', getMultipartFile)
@@ -220,32 +218,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     return parts
   }
 
-  function handleFileStreamLimit (stream) {
-    if (stream.truncated) {
-      const err = new Error('Request file too large, please check multipart config')
-      err.name = 'MultipartFileTooLargeError'
-      err.status = 413
-      throw err
-    }
-
-    stream.once('limit', () => {
-      const err = new Error('Request file too large, please check multipart config')
-      err.name = 'MultipartFileTooLargeError'
-      err.status = 413
-
-      if (stream.listenerCount('error') > 0) {
-        stream.emit('error', err)
-        this.log.warn(err)
-      } else {
-        this.log.error(err)
-        // ignore next error event
-        stream.on('error', () => { })
-      }
-      // ignore all data
-      stream.resume()
-    })
-  }
-
   async function saveRequestFiles () {
     const requestFiles = []
 
@@ -289,15 +261,32 @@ function fastifyMultipart (fastify, options = {}, done) {
       if (part.file) {
         const file = part.file
 
-        try {
-          this[kMultipartHandleFileStreamLimit](file)
-        } catch (error) {
-          // make sure request stream's data has been read
+        if (file.truncated) {
+          const err = new Error('Request file too large, please check multipart config')
+          err.name = 'MultipartFileTooLargeError'
+          err.status = 413
           await sendToWormhole(file)
-          throw error
-        }
+          yield Promise.reject(err)
+        } else {
+          file.once('limit', () => {
+            const err = new Error('Request file too large, please check multipart config')
+            err.name = 'MultipartFileTooLargeError'
+            err.status = 413
 
-        yield part
+            if (file.listenerCount('error') > 0) {
+              file.emit('error', err)
+              this.log.warn(err)
+            } else {
+              this.log.error(err)
+              // ignore next error event
+              file.on('error', () => { })
+            }
+            // ignore all data
+            file.resume()
+          })
+
+          yield part
+        }
       }
     }
   }
