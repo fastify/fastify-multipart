@@ -21,7 +21,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - run: npm install
-      - run: npm run lint
-      - run: npm run unit
+      - name: Install Dependencies
+        run: npm install --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm run unit
+
+      - name: Typescript
       - run: npm run typescript
