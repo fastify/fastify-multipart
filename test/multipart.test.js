@@ -72,7 +72,11 @@ test('should parse forms', function (t) {
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -117,7 +121,11 @@ test('should respond when all files are processed', function (t) {
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -203,7 +211,11 @@ test('should error if boundary is empty', function (t) {
       t.equal(res.statusCode, 500)
     })
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -251,7 +263,11 @@ test('should throw fileSize limitation error on small payload', function (t) {
     })
     form.append('upload', fs.createReadStream(filePath))
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -325,6 +341,10 @@ test('should emit fileSize limitation error during streaming', function (t) {
       })
     })
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })

@@ -60,7 +60,11 @@ test('should throw fileSize limitation error on small payload', function (t) {
     })
     form.append('upload', fs.createReadStream(filePath))
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -134,6 +138,10 @@ test('should emit fileSize limitation error during streaming', function (t) {
       })
     })
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })

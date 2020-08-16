@@ -58,7 +58,11 @@ test('should not allow __proto__ as file name', function (t) {
     const rs = fs.createReadStream(filePath)
     form.append('__proto__', rs)
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
 
@@ -106,6 +110,10 @@ test('should not allow __proto__ as field name', function (t) {
     })
     form.append('__proto__', 'world')
 
-    await pump(form, req)
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
   })
 })
