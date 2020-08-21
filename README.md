@@ -20,6 +20,8 @@ npm i fastify-multipart
 
 ## Usage
 
+If you are looking for the documentation for the legacy api before v2 please see [here](./README-legacy.md).
+
 ```js
 const fastify = require('fastify')()
 const fs = require('fs')
