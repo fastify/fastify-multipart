@@ -6,9 +6,9 @@ const opts = {
   addToBody: true,
   sharedSchemaId: 'mySharedSchema'
 }
-fastify.register(require('.'), opts)
+fastify.register(require('..'), opts)
 
-fastify.post('/upload', {
+fastify.post('/upload/files', {
   schema: {
     body: {
       type: 'object',

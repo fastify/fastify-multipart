@@ -6,10 +6,11 @@
   "types": "index.d.ts",
   "dependencies": {
     "busboy": "^0.3.1",
-    "deepmerge": "^4.2.2",
-    "fastify-plugin": "^2.3.0",
-    "stream-wormhole": "^1.1.0",
     "concat-stream": "^2.0.0",
+    "deepmerge": "^4.2.2",
+    "end-of-stream": "^1.4.4",
+    "fastify-plugin": "^2.3.2",
+    "stream-wormhole": "^1.1.0",
     "uuid": "^8.3.0"
   },
   "devDependencies": {
@@ -24,7 +25,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^3.2.0",
+    "fastify": "^3.2.1",
     "form-data": "^3.0.0",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
@@ -37,10 +38,10 @@
   },
   "scripts": {
     "lint": "standard | snazzy",
-    "unit": "tap test/*.test.js",
+    "unit": "tap test/**/*.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
-    "coverage": "tap test/*.test.js --coverage-report=html",
+    "coverage": "tap test/**/*.test.js --coverage-report=html",
     "start": "CLIMEM=8999 node -r climem example",
     "climem": "climem 8999 localhost"
   },

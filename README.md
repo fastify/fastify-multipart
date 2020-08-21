@@ -4,7 +4,12 @@
 ![Continuous
 Integration](https://github.com/fastify/fastify-multipart/workflows/Continuous%20Integration/badge.svg)
 
-Fastify plugin to parse the multipart content-type.
+Fastify plugin to parse the multipart content-type. Supports:
+
+- Async / Await
+- Async iterator support to handle multiple parts
+- Stream & Disk mode
+- Accumulate whole file in memory
 
 Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 
@@ -17,50 +22,34 @@ npm i fastify-multipart
 
 ```js
 const fastify = require('fastify')()
-const concat = require('concat-stream')
 const fs = require('fs')
-const pump = require('pump')
+const util = require('util')
+const path = require('path')
+const { pipeline } = require('stream')
+const pump = util.promisify(pipeline)
 
 fastify.register(require('fastify-multipart'))
 
-fastify.post('/', function (req, reply) {
-  // you can use this request's decorator to check if the request is multipart
-  if (!req.isMultipart()) {
-    reply.code(400).send(new Error('Request is not multipart'))
-    return
-  }
+fastify.post('/', async function (req, reply) {
+  // process a single file
+  // also, consider that if you allow to upload multiple files
+  // but handle only one the promise will never fulfill
+  const data = await req.file()
 
-  const mp = req.multipart(handler, onEnd)
+  // to accumulate the file in memory! Be careful!
+  //
+  // data.content // Buffer
+  //
+  // or
+
+  await pump(data.file, fs.createWriteStream(data.filename))
+
+  // be careful of permission issues on disk and not overwrite
+  // sensitive files that could cause security risks
   
-  // mp is an instance of
-  // https://www.npmjs.com/package/busboy
+  // also, consider that if the file stream is not consumed, the promise will never fulfill
 
-  mp.on('field', function (key, value) {
-    console.log('form-data', key, value)
-  })
-
-  function onEnd(err) {
-    console.log('upload completed')
-    reply.code(200).send()
-  }
-
-  function handler (field, file, filename, encoding, mimetype) {
-    // to accumulate the file in memory! Be careful!
-    //
-    // file.pipe(concat(function (buf) {
-    //   console.log('received', filename, 'size', buf.length)
-    // }))
-    //
-    // or
-
-    pump(file, fs.createWriteStream('a-destination'))
-
-    // be careful of permission issues on disk and not overwrite
-    // sensitive files that could cause security risks
-    
-    // also, consider that if the file stream is not consumed, the 
-    // onEnd callback won't be called
-  }
+  reply.send()
 })
 
 fastify.listen(3000, err => {
@@ -87,19 +76,15 @@ fastify.register(require('fastify-multipart'), {
 });
 ```
 
-If you do set upload limits, be sure to listen for limit events in the handler method. An error or exception will not occur if a limit is reached, but rather the stream will be truncated. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
+If you do set upload limits, be sure to catch the error. An error or exception will occur if a limit is reached. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
 
 ```js
-
-mp.on('partsLimit', () => console.log('Maximum number of form parts reached'));
-
-mp.on('filesLimit', () => console.log('Maximum number of files reached'));
-
-mp.on('fieldsLimit', () => console.log('Maximim number of fields reached'));
-
-function handler (field, file, filename, encoding, mimetype) {
-  file.on('limit', () => console.log('File size limit reached'));
-}              
+try {
+  const data = await req.file()
+} catch (error) {
+  // handle error
+  error.code // Request_files_limit | Request_fields_limit | Request_parts_limit | Prototype_violation | File_Too_Large
+}
 ```
 
 Note, if the file size limit is exceeded the file will not be attached to the body. 
@@ -107,97 +92,52 @@ Note, if the file size limit is exceeded the file will not be attached to the bo
 Additionally, you can pass per-request options to the req.multipart function
 
 ```js
-fastify.post('/', function (req, reply) {
+fastify.post('/', async function (req, reply) {
   const options = { limits: { fileSize: 1000 } };
-  const mp = req.multipart(handler, done, options)
-
-  function done (err) {
-    console.log('upload completed')
-    reply.code(200).send()
-  }
-
-  function handler (field, file, filename, encoding, mimetype) {
-    pump(file, fs.createWriteStream('a-destination'))
-  }
+  const data = await req.file(options)
+  await pump(data.file, fs.createWriteStream(data.filename))
+  reply.send()
 })
 ```
 
-You can also use all the parsed HTTP request parameters to the body:
+## Handle multiple file streams
 
 ```js
-const options = {
-  addToBody: true,
-  sharedSchemaId: 'MultipartFileType', // Optional shared schema id
-  onFile: (fieldName, stream, filename, encoding, mimetype, body) => {
-    // Manage the file stream like you need
-    // By default the data will be added in a Buffer
-    // Be careful to accumulate the file in memory!
-    // It is MANDATORY consume the stream, otherwise the response will not be processed!
-    // The body parameter is the object that will be added to the request
-    stream.resume()
-  },
-  limit: { /*...*/ } // You can the limit options in any case
-}
-
-fastify.register(require('fastify-multipart'), options)
-
-fastify.post('/', function (req, reply) {
-  console.log(req.body)
-  // This will print out:
-  // {
-  //   myStringField: 'example',
-  //   anotherOne: 'example',
-  //   myFilenameField: [{
-  //     data: <Buffer>,
-  //     encoding: '7bit',
-  //     filename: 'README.md',
-  //     limit: false,
-  //     mimetype: 'text/markdown'
-  //   }]
-  // }
-
-  reply.code(200).send()
+fastify.post('/', async function (req, reply) {
+  const parts = await req.files()
+  for await (const part of parts) {
+    await pump(part.file, fs.createWriteStream(part.filename))
+  }
+  reply.send()
 })
 ```
 
-The options `onFile` and `sharedSchemaId` will be used only when `addToBody: true`.
-
-The `onFile` option define how the file streams are managed:
-+ if you don't set it the `req.body.<fieldName>[index].data` will be a Buffer with the data loaded in memory
-+ if you set it with a function you **must** consume the stream, and the `req.body.<fieldName>[index].data` will be an empty array
-
-**Note**: By default values in fields with files have array type, so if there's only one file uploaded, you can access it via `req.body.<fieldName>[0].data`. Regular fields become an array only when multiple values are provided.
-
-The `sharedSchemaId` parameter must provide a string ID and a [shared schema](https://github.com/fastify/fastify/blob/master/docs/Validation-and-Serialization.md#adding-a-shared-schema) will be added to your fastify instance so you will be able to apply the validation to your service like this:
+## Handle multiple file streams and fields
 
 ```js
-fastify.post('/upload', {
-  schema: {
-    body: {
-      type: 'object',
-      required: ['myStringField', 'myFilenameField'],
-      properties: {
-        myStringField: { type: 'string' },
-        myFilenameField: { type: 'array', items: 'MultipartFileType#' }
+fastify.post('/upload/raw/any', async function (req, reply) {
+  const parts = await req.multipart()
+  for await (const part of parts) {
+    if (part.file) {
+      await pump(part.file, fs.createWriteStream(part.filename))
+    } else {
+      console.log(part)
     }
   }
-}, function (req, reply) {
-  reply.send('done')
+  reply.send()
 })
 ```
 
-The shared schema added will be like this:
+## Upload files to disk and work with temporary file paths
+
+This will store all files in the operating system default directory for temporary files. As soon as the response ends all files are removed.
 
 ```js
-{
-  type: 'object',
-  properties: {
-    encoding: { type: 'string' },
-    filename: { type: 'string' },
-    limit: { type: 'boolean' },
-    mimetype: { type: 'string' }
-  }
-}
+fastify.post('/upload/files', async function (req, reply) {
+  // stores files to tmp dir and return paths
+  const files = await req.saveRequestFiles()
+  reply.send()
+})
 ```
 
 ## Acknowledgements

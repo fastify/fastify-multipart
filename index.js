@@ -2,6 +2,7 @@ const Busboy = require('busboy')
 const os = require('os')
 const concat = require('concat-stream')
 const fp = require('fastify-plugin')
+const eos = require('end-of-stream')
 const { createWriteStream } = require('fs')
 const { unlink } = require('fs').promises
 const path = require('path')
@@ -13,13 +14,75 @@ const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
 
 const kMultipart = Symbol('multipart')
-const kMultipartHasParsed = Symbol('multipart.hasParsed')
+const kMultipartHandler = Symbol('multipartHandler')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
 function setMultipart (req, payload, done) {
   // nothing to do, it will be done by the Request.multipart object
   req.raw[kMultipart] = true
   done()
+}
+
+function attachToBody (options, req, reply, next) {
+  if (req.raw[kMultipart] !== true) {
+    next()
+    return
+  }
+
+  const consumerStream = options.onFile || defaultConsumer
+  const body = {}
+  const mp = req.multipart((field, file, filename, encoding, mimetype) => {
+    body[field] = body[field] || []
+    body[field].push({
+      data: [],
+      filename,
+      encoding,
+      mimetype,
+      limit: false
+    })
+
+    const result = consumerStream(field, file, filename, encoding, mimetype, body)
+    if (result && typeof result.then === 'function') {
+      result.catch((err) => {
+        // continue with the workflow
+        err.statusCode = 500
+        file.destroy(err)
+      })
+    }
+  }, function (err) {
+    if (!err) {
+      req.body = body
+    }
+    next(err)
+  }, options)
+
+  mp.on('field', (key, value) => {
+    if (key === '__proto__') {
+      mp.destroy(new Error('__proto__ is not allowed as field name'))
+      return
+    }
+    if (body[key] === undefined) {
+      body[key] = value
+    } else if (Array.isArray(body[key])) {
+      body[key].push(value)
+    } else {
+      body[key] = [body[key], value]
+    }
+  })
+}
+
+function defaultConsumer (field, file, filename, encoding, mimetype, body) {
+  const fileData = []
+  const lastFile = body[field][body[field].length - 1]
+  file.on('data', data => { if (!lastFile.limit) { fileData.push(data) } })
+  file.on('limit', () => { lastFile.limit = true })
+  file.on('end', () => {
+    if (!lastFile.limit) {
+      lastFile.data = Buffer.concat(fileData)
+    } else {
+      lastFile.data = undefined
+    }
+  })
 }
 
 function busboy (options) {
@@ -35,12 +98,33 @@ function busboy (options) {
 }
 
 function fastifyMultipart (fastify, options = {}, done) {
+  if (options.addToBody === true) {
+    if (typeof options.sharedSchemaId === 'string') {
+      fastify.addSchema({
+        $id: options.sharedSchemaId,
+        type: 'object',
+        properties: {
+          encoding: { type: 'string' },
+          filename: { type: 'string' },
+          limit: { type: 'boolean' },
+          mimetype: { type: 'string' }
+        }
+      })
+    }
+
+    fastify.addHook('preValidation', function (req, reply, next) {
+      attachToBody(options, req, reply, next)
+    })
+  }
+
   fastify.addContentTypeParser('multipart', setMultipart)
-  fastify.decorateRequest('handleMultipart', handleMultipart)
-  fastify.decorateRequest('multipart', getMultipartIterator)
+  fastify.decorateRequest(kMultipartHandler, handleMultipart)
+  fastify.decorateRequest('multipartIterator', getMultipartIterator)
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', [])
-  fastify.decorateRequest(kMultipartHasParsed, false)
+
+  // legacy
+  fastify.decorateRequest('multipart', handleLegacyMultipartApi)
 
   // Stream mode
   fastify.decorateRequest('file', getMultipartFile)
@@ -58,16 +142,98 @@ function fastifyMultipart (fastify, options = {}, done) {
     return this.raw[kMultipart] || false
   }
 
+  // handler definition is in multipart-readstream
+  // handler(field, file, filename, encoding, mimetype)
+  // opts is a per-request override for the options object
+  function handleLegacyMultipartApi (handler, done, opts) {
+    if (typeof handler !== 'function') {
+      throw new Error('handler must be a function')
+    }
+
+    if (typeof done !== 'function') {
+      throw new Error('the callback must be a function')
+    }
+
+    if (!this.isMultipart()) {
+      done(new Error('the request is not multipart'))
+      return
+    }
+
+    const log = this.log
+
+    log.debug('starting multipart parsing')
+    log.warn('This api is deprecated. Please use the new api `req.multipartIterator(options)`')
+
+    const req = this.raw
+
+    const busboyOptions = deepmerge.all([{ headers: req.headers }, options || {}, opts || {}])
+    const stream = busboy(busboyOptions)
+    var completed = false
+    var files = 0
+    var count = 0
+    var callDoneOnNextEos = false
+
+    req.on('error', function (err) {
+      stream.destroy()
+      if (!completed) {
+        completed = true
+        done(err)
+      }
+    })
+
+    stream.on('finish', function () {
+      log.debug('finished receiving stream, total %d files', files)
+      if (!completed && count === files) {
+        completed = true
+        setImmediate(done)
+      } else {
+        callDoneOnNextEos = true
+      }
+    })
+
+    stream.on('file', wrap)
+
+    req.pipe(stream)
+      .on('error', function (error) {
+        req.emit('error', error)
+      })
+
+    function wrap (field, file, filename, encoding, mimetype) {
+      log.debug({ field, filename, encoding, mimetype }, 'parsing part')
+      files++
+      eos(file, waitForFiles)
+      if (field === '__proto__') {
+        file.destroy(new Error('__proto__ is not allowed as field name'))
+        return
+      }
+      handler(field, file, filename, encoding, mimetype)
+    }
+
+    function waitForFiles (err) {
+      if (err) {
+        completed = true
+        done(err)
+        return
+      }
+
+      if (completed) {
+        return
+      }
+
+      ++count
+      if (callDoneOnNextEos && count === files) {
+        completed = true
+        done()
+      }
+    }
+
+    return stream
+  }
+
   function handleMultipart (opts = {}) {
     if (!this.isMultipart()) {
       throw new Error('the request is not multipart')
     }
-
-    if (this[kMultipartHasParsed]) {
-      throw new Error('multipart can not be called twice on the same request')
-    }
-
-    this[kMultipartHasParsed] = true
 
     let worker
     let lastValue
@@ -141,7 +307,9 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
-        onError(new Error('prototype property is not allowed as field name'))
+        const err = new Error('prototype property is not allowed as field name')
+        err.code = 'Prototype_violation'
+        onError(err)
         return
       }
 
@@ -167,9 +335,12 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onFile (name, file, filename, encoding, mimetype) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
+        const err = new Error('prototype property is not allowed as field name')
+        err.code = 'Prototype_violation'
+        err.status = 413
         // ignore all data
         sendToWormhole(file)
-        onError(new Error('prototype property is not allowed as field name'))
+        onError(err)
         return
       }
 
@@ -224,7 +395,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     const file = part.file
     if (file.truncated) {
       const err = new Error('Request file too large, please check multipart config')
-      err.name = 'MultipartFileTooLargeError'
+      err.code = 'File_Too_Large'
       err.status = 413
       await sendToWormhole(file)
       // throw on consumer side
@@ -233,7 +404,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     file.once('limit', () => {
       const err = new Error('Request file too large, please check multipart config')
-      err.name = 'MultipartFileTooLargeError'
+      err.code = 'File_Too_Large'
       err.status = 413
 
       if (file.listenerCount('error') > 0) {
@@ -282,7 +453,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function getMultipartFile (options) {
-    const parts = this.handleMultipart(options)
+    const parts = this[kMultipartHandler](options)
 
     let part
     while ((part = await parts()) != null) {
@@ -293,7 +464,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function * getMultipartFiles (options) {
-    const parts = this.handleMultipart(options)
+    const parts = this[kMultipartHandler](options)
 
     let part
     while ((part = await parts()) != null) {
@@ -305,7 +476,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function * getMultipartIterator (options) {
-    const parts = this.handleMultipart(options)
+    const parts = this[kMultipartHandler](options)
 
     let part
     while ((part = await parts()) != null) {

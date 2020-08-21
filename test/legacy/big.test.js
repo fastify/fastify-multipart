@@ -3,44 +3,63 @@
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
-const multipart = require('..')
+const multipart = require('./../..')
 const http = require('http')
 const stream = require('readable-stream')
 const Readable = stream.Readable
+const Writable = stream.Writable
 const pump = stream.pipeline
+const eos = stream.finished
 const crypto = require('crypto')
-const sendToWormhole = require('stream-wormhole')
 
 // skipping on Github Actions because it takes too long
 test('should upload a big file in constant memory', { skip: process.env.CI }, function (t) {
-  t.plan(9)
+  t.plan(12)
 
   const fastify = Fastify()
   const hashInput = crypto.createHash('sha256')
+  let sent = false
 
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
-  fastify.post('/', async function (req, reply) {
+  fastify.post('/', function (req, reply) {
     t.ok(req.isMultipart())
 
-    for await (const part of req.multipartIterator()) {
-      if (part.file) {
-        t.equal(part.fieldname, 'upload')
-        t.equal(part.filename, 'random-data')
-        t.equal(part.encoding, '7bit')
-        t.equal(part.mimetype, 'binary/octect-stream')
+    req.multipart(handler, function (err) {
+      t.error(err)
+    })
 
-        await sendToWormhole(part.file)
-      }
+    function handler (field, file, filename, encoding, mimetype) {
+      t.equal(filename, 'random-data')
+      t.equal(field, 'upload')
+      t.equal(encoding, '7bit')
+      t.equal(mimetype, 'binary/octect-stream')
+      const hashOutput = crypto.createHash('sha256')
+
+      pump(file, hashOutput, new Writable({
+        objectMode: true,
+        write (chunk, enc, cb) {
+          if (!sent) {
+            eos(hashInput, () => {
+              this._write(chunk, enc, cb)
+            })
+            return
+          }
+
+          t.equal(hashInput.digest('hex'), chunk.toString('hex'))
+          cb()
+        }
+      }), function (err) {
+        t.error(err)
+
+        const memory = process.memoryUsage()
+        t.ok(memory.rss < 400 * 1024 * 1024) // 200MB
+        t.ok(memory.heapTotal < 400 * 1024 * 1024) // 200MB
+        reply.send()
+      })
     }
-
-    const memory = process.memoryUsage()
-    t.ok(memory.rss < 400 * 1024 * 1024) // 200MB
-    t.ok(memory.heapTotal < 400 * 1024 * 1024) // 200MB
-
-    reply.send()
   })
 
   fastify.listen(0, function () {
@@ -61,6 +80,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
 
         if (total === 0) {
           t.pass('finished generating')
+          sent = true
           hashInput.end()
           this.push(null)
         }

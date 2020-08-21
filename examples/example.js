@@ -8,7 +8,7 @@ const { pipeline } = require('stream')
 const pump = util.promisify(pipeline)
 const form = path.join(__dirname, 'form.html')
 
-fastify.register(require('.'))
+fastify.register(require('..'))
 
 fastify.get('/', function (req, reply) {
   reply.type('text/html').send(fs.createReadStream(form))
@@ -48,7 +48,7 @@ fastify.post('/upload/files', async function (req, reply) {
   reply.send()
 })
 
-fastify.listen(3000, (err) => {
+fastify.listen(3000, err => {
   if (err) throw err
   console.log(`server listening on ${fastify.server.address().port}`)
 })
