@@ -14,7 +14,7 @@ const eos = stream.finished
 
 const filePath = path.join(__dirname, '..', '..', 'README.md')
 
-test('should parse forms', function (t) {
+test('should parse forms', { skip: process.platform === 'win32' }, function (t) {
   t.plan(14)
 
   const fastify = Fastify()
@@ -79,7 +79,7 @@ test('should parse forms', function (t) {
   })
 })
 
-test('should call finished when both files are pumped', function (t) {
+test('should call finished when both files are pumped', { skip: process.platform === 'win32' }, function (t) {
   t.plan(10)
 
   const fastify = Fastify()
@@ -139,7 +139,7 @@ test('should call finished when both files are pumped', function (t) {
   })
 })
 
-test('should error if it is not multipart', function (t) {
+test('should error if it is not multipart', { skip: process.platform === 'win32' }, function (t) {
   t.plan(4)
 
   const fastify = Fastify()
@@ -181,7 +181,7 @@ test('should error if it is not multipart', function (t) {
   })
 })
 
-test('should error if it is invalid multipart', function (t) {
+test('should error if it is invalid multipart', { skip: process.platform === 'win32' }, function (t) {
   t.plan(5)
 
   const fastify = Fastify()
@@ -226,7 +226,7 @@ test('should error if it is invalid multipart', function (t) {
   })
 })
 
-test('should override options', function (t) {
+test('should override options', { skip: process.platform === 'win32' }, function (t) {
   t.plan(5)
 
   const fastify = Fastify()
@@ -275,7 +275,7 @@ test('should override options', function (t) {
   })
 })
 
-test('should not allow __proto__', function (t) {
+test('should not allow __proto__', { skip: process.platform === 'win32' }, function (t) {
   t.plan(5)
 
   const fastify = Fastify()
