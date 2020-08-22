@@ -38,6 +38,12 @@ fastify.post('/', async function (req, reply) {
   // but handle only one the promise will never fulfill
   const data = await req.file()
 
+  data.file // stream
+  data.fieldname
+  data.filename
+  data.encoding
+  data.mimetype
+
   // to accumulate the file in memory! Be careful!
   //
   // await data.content // Buffer
@@ -147,8 +153,14 @@ This will store all files in the operating system default directory for temporar
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
-  // stores files to tmp dir and return paths
+  // stores files to tmp dir and return files
   const files = await req.saveRequestFiles()
+  files[0].filepath
+  files[0].fieldname
+  files[0].filename
+  files[0].encoding
+  files[0].mimetype
+
   reply.send()
 })
 ```
