@@ -174,7 +174,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     var callDoneOnNextEos = false
 
     req.on('error', function (err) {
-      console.log('###################', err)
       stream.destroy()
       if (!completed) {
         completed = true
@@ -196,6 +195,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     req.pipe(stream)
       .on('error', function (error) {
+        console.log('##########error#########', error)
         req.emit('error', error)
       })
 
@@ -212,6 +212,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
+        console.log('##########waitForFiles#########', err)
         completed = true
         done(err)
         return
