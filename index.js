@@ -46,7 +46,7 @@ function attachToBody (options, req, reply, next) {
       result.catch((err) => {
         // continue with the workflow
         err.statusCode = 500
-        file.destroy(err)
+        setImmediate(() => file.destroy(err))
       })
     }
   }, function (err) {
