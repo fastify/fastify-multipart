@@ -174,6 +174,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     var callDoneOnNextEos = false
 
     req.on('error', function (err) {
+      console.log('##########req. error#########', err)
       stream.destroy()
       if (!completed) {
         completed = true
