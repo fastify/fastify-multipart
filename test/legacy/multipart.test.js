@@ -324,7 +324,6 @@ test('should not allow __proto__', function (t) {
     // form.append('hello', 'world')
     // form.append('willbe', 'dropped')
     pump(form, req, function (err) {
-      console.error(err, '################')
       t.error(err, 'client pump: no err')
     })
   })

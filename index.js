@@ -172,9 +172,9 @@ function fastifyMultipart (fastify, options = {}, done) {
     var files = 0
     var count = 0
     var callDoneOnNextEos = false
+    var lastError
 
     req.on('error', function (err) {
-      console.log('##########req. error#########', err)
       stream.destroy()
       if (!completed) {
         completed = true
@@ -186,18 +186,21 @@ function fastifyMultipart (fastify, options = {}, done) {
       log.debug('finished receiving stream, total %d files', files)
       if (!completed && count === files) {
         completed = true
-        setImmediate(done)
+        setImmediate(() => done(lastError))
       } else {
         callDoneOnNextEos = true
       }
     })
 
     stream.on('file', wrap)
+    stream.on('error', (err) => {
+      completed = true
+      setImmediate(() => done(err))
+    })
 
     req.pipe(stream)
-      .on('error', function (error) {
-        console.log('##########error#########', error)
-        req.emit('error', error)
+      .on('error', (error) => {
+        lastError = error
       })
 
     function wrap (field, file, filename, encoding, mimetype) {
@@ -205,7 +208,9 @@ function fastifyMultipart (fastify, options = {}, done) {
       files++
       eos(file, waitForFiles)
       if (field === '__proto__') {
-        file.destroy(new Error('__proto__ is not allowed as field name'))
+        // ignore all data, stream is consumed and any error is suppressed
+        sendToWormhole(file)
+        lastError = new Error('__proto__ is not allowed as field name')
         return
       }
       handler(field, file, filename, encoding, mimetype)
@@ -213,7 +218,6 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
-        console.log('##########waitForFiles#########', err)
         completed = true
         done(err)
         return
@@ -341,7 +345,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         const err = new Error('prototype property is not allowed as field name')
         err.code = 'Prototype_violation'
         err.status = 413
-        // ignore all data
+        // ignore all data, stream is consumed and any error is suppressed
         sendToWormhole(file)
         onError(err)
         return
