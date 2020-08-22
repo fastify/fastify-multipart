@@ -179,7 +179,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     const log = this.log
 
     log.debug('starting multipart parsing')
-    log.warn('this api is deprecated. Please use the new api.')
 
     const req = this.raw
 
@@ -189,7 +188,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     var files = 0
     var count = 0
     var callDoneOnNextEos = false
-    var lastError
 
     req.on('error', function (err) {
       stream.destroy()
@@ -203,22 +201,17 @@ function fastifyMultipart (fastify, options = {}, done) {
       log.debug('finished receiving stream, total %d files', files)
       if (!completed && count === files) {
         completed = true
-        setImmediate(() => done(lastError))
+        setImmediate(done)
       } else {
         callDoneOnNextEos = true
       }
     })
 
     stream.on('file', wrap)
-    // handle busboy parsing errors e.g (Multipart: Boundary not found)
-    stream.on('error', (err) => {
-      completed = true
-      setImmediate(() => done(err))
-    })
 
     req.pipe(stream)
-      .on('error', (err) => {
-        lastError = err
+      .on('error', function (error) {
+        req.emit('error', error)
       })
 
     function wrap (field, file, filename, encoding, mimetype) {
@@ -226,9 +219,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       files++
       eos(file, waitForFiles)
       if (field === '__proto__') {
-        // ensure that stream is consumed, any error is suppressed
-        sendToWormhole(file)
-        lastError = new Error('__proto__ is not allowed as field name')
+        file.destroy(new Error('__proto__ is not allowed as field name'))
         return
       }
       handler(field, file, filename, encoding, mimetype)
@@ -236,11 +227,8 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
-        // ensure that stream is consumed, any error is suppressed
-        sendToWormhole(this).then(() => {
-          completed = true
-          done(err)
-        })
+        completed = true
+        done(err)
         return
       }
 
