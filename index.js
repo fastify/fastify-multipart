@@ -218,6 +218,8 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
+        // ignore all data
+        this.resume()
         completed = true
         done(err)
         return
