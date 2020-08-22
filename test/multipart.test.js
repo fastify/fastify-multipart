@@ -128,7 +128,7 @@ test('should respond when all files are processed', function (t) {
 })
 
 test('should group parts with the same name to an array', function (t) {
-  t.plan(10)
+  t.plan(15)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -173,8 +173,10 @@ test('should group parts with the same name to an array', function (t) {
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload', fs.createReadStream(filePath))
+    form.append('upload', fs.createReadStream(filePath))
     form.append('hello', 'world')
-    form.append('hello', 'dropped')
+    form.append('hello', 'foo')
+    form.append('hello', 'bar')
 
     try {
       await pump(form, req)

@@ -145,3 +145,77 @@ test('should emit fileSize limitation error during streaming', function (t) {
     }
   })
 })
+
+test('should ignore fileSize limitation error when no error handler was set', function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+  const hashInput = crypto.createHash('sha256')
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    const part = await req.file({ limits: { fileSize: 16500 } })
+    part.file.resume()
+    // don't add error listener
+    await eos(part.file, { error: false })
+    reply.code(200).send()
+  })
+
+  fastify.listen(0, async function () {
+    // request
+    const knownLength = 1024 * 1024 // 1MB
+    let total = knownLength
+    const form = new FormData({ maxDataSize: total })
+    const rs = new Readable({
+      read (n) {
+        if (n > total) {
+          n = total
+        }
+
+        var buf = Buffer.alloc(n).fill('x')
+        hashInput.update(buf)
+        this.push(buf)
+
+        total -= n
+
+        if (total === 0) {
+          t.pass('finished generating')
+          hashInput.end()
+          this.push(null)
+        }
+      }
+    })
+    form.append('upload', rs, {
+      filename: 'random-data',
+      contentType: 'binary/octect-stream',
+      knownLength
+    })
+
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
+  })
+})
