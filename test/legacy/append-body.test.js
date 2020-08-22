@@ -411,7 +411,7 @@ test('addToBody option with promise', t => {
   })
 })
 
-test('addToBody option with promise in error', t => {
+test('addToBody option with promise in error', { skip: process.platform === 'win32' }, t => {
   t.plan(3)
 
   const fastify = Fastify()
