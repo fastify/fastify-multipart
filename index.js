@@ -162,7 +162,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     const log = this.log
 
     log.debug('starting multipart parsing')
-    log.warn('This api is deprecated. Please use the new api `req.multipartIterator(options)`')
+    log.warn('this api is deprecated. Please use the new api.')
 
     const req = this.raw
 
@@ -193,6 +193,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     })
 
     stream.on('file', wrap)
+    // handle busboy parsing errors e.g (Multipart: Boundary not found)
     stream.on('error', (err) => {
       completed = true
       setImmediate(() => done(err))
@@ -218,7 +219,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
-        // ignore all data
+        // ignore all data, busboy only emits finish when all streams were consumed
         this.resume()
         completed = true
         done(err)
