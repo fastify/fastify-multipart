@@ -227,7 +227,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         // ignore all data, busboy only emits finish when all streams were consumed
         this.resume()
         completed = true
-        done(err)
+        setImmediate(() => done(err))
         return
       }
 
