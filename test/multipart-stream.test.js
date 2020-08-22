@@ -32,7 +32,7 @@ test('should throw fileSize limitation error on small payload', function (t) {
       await req.file({ limits: { fileSize: 2 } })
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Request file too large, please check multipart config')
+      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
   })
@@ -84,7 +84,7 @@ test('should emit fileSize limitation error during streaming', function (t) {
       await sendToWormhole(part.file, true)
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Request file too large, please check multipart config')
+      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       // We need to wait before the stream is drained and the busboy firing 'onEnd' event
       await eos(part.file)
       reply.code(500).send()

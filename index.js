@@ -121,10 +121,18 @@ function fastifyMultipart (fastify, options = {}, done) {
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
   const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
+  const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request file too large, please check multipart config', 413)
   const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
-  const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 400)
+  const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 
-  fastify.decorate('multipartErrors', { PartsLimitError, FilesLimitError, FieldsLimitError, PrototypeViolationError, InvalidMultipartContentTypeError })
+  fastify.decorate('multipartErrors', {
+    PartsLimitError,
+    FilesLimitError,
+    FieldsLimitError,
+    PrototypeViolationError,
+    InvalidMultipartContentTypeError,
+    RequestFileTooLargeError
+  })
 
   fastify.addContentTypeParser('multipart', setMultipart)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
@@ -400,19 +408,14 @@ function fastifyMultipart (fastify, options = {}, done) {
   async function handlePartFile (part, logger) {
     const file = part.file
     if (file.truncated) {
-      const err = new Error('Request file too large, please check multipart config')
-      err.code = 'File_Too_Large'
-      err.status = 413
       // ensure that stream is consumed, any error is suppressed
       await sendToWormhole(file)
       // throw on consumer side
-      return Promise.reject(err)
+      return Promise.reject(new RequestFileTooLargeError())
     }
 
     file.once('limit', () => {
-      const err = new Error('Request file too large, please check multipart config')
-      err.code = 'File_Too_Large'
-      err.status = 413
+      const err = new RequestFileTooLargeError()
 
       if (file.listenerCount('error') > 0) {
         file.emit('error', err)
