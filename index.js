@@ -210,6 +210,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
+        console.error(err, '#######11111#########')
         completed = true
         done(err)
         return

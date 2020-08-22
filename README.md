@@ -40,7 +40,7 @@ fastify.post('/', async function (req, reply) {
 
   // to accumulate the file in memory! Be careful!
   //
-  // data.content // Buffer
+  // await data.content // Buffer
   //
   // or
 
@@ -129,6 +129,18 @@ fastify.post('/upload/raw/any', async function (req, reply) {
   reply.send()
 })
 ```
+
+## Accumulate whole file in memory
+
+```js
+fastify.post('/upload/raw/any', async function (req, reply) {
+  const data = await req.file()
+  const buffer = await data.content
+  // upload to S3
+  reply.send()
+})
+```
+
 
 ## Upload files to disk and work with temporary file paths
 
