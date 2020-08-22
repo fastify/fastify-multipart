@@ -209,7 +209,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       files++
       eos(file, waitForFiles)
       if (field === '__proto__') {
-        // ignore all data, stream is consumed and any error is suppressed
+        // ensure that stream is consumed, any error is suppressed
         sendToWormhole(file)
         lastError = new Error('__proto__ is not allowed as field name')
         return
@@ -219,7 +219,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
-        // ignore all data, busboy only emits finish when all streams were consumed
+        // ensure that stream is consumed, any error is suppressed
         sendToWormhole(this).then(() => {
           completed = true
           done(err)
@@ -349,7 +349,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         const err = new Error('prototype property is not allowed as field name')
         err.code = 'Prototype_violation'
         err.status = 413
-        // ignore all data, stream is consumed and any error is suppressed
+        // ensure that stream is consumed, any error is suppressed
         sendToWormhole(file)
         onError(err)
         return
@@ -408,6 +408,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       const err = new Error('Request file too large, please check multipart config')
       err.code = 'File_Too_Large'
       err.status = 413
+      // ensure that stream is consumed, any error is suppressed
       await sendToWormhole(file)
       // throw on consumer side
       return Promise.reject(err)
