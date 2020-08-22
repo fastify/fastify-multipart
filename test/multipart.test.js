@@ -199,7 +199,7 @@ test('should error if it is not multipart', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'the request is not multipart')
+      t.true(error instanceof fastify.multipartErrors.InvalidMultipartContentTypeError)
       reply.code(500).send()
     }
   })
@@ -287,7 +287,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       }
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Reach files limit')
+      t.true(error instanceof fastify.multipartErrors.FilesLimitError)
       reply.code(500).send()
     }
   })
@@ -337,7 +337,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
       }
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Reach fields limit')
+      t.true(error instanceof fastify.multipartErrors.FieldsLimitError)
       reply.code(500).send()
     }
   })
@@ -387,7 +387,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
       }
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Reach parts limit')
+      t.true(error instanceof fastify.multipartErrors.PartsLimitError)
       reply.code(500).send()
     }
   })

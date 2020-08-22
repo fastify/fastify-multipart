@@ -8,6 +8,7 @@ const { unlink } = require('fs').promises
 const path = require('path')
 const uuid = require('uuid')
 const util = require('util')
+const createError = require('fastify-error')
 const sendToWormhole = require('stream-wormhole')
 const deepmerge = require('deepmerge')
 const { PassThrough, pipeline } = require('stream')
@@ -116,6 +117,14 @@ function fastifyMultipart (fastify, options = {}, done) {
       attachToBody(options, req, reply, next)
     })
   }
+
+  const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
+  const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
+  const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
+  const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
+  const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 400)
+
+  fastify.decorate('multipartErrors', { PartsLimitError, FilesLimitError, FieldsLimitError, PrototypeViolationError, InvalidMultipartContentTypeError })
 
   fastify.addContentTypeParser('multipart', setMultipart)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
@@ -243,7 +252,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
   function handleMultipart (opts = {}) {
     if (!this.isMultipart()) {
-      throw new Error('the request is not multipart')
+      throw new InvalidMultipartContentTypeError()
     }
 
     let worker
@@ -293,24 +302,15 @@ function fastifyMultipart (fastify, options = {}, done) {
       .on('finish', onEnd)
 
     bb.on('partsLimit', function () {
-      const err = new Error('Reach parts limit')
-      err.code = 'Request_parts_limit'
-      err.status = 413
-      onError(err)
+      onError(new PartsLimitError())
     })
 
     bb.on('filesLimit', function () {
-      const err = new Error('Reach files limit')
-      err.code = 'Request_files_limit'
-      err.status = 413
-      onError(err)
+      onError(new FilesLimitError())
     })
 
     bb.on('fieldsLimit', function () {
-      const err = new Error('Reach fields limit')
-      err.code = 'Request_fields_limit'
-      err.status = 413
-      onError(err)
+      onError(new FieldsLimitError())
     })
 
     request.pipe(bb)
@@ -318,9 +318,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
-        const err = new Error('prototype property is not allowed as field name')
-        err.code = 'Prototype_violation'
-        onError(err)
+        onError(new PrototypeViolationError())
         return
       }
 
@@ -346,12 +344,9 @@ function fastifyMultipart (fastify, options = {}, done) {
     function onFile (name, file, filename, encoding, mimetype) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
-        const err = new Error('prototype property is not allowed as field name')
-        err.code = 'Prototype_violation'
-        err.status = 413
         // ensure that stream is consumed, any error is suppressed
         sendToWormhole(file)
-        onError(err)
+        onError(new PrototypeViolationError())
         return
       }
 

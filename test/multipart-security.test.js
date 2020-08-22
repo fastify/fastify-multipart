@@ -28,7 +28,7 @@ test('should not allow __proto__ as file name', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'prototype property is not allowed as field name')
+      t.true(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -78,7 +78,7 @@ test('should not allow __proto__ as field name', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'prototype property is not allowed as field name')
+      t.true(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
