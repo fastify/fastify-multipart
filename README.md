@@ -35,10 +35,11 @@ fastify.register(require('fastify-multipart'))
 fastify.post('/', async function (req, reply) {
   // process a single file
   // also, consider that if you allow to upload multiple files
-  // but handle only one the promise will never fulfill
+  // you must consume all files othwise the promise will never fulfill
   const data = await req.file()
 
   data.file // stream
+  data.fields // other parsed parts
   data.fieldname
   data.filename
   data.encoding
@@ -160,6 +161,7 @@ fastify.post('/upload/files', async function (req, reply) {
   files[0].filename
   files[0].encoding
   files[0].mimetype
+  files[0].fields // other parsed parts
 
   reply.send()
 })
