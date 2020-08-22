@@ -2,7 +2,6 @@ const Busboy = require('busboy')
 const os = require('os')
 const concat = require('concat-stream')
 const fp = require('fastify-plugin')
-const eos = require('end-of-stream')
 const { createWriteStream } = require('fs')
 const { unlink } = require('fs').promises
 const path = require('path')
@@ -10,7 +9,7 @@ const uuid = require('uuid')
 const util = require('util')
 const sendToWormhole = require('stream-wormhole')
 const deepmerge = require('deepmerge')
-const { PassThrough, pipeline } = require('stream')
+const { PassThrough, pipeline, finished } = require('stream')
 const pump = util.promisify(pipeline)
 
 const kMultipart = Symbol('multipart')
@@ -46,7 +45,7 @@ function attachToBody (options, req, reply, next) {
       result.catch((err) => {
         // continue with the workflow
         err.statusCode = 500
-        setImmediate(() => file.destroy(err))
+        file.destroy(err)
       })
     }
   }, function (err) {
@@ -201,7 +200,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
       files++
-      eos(file, waitForFiles)
+      finished(file, waitForFiles)
       if (field === '__proto__') {
         file.destroy(new Error('__proto__ is not allowed as field name'))
         return
