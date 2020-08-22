@@ -84,12 +84,11 @@ If you do set upload limits, be sure to catch the error. An error or exception w
 try {
   const data = await req.file()
 } catch (error) {
-  // handle error
-  error.code // Request_files_limit | Request_fields_limit | Request_parts_limit | Prototype_violation | File_Too_Large
+  if (error instanceof fastify.multipartErrors.FilesLimitError) {
+    // handle error
+  }
 }
-```
-
-Note, if the file size limit is exceeded the file will not be attached to the body. 
+``` 
 
 Additionally, you can pass per-request options to the req.multipart function
 
@@ -151,6 +150,16 @@ fastify.post('/upload/files', async function (req, reply) {
   // stores files to tmp dir and return paths
   const files = await req.saveRequestFiles()
   reply.send()
+})
+```
+
+## Access all errors
+
+We export all custom errors via a server decorator `fastify.multipartErrors`. This useful if you want to react to specific errors. They are derivated from [fastify-error](https://github.com/fastify/fastify-error) and already include the correct `statusCode`.
+
+```js
+fastify.post('/upload/files', async function (req, reply) {
+  const { FilesLimitError } = fastify.multipartErrors
 })
 ```
 
