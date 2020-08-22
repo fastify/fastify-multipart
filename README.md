@@ -155,7 +155,7 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## Access all errors
 
-We export all custom errors via a server decorator `fastify.multipartErrors`. This useful if you want to react to specific errors. They are derivated from [fastify-error](https://github.com/fastify/fastify-error) and already include the correct `statusCode`.
+We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derivated from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
