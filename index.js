@@ -175,6 +175,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     var lastError
 
     req.on('error', function (err) {
+      console.log('#############req:error###########', err)
       stream.destroy()
       if (!completed) {
         completed = true
@@ -183,6 +184,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     })
 
     stream.on('finish', function () {
+      console.log('#############finish###########')
       log.debug('finished receiving stream, total %d files', files)
       if (!completed && count === files) {
         completed = true
@@ -195,13 +197,15 @@ function fastifyMultipart (fastify, options = {}, done) {
     stream.on('file', wrap)
     // handle busboy parsing errors e.g (Multipart: Boundary not found)
     stream.on('error', (err) => {
+      console.log('#############stream:error###########', err)
       completed = true
       setImmediate(() => done(err))
     })
 
     req.pipe(stream)
-      .on('error', (error) => {
-        lastError = error
+      .on('error', (err) => {
+        console.log('#############pipe:error###########', err)
+        lastError = err
       })
 
     function wrap (field, file, filename, encoding, mimetype) {
@@ -219,6 +223,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function waitForFiles (err) {
       if (err) {
+        console.log('#############waitForFiles:error###########', err)
         // ignore all data, busboy only emits finish when all streams were consumed
         this.resume()
         completed = true
