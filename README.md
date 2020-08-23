@@ -195,7 +195,6 @@ async function onFile(part) {
 fastify.register(multipart, { onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const uploadValue = await req.body.upload.buffer()  // access files
   const fooValue = await req.body.foo.value           // other fields
 })
 ```
