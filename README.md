@@ -218,6 +218,8 @@ fastify.post('/upload/files', {
       properties: {
         myField: { $ref: '#mySharedSchema'},
         // or
+        myFiles: { type: 'array', items: fastify.getSchema('mySharedSchema') },
+        // or
         hello: {
           properties: {
             value: { 
