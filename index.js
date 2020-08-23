@@ -119,6 +119,18 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   if (options.attachFieldsToBody === true || options.onFile) {
+    if (typeof options.sharedSchemaId === 'string') {
+      fastify.addSchema({
+        $id: options.sharedSchemaId,
+        type: 'object',
+        properties: {
+          fieldname: { type: 'string' },
+          encoding: { type: 'string' },
+          filename: { type: 'string' },
+          mimetype: { type: 'string' }
+        }
+      })
+    }
     fastify.addHook('preValidation', async function (req, reply) {
       for await (const part of req.multipartIterator()) {
         req.body = part.fields

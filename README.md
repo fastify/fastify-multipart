@@ -200,6 +200,42 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
+## JSON Schema body validation
+
+If you enable `attachFieldsToBody` and set `sharedSchemaId` a shared JSON Schema is added which can be used to validate parsed multipart fields.
+
+```js
+const opts = {
+  attachFieldsToBody: true,
+  sharedSchemaId: '#mySharedSchema'
+}
+fastify.register(multipart, opts)
+
+fastify.post('/upload/files', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['myField'],
+      properties: {
+        myField: { $ref: '#mySharedSchema'},
+        // or
+        hello: {
+          properties: {
+            value: { 
+              type: 'string',
+              enum: ['male']
+            }
+          }
+        }
+      }
+    }
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derivated from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
