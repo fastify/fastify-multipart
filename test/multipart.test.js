@@ -324,6 +324,58 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
   })
 })
 
+test('should be able to configure limits globally with plugin register options', function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { limits: { files: 1 } })
+
+  fastify.post('/', async function (req, reply) {
+    try {
+      const parts = await req.files()
+      for await (const part of parts) {
+        t.ok(part.file)
+        await sendToWormhole(part.file)
+      }
+      reply.code(200).send()
+    } catch (error) {
+      t.true(error instanceof fastify.multipartErrors.FilesLimitError)
+      reply.code(500).send()
+    }
+  })
+
+  fastify.listen(0, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    form.append('upload', fs.createReadStream(filePath))
+    form.append('upload2', fs.createReadStream(filePath))
+
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
+  })
+})
+
 test('should throw error due to fieldsLimit (Max number of non-file fields (Default: Infinity))', function (t) {
   t.plan(4)
 
