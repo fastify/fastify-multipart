@@ -118,6 +118,21 @@ function fastifyMultipart (fastify, options = {}, done) {
     })
   }
 
+  if (options.attachFieldsToBody === true || options.onFile) {
+    fastify.addHook('preValidation', async function (req, reply) {
+      for await (const part of req.multipartIterator()) {
+        req.body = part.fields
+        if (part.file) {
+          if (options.onFile) {
+            await options.onFile(part)
+          } else {
+            await part.buffer()
+          }
+        }
+      }
+    })
+  }
+
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
   const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
@@ -355,9 +370,16 @@ function fastifyMultipart (fastify, options = {}, done) {
         mimetype,
         file,
         fields: body,
-        get content () {
+        _buf: null,
+        buffer () {
+          if (this._buf) {
+            return Promise.resolve(this._buf)
+          }
           return new Promise((resolve, reject) => {
-            pump(this.file, concat(resolve)).catch(reject)
+            pump(this.file, concat((buf) => {
+              this._buf = buf
+              resolve(this._buf)
+            })).catch(reject)
           })
         }
       }

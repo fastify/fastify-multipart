@@ -13,24 +13,25 @@ const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should be able to get whole buffer by accessing "content" on part', function (t) {
-  t.plan(4)
+test('should be able to attach all parsed fields and files and make it accessible through "req.body"', function (t) {
+  t.plan(6)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  fastify.register(multipart, { attachFieldsToBody: true })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    const file = await req.file()
-    // lazy load (getter)
-    const buf = await file.buffer()
+    t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    t.equal(buf.toString(), original)
+    const content = await req.body.upload.buffer()
+
+    t.equal(content.toString(), original)
+    t.equal(req.body.hello.value, 'world')
 
     reply.code(200).send()
   })
@@ -55,6 +56,7 @@ test('should be able to get whole buffer by accessing "content" on part', functi
       })
     })
     form.append('upload', fs.createReadStream(filePath))
+    form.append('hello', 'world')
 
     try {
       await pump(form, req)
@@ -64,26 +66,30 @@ test('should be able to get whole buffer by accessing "content" on part', functi
   })
 })
 
-test('should be able to access "content" multiple times without reading the stream twice', function (t) {
-  t.plan(5)
+test('should be able to define a custom "onFile" handler', function (t) {
+  t.plan(7)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  async function onFile (part) {
+    t.pass('custom onFile handler')
+    await part.buffer()
+  }
+
+  fastify.register(multipart, { attachFieldsToBody: true, onFile })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    const file = await req.file()
-    // lazy load (getter)
-    const buf = await file.buffer()
-    const buf2 = await file.buffer()
+    t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    t.equal(buf.toString(), original)
-    t.equal(buf2.toString(), original)
+    const content = await req.body.upload.buffer()
+
+    t.equal(content.toString(), original)
+    t.equal(req.body.hello.value, 'world')
 
     reply.code(200).send()
   })
@@ -108,6 +114,7 @@ test('should be able to access "content" multiple times without reading the stre
       })
     })
     form.append('upload', fs.createReadStream(filePath))
+    form.append('hello', 'world')
 
     try {
       await pump(form, req)

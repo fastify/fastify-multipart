@@ -10,6 +10,7 @@ Fastify plugin to parse the multipart content-type. Supports:
 - Async iterator support to handle multiple parts
 - Stream & Disk mode
 - Accumulate whole file in memory
+- Mode to attach all fields to the request body
 
 Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 
@@ -47,7 +48,7 @@ fastify.post('/', async function (req, reply) {
 
   // to accumulate the file in memory! Be careful!
   //
-  // await data.content // Buffer
+  // await data.buffer() // Buffer
   //
   // or
 
@@ -141,7 +142,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 ```js
 fastify.post('/upload/raw/any', async function (req, reply) {
   const data = await req.file()
-  const buffer = await data.content
+  const buffer = await data.buffer()
   // upload to S3
   reply.send()
 })
@@ -164,6 +165,34 @@ fastify.post('/upload/files', async function (req, reply) {
   files[0].fields // other parsed parts
 
   reply.send()
+})
+```
+
+## Parse all fields and assign them to the body
+
+This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by the fastify.
+
+```js
+fastify.register(multipart, { attachFieldsToBody: true })
+
+fastify.post('/upload/files', async function (req, reply) {
+  const uploadValue = await req.body.upload.buffer()  // access files
+  const fooValue = await req.body.foo.value           // other fields
+})
+```
+
+You can also define a `onFile` handler to avoid accumulate all files in memory.
+
+```js
+async function onFile(part) {
+  await part.buffer()
+}
+
+fastify.register(multipart, { onFile })
+
+fastify.post('/upload/files', async function (req, reply) {
+  const uploadValue = await req.body.upload.buffer()  // access files
+  const fooValue = await req.body.foo.value           // other fields
 })
 ```
 
