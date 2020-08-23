@@ -101,7 +101,6 @@ function busboy (options) {
 function fastifyMultipart (fastify, options = {}, done) {
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
-      console.log('#################222222222222222222')
       fastify.addSchema({
         $id: options.sharedSchemaId,
         type: 'object',
@@ -119,9 +118,8 @@ function fastifyMultipart (fastify, options = {}, done) {
     })
   }
 
-  if (options.attachFieldsToBody === true || options.onFile) {
+  if (options.attachFieldsToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
-      console.log('#################11111111111', (new Error()).stack)
       fastify.addSchema({
         $id: options.sharedSchemaId,
         type: 'object',
