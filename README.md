@@ -70,7 +70,7 @@ fastify.listen(3000, err => {
 
 You can also pass optional arguments to busboy when registering with fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
 
-**Note**: if the file stream that is provided to the handler function is not consumed (like in the example above with the usage of pump) the onEnd callback won't be called at the end of the multipart processing.
+**Note**: if the file stream that is provided to the handler function is not consumed (like in the example above with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 ```js
