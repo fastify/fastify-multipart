@@ -70,7 +70,7 @@ fastify.listen(3000, err => {
 
 You can also pass optional arguments to busboy when registering with fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
 
-**Note**: if the file stream that is provided to the handler function is not consumed (like in the example above with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
+**Note**: if the file stream that is provided by `data.file` is not consumed (like in the example above with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 ```js
@@ -88,9 +88,13 @@ fastify.register(require('fastify-multipart'), {
 
 If you do set upload limits, be sure to catch the error. An error or exception will occur if a limit is reached. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
 
+**Note**: if the file stream that is provided by `data.file` is not consumed (like in the example below with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
+This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
+
 ```js
 try {
   const data = await req.file()
+  await pump(data.file, fs.createWriteStream(data.filename))
 } catch (error) {
   if (error instanceof fastify.multipartErrors.FilesLimitError) {
     // handle error
@@ -185,7 +189,7 @@ You can also define a `onFile` handler to avoid accumulate all files in memory.
 
 ```js
 async function onFile(part) {
-  await part.buffer()
+  await pump(part.file, fs.createWriteStream(part.filename))
 }
 
 fastify.register(multipart, { onFile })
