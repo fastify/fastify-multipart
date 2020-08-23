@@ -170,7 +170,7 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## Parse all fields and assign them to the body
 
-This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by the fastify.
+This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by fastify.
 
 ```js
 fastify.register(multipart, { attachFieldsToBody: true })
