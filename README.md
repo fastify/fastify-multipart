@@ -192,7 +192,7 @@ async function onFile(part) {
   await pump(part.file, fs.createWriteStream(part.filename))
 }
 
-fastify.register(multipart, { onFile })
+fastify.register(multipart, { attachFieldsToBody: true, onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
   const fooValue = await req.body.foo.value           // other fields
