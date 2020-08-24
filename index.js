@@ -395,7 +395,7 @@ function fastifyMultipart (fastify, options = {}, done) {
           for await (const chunk of this.file) {
             fileChunks.push(chunk)
           }
-          this._buf = fileChunks
+          this._buf = Buffer.concat(fileChunks)
           return this._buf
         }
       }
