@@ -1,6 +1,7 @@
+'use strict'
+
 const Busboy = require('busboy')
 const os = require('os')
-const concat = require('concat-stream')
 const fp = require('fastify-plugin')
 const eos = require('end-of-stream')
 const { createWriteStream } = require('fs')
@@ -383,16 +384,16 @@ function fastifyMultipart (fastify, options = {}, done) {
         file,
         fields: body,
         _buf: null,
-        buffer () {
+        async buffer () {
           if (this._buf) {
-            return Promise.resolve(this._buf)
+            return this._buf
           }
-          return new Promise((resolve, reject) => {
-            pump(this.file, concat((buf) => {
-              this._buf = buf
-              resolve(this._buf)
-            })).catch(reject)
-          })
+          const fileChunks = []
+          for await (const chunk of this.file) {
+            fileChunks.push(chunk)
+          }
+          this._buf = fileChunks
+          return this._buf
         }
       }
       if (body[name] === undefined) {
@@ -447,7 +448,9 @@ function fastifyMultipart (fastify, options = {}, done) {
       } else {
         logger.error(err)
         // ignore next error event
-        file.on('error', () => { })
+        file.on('error', (err) => {
+          logger.error('fileLimit: suppressed file stream error, %s', err.messsage)
+        })
       }
       // ignore all data
       file.resume()

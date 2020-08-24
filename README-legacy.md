@@ -1,4 +1,4 @@
-# Legacy api of fastify-multipart
+# Callback-based API
 
 ## Usage
 
