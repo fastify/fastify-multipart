@@ -208,6 +208,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     const log = this.log
 
+    log.warn('the multipart callback-based api is deprecated in favour of the new promise api')
     log.debug('starting multipart parsing')
 
     const req = this.raw
@@ -280,6 +281,8 @@ function fastifyMultipart (fastify, options = {}, done) {
     if (!this.isMultipart()) {
       throw new InvalidMultipartContentTypeError()
     }
+
+    this.log.debug('starting multipart parsing')
 
     let worker
     let lastValue
