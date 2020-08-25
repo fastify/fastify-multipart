@@ -28,7 +28,7 @@ test('should be able to get whole buffer by accessing "content" on part', functi
 
     const file = await req.file()
     // lazy load (getter)
-    const buf = await file.buffer()
+    const buf = await file.toBuffer()
 
     t.equal(buf.toString(), original)
 
@@ -79,8 +79,8 @@ test('should be able to access "content" multiple times without reading the stre
 
     const file = await req.file()
     // lazy load (getter)
-    const buf = await file.buffer()
-    const buf2 = await file.buffer()
+    const buf = await file.toBuffer()
+    const buf2 = await file.toBuffer()
 
     t.equal(buf.toString(), original)
     t.equal(buf2.toString(), original)

@@ -28,7 +28,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
 
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    const content = await req.body.upload.buffer()
+    const content = await req.body.upload.toBuffer()
 
     t.equal(content.toString(), original)
     t.equal(req.body.hello.value, 'world')
@@ -74,7 +74,7 @@ test('should be able to define a custom "onFile" handler', function (t) {
 
   async function onFile (part) {
     t.pass('custom onFile handler')
-    await part.buffer()
+    await part.toBuffer()
   }
 
   fastify.register(multipart, { attachFieldsToBody: true, onFile })
@@ -86,7 +86,7 @@ test('should be able to define a custom "onFile" handler', function (t) {
 
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    const content = await req.body.upload.buffer()
+    const content = await req.body.upload.toBuffer()
 
     t.equal(content.toString(), original)
     t.equal(req.body.hello.value, 'world')

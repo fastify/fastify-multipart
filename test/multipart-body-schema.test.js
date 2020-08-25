@@ -39,7 +39,7 @@ test('should be able to use JSON schema to validate request', function (t) {
 
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    const content = await req.body.upload.buffer()
+    const content = await req.body.upload.toBuffer()
 
     t.equal(content.toString(), original)
     t.equal(req.body.hello.value, 'world')

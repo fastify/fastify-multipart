@@ -139,7 +139,7 @@ function fastifyMultipart (fastify, options = {}, done) {
           if (options.onFile) {
             await options.onFile(part)
           } else {
-            await part.buffer()
+            await part.toBuffer()
           }
         }
       }
@@ -387,7 +387,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         file,
         fields: body,
         _buf: null,
-        async buffer () {
+        async toBuffer () {
           if (this._buf) {
             return this._buf
           }

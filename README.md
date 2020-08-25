@@ -49,7 +49,7 @@ fastify.post('/', async function (req, reply) {
 
   // to accumulate the file in memory! Be careful!
   //
-  // await data.buffer() // Buffer
+  // await data.toBuffer() // Buffer
   //
   // or
 
@@ -147,7 +147,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 ```js
 fastify.post('/upload/raw/any', async function (req, reply) {
   const data = await req.file()
-  const buffer = await data.buffer()
+  const buffer = await data.toBuffer()
   // upload to S3
   reply.send()
 })
@@ -181,7 +181,7 @@ This allows you to parse all fields automatically and assign them to the `reques
 fastify.register(multipart, { attachFieldsToBody: true })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const uploadValue = await req.body.upload.buffer()  // access files
+  const uploadValue = await req.body.upload.toBuffer()  // access files
   const fooValue = await req.body.foo.value           // other fields
 })
 ```
