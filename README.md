@@ -11,6 +11,7 @@ Fastify plugin to parse the multipart content-type. Supports:
 - Stream & Disk mode
 - Accumulate whole file in memory
 - Mode to attach all fields to the request body
+- Tested across Linux/Mac/Windows
 
 Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 

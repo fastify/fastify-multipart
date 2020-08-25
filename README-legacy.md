@@ -1,5 +1,11 @@
 # Callback-based API
 
+## Compatibility
+
+- [X] Linux
+- [X] Mac
+- [ ] Windows: Due to this [error](https://github.com/fastify/fastify-multipart/issues/110), we recommend to use the [new](/README.md) promise implementation.
+
 ## Usage
 
 ```js
