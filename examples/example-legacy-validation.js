@@ -4,18 +4,18 @@ const fastify = require('fastify')({ logger: true })
 
 const opts = {
   addToBody: true,
-  sharedSchemaId: 'mySharedSchema'
+  sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(require('.'), opts)
+fastify.register(require('..'), opts)
 
-fastify.post('/upload', {
+fastify.post('/upload/files', {
   schema: {
     body: {
       type: 'object',
       required: ['myStringField'],
       properties: {
         myStringField: { type: 'string' },
-        myFilenameField: 'mySharedSchema#'
+        myFilenameField: { $ref: '#mySharedSchema' }
       }
     }
   }

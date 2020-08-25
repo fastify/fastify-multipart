@@ -18,10 +18,33 @@ interface BodyEntry {
     limit: false
 }
 
+interface MultipartFields {
+  [x: string]: Multipart;
+}
+
+interface Multipart {
+  toBuffer: () => Promise<Buffer>,
+  file: NodeJS.ReadableStream,
+  filepath: string,
+  fieldname: string,
+  filename: string,
+  encoding: string,
+  mimetype: string,
+  fields: MultipartFields
+}
+
 declare module "fastify" {
     interface FastifyRequest {
         isMultipart: () => boolean;
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
+
+        // promise api
+        multipartIterator: (options?: busboy.BusboyConfig) => AsyncIterator<Multipart>
+        file: (options?: busboy.BusboyConfig) => Promise<Multipart>
+        files: (options?: busboy.BusboyConfig) => AsyncIterator<Multipart>
+        saveRequestFiles: (options?: busboy.BusboyConfig) => Promise<Array<Multipart>>
+        cleanRequestFiles: () => Promise<void>
+        tmpUploads: Array<Multipart>
     }
 }
 
@@ -32,7 +55,12 @@ export interface FastifyMultipartOptions {
     addToBody?: boolean;
 
     /**
-     * Add a shered schema to validate the input fields
+     * Only valid in the promise api. Append the multipart parameters to the body object.
+     */
+    attachFieldsToBody?: boolean
+
+    /**
+     * Add a shared schema to validate the input fields
      */
     sharedSchemaId?: string;
 

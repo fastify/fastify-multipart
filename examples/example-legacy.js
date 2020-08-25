@@ -4,15 +4,15 @@ const fastify = require('fastify')()
 const fs = require('fs')
 const path = require('path')
 const pump = require('pump')
-const form = path.join(__dirname, 'form.html')
+const form = path.join(__dirname, '..', 'form.html')
 
-fastify.register(require('.'))
+fastify.register(require('..'))
 
 fastify.get('/', function (req, reply) {
   reply.type('text/html').send(fs.createReadStream(form))
 })
 
-fastify.post('/upload', function (req, reply) {
+fastify.post('/upload/files', function (req, reply) {
   const mp = req.multipart(handler, function (err) {
     if (err) {
       reply.send(err)
