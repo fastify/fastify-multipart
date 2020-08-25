@@ -6,7 +6,7 @@ const util = require('util')
 const path = require('path')
 const { pipeline } = require('stream')
 const pump = util.promisify(pipeline)
-const form = path.join(__dirname, 'form.html')
+const form = path.join(__dirname, '..', 'form.html')
 
 fastify.register(require('..'))
 

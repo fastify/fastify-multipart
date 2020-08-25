@@ -4,7 +4,7 @@ const fastify = require('fastify')()
 const fs = require('fs')
 const path = require('path')
 const pump = require('pump')
-const form = path.join(__dirname, 'form.html')
+const form = path.join(__dirname, '..', 'form.html')
 
 fastify.register(require('..'))
 
