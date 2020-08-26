@@ -103,7 +103,7 @@ try {
 }
 ``` 
 
-Additionally, you can pass per-request options to the req.multipart function
+Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.multipartIterator` function.
 
 ```js
 fastify.post('/', async function (req, reply) {
@@ -130,7 +130,7 @@ fastify.post('/', async function (req, reply) {
 
 ```js
 fastify.post('/upload/raw/any', async function (req, reply) {
-  const parts = await req.multipart()
+  const parts = await req.multipartIterator()
   for await (const part of parts) {
     if (part.file) {
       await pump(part.file, fs.createWriteStream(part.filename))
