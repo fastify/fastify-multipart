@@ -24,7 +24,7 @@ test('should parse forms', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    for await (const part of req.multipartIterator()) {
+    for await (const part of req.parts()) {
       if (part.file) {
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'README.md')
@@ -136,7 +136,7 @@ test('should group parts with the same name to an array', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    const parts = await req.multipartIterator()
+    const parts = await req.parts()
     for await (const part of parts) {
       t.ok(part)
       if (Array.isArray(part.fields.upload)) {
@@ -386,7 +386,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
 
   fastify.post('/', async function (req, reply) {
     try {
-      for await (const part of req.multipartIterator({ limits: { fields: 1 } })) {
+      for await (const part of req.parts({ limits: { fields: 1 } })) {
         t.ok(part)
       }
       reply.code(200).send()
@@ -436,7 +436,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
 
   fastify.post('/', async function (req, reply) {
     try {
-      for await (const part of req.multipartIterator({ limits: { parts: 1 } })) {
+      for await (const part of req.parts({ limits: { parts: 1 } })) {
         t.ok(part)
       }
       reply.code(200).send()

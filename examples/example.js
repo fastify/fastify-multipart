@@ -29,7 +29,7 @@ fastify.post('/upload/stream/files', async function (req, reply) {
 })
 
 fastify.post('/upload/raw/any', async function (req, reply) {
-  const parts = await req.multipartIterator()
+  const parts = await req.parts()
   for await (const part of parts) {
     if (part.file) {
       await pump(part.file, fs.createWriteStream(part.filename))
