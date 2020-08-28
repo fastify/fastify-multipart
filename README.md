@@ -178,7 +178,7 @@ fastify.post('/upload/files', async function (req, reply) {
 This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by fastify.
 
 ```js
-fastify.register(multipart, { attachFieldsToBody: true })
+fastify.register(require('fastify-multipart'), { attachFieldsToBody: true })
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = await req.body.upload.toBuffer()  // access files
@@ -193,7 +193,7 @@ async function onFile(part) {
   await pump(part.file, fs.createWriteStream(part.filename))
 }
 
-fastify.register(multipart, { attachFieldsToBody: true, onFile })
+fastify.register(require('fastify-multipart'), { attachFieldsToBody: true, onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
   const fooValue = await req.body.foo.value           // other fields
@@ -209,7 +209,7 @@ const opts = {
   attachFieldsToBody: true,
   sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(multipart, opts)
+fastify.register(require('fastify-multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
