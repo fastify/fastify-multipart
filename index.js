@@ -133,7 +133,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       })
     }
     fastify.addHook('preValidation', async function (req, reply) {
-      for await (const part of req.multipartIterator()) {
+      for await (const part of req.parts()) {
         req.body = part.fields
         if (part.file) {
           if (options.onFile) {
@@ -164,7 +164,12 @@ function fastifyMultipart (fastify, options = {}, done) {
 
   fastify.addContentTypeParser('multipart', setMultipart)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
+
+  fastify.decorateRequest('parts', getMultipartIterator)
+  // keeping multipartIterator to avoid bumping a major
+  // TODO remove on 4.x
   fastify.decorateRequest('multipartIterator', getMultipartIterator)
+
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', [])
 
