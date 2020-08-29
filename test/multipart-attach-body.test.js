@@ -123,3 +123,38 @@ test('should be able to define a custom "onFile" handler', function (t) {
     }
   })
 })
+
+test('should not process requests with content-type other than multipart', function (t) {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: true })
+
+  fastify.post('/', async function (req) {
+    return { hello: req.body.name }
+  })
+
+  fastify.listen(0, function () {
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: { 'content-type': 'application/json' },
+      method: 'POST'
+    }
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.on('data', function (data) {
+        t.equal(JSON.parse(data).hello, 'world')
+      })
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    req.end(JSON.stringify({ name: 'world' }))
+  })
+})
