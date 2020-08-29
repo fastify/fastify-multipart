@@ -133,6 +133,9 @@ function fastifyMultipart (fastify, options = {}, done) {
       })
     }
     fastify.addHook('preValidation', async function (req, reply) {
+      if (!req.isMultipart()) {
+        return
+      }
       for await (const part of req.parts()) {
         req.body = part.fields
         if (part.file) {
