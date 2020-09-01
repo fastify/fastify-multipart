@@ -19,7 +19,7 @@ interface BodyEntry {
 }
 
 interface MultipartFields {
-  [x: string]: Multipart;
+  [x: string]: Multipart | Multipart[];
 }
 
 interface Multipart {
