@@ -23,7 +23,7 @@ export interface MultipartFields {
     [x: string]: Multipart | Multipart[];
 }
 
-interface Multipart {
+export interface Multipart {
   toBuffer: () => Promise<Buffer>,
   file: NodeJS.ReadableStream,
   filepath: string,
