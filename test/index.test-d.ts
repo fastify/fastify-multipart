@@ -1,5 +1,12 @@
 import fastify from 'fastify'
 import fastifyMultipart from '..'
+import { MultipartFields } from '..'
+import * as util from 'util'
+import { pipeline } from 'stream'
+import * as fs from 'fs'
+import { expectType } from 'tsd'
+
+const pump = util.promisify(pipeline)
 
 const runServer = async () => {
   const app = fastify()
@@ -33,6 +40,79 @@ const runServer = async () => {
         fileSize: 10000
       }
     })
+  })
+
+  // usage
+  app.post('/', async (req, reply) => {
+    const data = await req.file()
+
+    expectType<NodeJS.ReadableStream>(data.file)
+    expectType<MultipartFields>(data.fields)
+    expectType<string>(data.fieldname)
+    expectType<string>(data.filename)
+    expectType<string>(data.encoding)
+    expectType<string>(data.mimetype)
+
+    await pump(data.file, fs.createWriteStream(data.filename))
+
+    reply.send()
+  })
+
+  // busboy
+  app.post('/', async function (req, reply) {
+    const options: busboy.BusboyConfig = { limits: { fileSize: 1000 } };
+    const data = await req.file(options)
+    await pump(data.file, fs.createWriteStream(data.filename))
+    reply.send()
+  })
+
+  // handle multiple file streams
+  app.post('/', async (req, reply) => {
+    const parts = await req.files()
+    for await (const part of parts) {
+      await pump(part.file, fs.createWriteStream(part.filename))
+    }
+    reply.send()
+  })
+
+  // handle multiple file streams and fields
+  app.post('/upload/raw/any', async function (req, reply) {
+    const parts = await req.parts()
+    for await (const part of parts) {
+      if (part.file) {
+        await pump(part.file, fs.createWriteStream(part.filename))
+      } else {
+        console.log(part)
+      }
+    }
+    reply.send()
+  })
+
+  // accumulate whole file in memory
+  app.post('/upload/raw/any', async function (req, reply) {
+    const data = await req.file()
+    const buffer = await data.toBuffer()
+    // upload to S3
+    reply.send()
+  })
+
+  // upload files to disk and work with temporary file paths
+  app.post('/upload/files', async function (req, reply) {
+    // stores files to tmp dir and return files
+    const files = await req.saveRequestFiles()
+    files[0].filepath
+    files[0].fieldname
+    files[0].filename
+    files[0].encoding
+    files[0].mimetype
+    files[0].fields // other parsed parts
+
+    reply.send()
+  })
+
+  // access all errors
+  app.post('/upload/files', async function (req, reply) {
+    const { FilesLimitError } = app.multipartErrors
   })
 
   await app.ready()
