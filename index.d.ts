@@ -89,7 +89,7 @@ export interface FastifyMultipartOptions {
     /**
      * Manage the file stream like you need
      */
-    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void;
+    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void | Promise<void>;
 
     limits?: {
         /**
