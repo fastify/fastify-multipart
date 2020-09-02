@@ -1,6 +1,7 @@
 import * as busboy from "busboy";
 import { FastifyPlugin } from "fastify";
 import { Readable } from 'stream';
+import { FastifyError } from "fastify-error";
 
 type MultipartHandler = (
     field: string,
@@ -18,8 +19,8 @@ interface BodyEntry {
     limit: false
 }
 
-interface MultipartFields {
-  [x: string]: Multipart | Multipart[];
+export interface MultipartFields {
+    [x: string]: Multipart | Multipart[];
 }
 
 interface Multipart {
@@ -33,18 +34,39 @@ interface Multipart {
   fields: MultipartFields
 }
 
+interface MultipartErrors {
+    PartsLimitError: FastifyError,
+    FilesLimitError: FastifyError,
+    FieldsLimitError: FastifyError,
+    PrototypeViolationError: FastifyError,
+    InvalidMultipartContentTypeError: FastifyError,
+    RequestFileTooLargeError: FastifyError
+}
+
 declare module "fastify" {
     interface FastifyRequest {
         isMultipart: () => boolean;
+
+        parts: (options?: busboy.BusboyConfig) =>  AsyncIterableIterator<Multipart>
+
+        // legacy
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
 
         // promise api
-        multipartIterator: (options?: busboy.BusboyConfig) => AsyncIterator<Multipart>
+        multipartIterator: (options?: busboy.BusboyConfig) => AsyncIterableIterator<Multipart>
+
+        // Stream mode
         file: (options?: busboy.BusboyConfig) => Promise<Multipart>
-        files: (options?: busboy.BusboyConfig) => AsyncIterator<Multipart>
+        files: (options?: busboy.BusboyConfig) => AsyncIterableIterator<Multipart>
+
+        // Disk mode
         saveRequestFiles: (options?: busboy.BusboyConfig) => Promise<Array<Multipart>>
         cleanRequestFiles: () => Promise<void>
         tmpUploads: Array<Multipart>
+    }
+
+    interface FastifyInstance {
+        multipartErrors: MultipartErrors
     }
 }
 
