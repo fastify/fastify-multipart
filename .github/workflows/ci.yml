@@ -1,42 +1,44 @@
 name: Continuous Integration
-on:
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-  pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-
+"on":
+    push:
+        paths-ignore:
+            - '*.md'
+            - docs/**
+    pull_request:
+        paths-ignore:
+            - '*.md'
+            - docs/**
+            - fixtures
 env:
-  CI: true
-
+    A: foo
+    CI: "true"
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node-version: [10.x, 12.x, 14.x]
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-    name: Node ${{ matrix.node-version }}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install Dependencies
-        run: npm install --ignore-scripts
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Tests
-        run: npm run unit
-
-      - name: Typescript
-        run: npm run typescript
+    build:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                node-version:
+                    - 10.x
+                    - 12.x
+                    - 14.x
+                    - 15.x
+                os:
+                    - macOS-latest
+                    - ubuntu-latest
+                    - windows-latest
+        name: Node ${{ matrix.node-version }}
+        steps:
+            - uses: actions/checkout@v2
+            - uses: actions/setup-node@v1
+              name: Setup node
+              with:
+                node-version: ${{ matrix.node-version }}
+            - name: Install Dependencies
+              run: npm install --ignore-scripts
+            - if: if
+              name: Tests
+              run: npm run unit
+            - name: Typescript
+              run: npm run typescript2
+            - name: Post
+              run: npm run post
