@@ -125,9 +125,7 @@ test('should throw on file limit error', function (t) {
 
     try {
       await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    } catch (error) {}
   })
 })
 
@@ -135,7 +133,7 @@ test('should throw on file limit error, after highWaterMark', function (t) {
   t.plan(6)
 
   const hashInput = crypto.createHash('sha256')
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -203,9 +201,7 @@ test('should throw on file limit error, after highWaterMark', function (t) {
 
     try {
       await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    } catch (error) {}
   })
 })
 
