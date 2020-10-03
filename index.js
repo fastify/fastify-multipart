@@ -447,11 +447,14 @@ function fastifyMultipart (fastify, options = {}, done) {
       // ensure that stream is consumed, any error is suppressed
       await sendToWormhole(file)
       // throw on consumer side
-      return Promise.reject(new RequestFileTooLargeError())
+      const err = new RequestFileTooLargeError()
+      err.part = part
+      return Promise.reject(err)
     }
 
     file.once('limit', () => {
       const err = new RequestFileTooLargeError()
+      err.part = part
 
       if (file.listenerCount('error') > 0) {
         file.emit('error', err)
@@ -482,8 +485,13 @@ function fastifyMultipart (fastify, options = {}, done) {
         this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
       } catch (error) {
-        this.log.error(error)
-        await unlink(filepath)
+        try {
+          await unlink(filepath)
+        } catch (error) {
+          this.log.debug('saveRequestFiles: could not delete file, %s', error.messsage)
+        }
+
+        throw error
       }
     }
 
