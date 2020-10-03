@@ -14,11 +14,13 @@ const stream = require('stream')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
 const eos = util.promisify(stream.finished)
+const EventEmitter = require('events')
+const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should throw fileSize limitation error on small payload', function (t) {
-  t.plan(4)
+test('should throw fileSize limitation error on small payload', async function (t) {
+  t.plan(3)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -37,37 +39,32 @@ test('should throw fileSize limitation error on small payload', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('upload', fs.createReadStream(filePath))
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
-  })
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 500)
+  res.resume()
+  await once(res, 'end')
 })
 
-test('should emit fileSize limitation error during streaming', function (t) {
-  t.plan(5)
+test('should emit fileSize limitation error during streaming', async function (t) {
+  t.plan(4)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -91,63 +88,58 @@ test('should emit fileSize limitation error during streaming', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const knownLength = 1024 * 1024 // 1MB
-    let total = knownLength
-    const form = new FormData({ maxDataSize: total })
-    const rs = new Readable({
-      read (n) {
-        if (n > total) {
-          n = total
-        }
+  await fastify.listen(0)
 
-        var buf = Buffer.alloc(n).fill('x')
-        hashInput.update(buf)
-        this.push(buf)
-
-        total -= n
-
-        if (total === 0) {
-          t.pass('finished generating')
-          hashInput.end()
-          this.push(null)
-        }
+  // request
+  const knownLength = 1024 * 1024 // 1MB
+  let total = knownLength
+  const form = new FormData({ maxDataSize: total })
+  const rs = new Readable({
+    read (n) {
+      if (n > total) {
+        n = total
       }
-    })
-    form.append('upload', rs, {
-      filename: 'random-data',
-      contentType: 'binary/octect-stream',
-      knownLength
-    })
 
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+      var buf = Buffer.alloc(n).fill('x')
+      hashInput.update(buf)
+      this.push(buf)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
+      total -= n
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
+      if (total === 0) {
+        t.pass('finished generating')
+        hashInput.end()
+        this.push(null)
+      }
     }
   })
+
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', rs, {
+    filename: 'random-data',
+    contentType: 'binary/octect-stream',
+    knownLength
+  })
+
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 500)
+  res.resume()
+  await once(res, 'end')
 })
 
-test('should ignore fileSize limitation error when no error handler was set', function (t) {
-  t.plan(4)
+test('should ignore fileSize limitation error when no error handler was set', async function (t) {
+  t.plan(3)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -165,57 +157,52 @@ test('should ignore fileSize limitation error when no error handler was set', fu
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const knownLength = 1024 * 1024 // 1MB
-    let total = knownLength
-    const form = new FormData({ maxDataSize: total })
-    const rs = new Readable({
-      read (n) {
-        if (n > total) {
-          n = total
-        }
+  await fastify.listen(0)
 
-        var buf = Buffer.alloc(n).fill('x')
-        hashInput.update(buf)
-        this.push(buf)
-
-        total -= n
-
-        if (total === 0) {
-          t.pass('finished generating')
-          hashInput.end()
-          this.push(null)
-        }
+  // request
+  const knownLength = 1024 * 1024 // 1MB
+  let total = knownLength
+  const form = new FormData({ maxDataSize: total })
+  const rs = new Readable({
+    read (n) {
+      if (n > total) {
+        n = total
       }
-    })
-    form.append('upload', rs, {
-      filename: 'random-data',
-      contentType: 'binary/octect-stream',
-      knownLength
-    })
 
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+      var buf = Buffer.alloc(n).fill('x')
+      hashInput.update(buf)
+      this.push(buf)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
+      total -= n
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
+      if (total === 0) {
+        t.pass('finished generating')
+        hashInput.end()
+        this.push(null)
+      }
     }
   })
+
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', rs, {
+    filename: 'random-data',
+    contentType: 'binary/octect-stream',
+    knownLength
+  })
+
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
 })
