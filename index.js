@@ -449,14 +449,12 @@ function fastifyMultipart (fastify, options = {}, done) {
       // throw on consumer side
       const err = new RequestFileTooLargeError()
       err.part = part
-      delete err.part.file
       return Promise.reject(err)
     }
 
     file.once('limit', () => {
       const err = new RequestFileTooLargeError()
       err.part = part
-      delete err.part.file
 
       if (file.listenerCount('error') > 0) {
         file.emit('error', err)
@@ -487,6 +485,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
       } catch (error) {
+        await sendToWormhole(file.file)
         try {
           await unlink(filepath)
         } catch (error) {
