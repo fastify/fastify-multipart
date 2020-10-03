@@ -466,6 +466,8 @@ function fastifyMultipart (fastify, options = {}, done) {
           logger.error('fileLimit: suppressed file stream error, %s', err.messsage)
         })
       }
+      // ignore all data
+      file.resume()
     })
 
     return part
@@ -483,8 +485,6 @@ function fastifyMultipart (fastify, options = {}, done) {
         this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
       } catch (error) {
-        // ensure that stream is consumed, any error is suppressed
-        await sendToWormhole(file.file)
         try {
           await unlink(filepath)
         } catch (error) {

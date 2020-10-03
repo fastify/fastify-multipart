@@ -10,6 +10,7 @@ const crypto = require('crypto')
 const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
+const sendToWormhole = require('stream-wormhole')
 const { access } = require('fs').promises
 const stream = require('stream')
 const pump = util.promisify(stream.pipeline)
@@ -149,6 +150,8 @@ test('should throw on file limit error, after highWaterMark', function (t) {
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       t.equal(error.part.fieldname, 'upload2')
+      // we have to wait until the file was flushed
+      await sendToWormhole(error.part.file)
       reply.code(500).send()
     }
   })
