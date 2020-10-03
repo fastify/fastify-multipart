@@ -12,6 +12,8 @@ const path = require('path')
 const fs = require('fs')
 const { access } = require('fs').promises
 const stream = require('stream')
+const EventEmitter = require('events')
+const { once } = EventEmitter
 const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
@@ -80,8 +82,8 @@ test('should store file on disk, remove on response', function (t) {
   })
 })
 
-test('should throw on file limit error', function (t) {
-  t.plan(5)
+test('should throw on file limit error', async function (t) {
+  t.plan(4)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -101,36 +103,31 @@ test('should throw on file limit error', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('upload2', fs.createReadStream(filePath))
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('upload', fs.createReadStream(filePath))
-    form.append('upload2', fs.createReadStream(filePath))
+  pump(form, req)
 
-    try {
-      await pump(form, req)
-    } catch (error) {}
-  })
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 500)
+  res.resume()
+  await once(res, 'end')
 })
 
-test('should throw on file limit error, after highWaterMark', function (t) {
-  t.plan(6)
+test('should throw on file limit error, after highWaterMark', async function (t) {
+  t.plan(5)
 
   const hashInput = crypto.createHash('sha256')
   const fastify = Fastify()
@@ -151,58 +148,55 @@ test('should throw on file limit error, after highWaterMark', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const knownLength = 1024 * 1024 // 1MB
-    let total = knownLength
-    const form = new FormData({ maxDataSize: total })
-    const rs = new Readable({
-      read (n) {
-        if (n > total) {
-          n = total
-        }
+  await fastify.listen(0)
 
-        var buf = Buffer.alloc(n).fill('x')
-        hashInput.update(buf)
-        this.push(buf)
-
-        total -= n
-
-        if (total === 0) {
-          t.pass('finished generating')
-          hashInput.end()
-          this.push(null)
-        }
+  // request
+  const knownLength = 1024 * 1024 // 1MB
+  let total = knownLength
+  const form = new FormData({ maxDataSize: total })
+  const rs = new Readable({
+    read (n) {
+      if (n > total) {
+        n = total
       }
-    })
-    form.append('upload', fs.createReadStream(filePath))
-    form.append('upload2', rs, {
-      filename: 'random-data',
-      contentType: 'binary/octect-stream',
-      knownLength
-    })
 
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
+      var buf = Buffer.alloc(n).fill('x')
+      hashInput.update(buf)
+      this.push(buf)
+
+      total -= n
+
+      if (total === 0) {
+        t.pass('finished generating')
+        hashInput.end()
+        this.push(null)
+      }
     }
-
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-
-    try {
-      await pump(form, req)
-    } catch (error) {}
   })
+
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('upload2', rs, {
+    filename: 'random-data',
+    contentType: 'binary/octect-stream',
+    knownLength
+  })
+
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 500)
+  res.resume()
+  await once(res, 'end')
 })
 
 test('should store file on disk, remove on response error', function (t) {
