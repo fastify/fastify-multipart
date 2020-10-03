@@ -93,11 +93,11 @@ test('should throw on file limit error', function (t) {
 
     try {
       await req.saveRequestFiles({ limits: { fileSize: 500 } })
-      reply.code(500).send()
+      reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       t.equal(error.part.fieldname, 'upload')
-      reply.code(200).send()
+      reply.code(500).send()
     }
   })
 
@@ -114,7 +114,7 @@ test('should throw on file limit error', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
         t.pass('res ended successfully')
@@ -145,11 +145,11 @@ test('should throw on file limit error, after highWaterMark', function (t) {
 
     try {
       await req.saveRequestFiles({ limits: { fileSize: 17000 } })
-      reply.code(500).send()
+      reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       t.equal(error.part.fieldname, 'upload2')
-      reply.code(200).send()
+      reply.code(500).send()
     }
   })
 
@@ -194,7 +194,7 @@ test('should throw on file limit error, after highWaterMark', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
         t.pass('res ended successfully')

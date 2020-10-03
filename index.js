@@ -467,7 +467,7 @@ function fastifyMultipart (fastify, options = {}, done) {
         })
       }
       // ignore all data
-      file.resume()
+      sendToWormhole(file)
     })
 
     return part
