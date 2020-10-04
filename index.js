@@ -174,7 +174,7 @@ function fastifyMultipart (fastify, options = {}, done) {
   fastify.decorateRequest('multipartIterator', getMultipartIterator)
 
   fastify.decorateRequest('isMultipart', isMultipart)
-  fastify.decorateRequest('tmpUploads', [])
+  fastify.decorateRequest('tmpUploads', null)
 
   // legacy
   fastify.decorateRequest('multipart', handleLegacyMultipartApi)
@@ -474,6 +474,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     const requestFiles = []
 
     const files = await this.files(options)
+    this.tmpUploads = []
     for await (const file of files) {
       const filepath = path.join(os.tmpdir(), toID() + path.extname(file.filename))
       const target = createWriteStream(filepath)
@@ -491,6 +492,9 @@ function fastifyMultipart (fastify, options = {}, done) {
   }
 
   async function cleanRequestFiles () {
+    if (!this.tmpUploads) {
+      return
+    }
     for (const filepath of this.tmpUploads) {
       try {
         await unlink(filepath)
