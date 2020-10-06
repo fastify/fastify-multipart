@@ -171,7 +171,6 @@ test('should throw on file limit error', async function (t) {
   }
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
-  form.append('upload2', fs.createReadStream(filePath))
 
   pump(form, req)
 
@@ -239,7 +238,6 @@ test('should throw on file limit error, after highWaterMark', async function (t)
   }
 
   const req = http.request(opts)
-  form.append('upload', fs.createReadStream(filePath))
   form.append('upload2', rs, {
     filename: 'random-data',
     contentType: 'binary/octect-stream',
