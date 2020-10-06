@@ -18,10 +18,10 @@ const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should store file on disk, remove on response', function (t) {
-  t.plan(11)
+test('should store file on disk, remove on response', async function (t) {
+  t.plan(10)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -42,6 +42,7 @@ test('should store file on disk, remove on response', function (t) {
 
     reply.code(200).send()
   })
+  const ee = new EventEmitter()
 
   // ensure that file is removed after response
   fastify.addHook('onResponse', async (request, reply) => {
@@ -50,42 +51,96 @@ test('should store file on disk, remove on response', function (t) {
     } catch (error) {
       t.equal(error.code, 'ENOENT')
       t.pass('Temp file was removed after response')
+      ee.emit('response')
     }
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('upload', fs.createReadStream(filePath))
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
 
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  await once(ee, 'response')
+})
+
+test('should store file on disk, remove on response error', async function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    await req.saveRequestFiles()
+
+    throw new Error('test')
+  })
+
+  const ee = new EventEmitter()
+
+  // ensure that file is removed after response
+  fastify.addHook('onResponse', async (request, reply) => {
     try {
-      await pump(form, req)
+      await access(request.tmpUploads[0], fs.constants.F_OK)
     } catch (error) {
-      t.error(error, 'formData request pump: no err')
+      t.equal(error.code, 'ENOENT')
+      t.pass('Temp file was removed after response')
+      ee.emit('response')
     }
   })
+
+  await fastify.listen(0)
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts, (res) => {
+    t.equal(res.statusCode, 500)
+    res.resume()
+    res.on('end', () => {
+      t.pass('res ended successfully')
+    })
+  })
+  form.append('upload', fs.createReadStream(filePath))
+
+  try {
+    await pump(form, req)
+  } catch (error) {
+    t.error(error, 'formData request pump: no err')
+  }
+  await once(ee, 'response')
 })
 
 test('should throw on file limit error', async function (t) {
   t.plan(4)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -130,7 +185,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
   t.plan(5)
 
   const hashInput = crypto.createHash('sha256')
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -199,21 +254,24 @@ test('should throw on file limit error, after highWaterMark', async function (t)
   await once(res, 'end')
 })
 
-test('should store file on disk, remove on response error', function (t) {
-  t.plan(5)
+test('should store file on disk, remove on response error, serial', async function (t) {
+  t.plan(18)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.equal(req.tmpUploads, null)
 
     await req.saveRequestFiles()
 
+    t.equal(req.tmpUploads.length, 1)
+
     throw new Error('test')
   })
+  const ee = new EventEmitter()
 
   // ensure that file is removed after response
   fastify.addHook('onResponse', async (request, reply) => {
@@ -222,10 +280,13 @@ test('should store file on disk, remove on response error', function (t) {
     } catch (error) {
       t.equal(error.code, 'ENOENT')
       t.pass('Temp file was removed after response')
+      ee.emit('response')
     }
   })
 
-  fastify.listen(0, async function () {
+  await fastify.listen(0)
+
+  async function send () {
     // request
     const form = new FormData()
     const opts = {
@@ -251,5 +312,10 @@ test('should store file on disk, remove on response error', function (t) {
     } catch (error) {
       t.error(error, 'formData request pump: no err')
     }
-  })
+    await once(ee, 'response')
+  }
+
+  await send()
+  await send()
+  await send()
 })
