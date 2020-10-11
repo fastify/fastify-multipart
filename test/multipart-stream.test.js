@@ -22,7 +22,7 @@ const filePath = path.join(__dirname, '../README.md')
 test('should throw fileSize limitation error on small payload', async function (t) {
   t.plan(4)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -73,7 +73,7 @@ test('should throw fileSize limitation error on small payload', async function (
 test('should emit fileSize limitation error during streaming', async function (t) {
   t.plan(5)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
   const hashInput = crypto.createHash('sha256')
 
