@@ -20,7 +20,7 @@ const { once } = EventEmitter
 const filePath = path.join(__dirname, '../README.md')
 
 test('should throw fileSize limitation error on small payload', async function (t) {
-  t.plan(3)
+  t.plan(4)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -30,11 +30,18 @@ test('should throw fileSize limitation error on small payload', async function (
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
+    let part
     try {
-      await req.file({ limits: { fileSize: 2 } })
+      part = await req.file({ limits: { fileSize: 2 } })
       reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      try {
+        // We need to wait before the stream is drained and the busboy firing 'onEnd' event
+        await eos(part.file)
+      } catch (error) {
+        t.ok(error, 'eos error')
+      }
       reply.code(500).send()
     }
   })
