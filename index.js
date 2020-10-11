@@ -175,7 +175,6 @@ function fastifyMultipart (fastify, options = {}, done) {
 
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', null)
-  fastify.decorateRequest('busboy', null)
 
   // legacy
   fastify.decorateRequest('multipart', handleLegacyMultipartApi)
@@ -330,8 +329,6 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     const bb = busboy(busboyOptions)
 
-    this.busboy = bb
-
     request.on('close', cleanup)
 
     bb
@@ -450,8 +447,6 @@ function fastifyMultipart (fastify, options = {}, done) {
       // ensure that stream is consumed, any error is suppressed
       await sendToWormhole(file)
 
-      request.raw.unpipe(request.busboy)
-
       // throw on consumer side
       const err = new RequestFileTooLargeError()
       err.part = part
@@ -476,7 +471,6 @@ function fastifyMultipart (fastify, options = {}, done) {
       }
       // ignore all data
       file.resume()
-      request.raw.unpipe(request.busboy)
     })
 
     return part
