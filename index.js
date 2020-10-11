@@ -175,6 +175,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', null)
+  fastify.decorateRequest('busboy', null)
 
   // legacy
   fastify.decorateRequest('multipart', handleLegacyMultipartApi)
@@ -329,7 +330,7 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     const bb = busboy(busboyOptions)
 
-    request.bb = bb
+    this.busboy = bb
 
     request.on('close', cleanup)
 
@@ -443,11 +444,14 @@ function fastifyMultipart (fastify, options = {}, done) {
     return parts
   }
 
-  async function handlePartFile (part, logger) {
+  async function handlePartFile (part, request) {
     const file = part.file
     if (file.truncated) {
       // ensure that stream is consumed, any error is suppressed
       await sendToWormhole(file)
+
+      request.raw.unpipe(request.busboy)
+
       // throw on consumer side
       const err = new RequestFileTooLargeError()
       err.part = part
@@ -462,16 +466,17 @@ function fastifyMultipart (fastify, options = {}, done) {
 
       if (file.listenerCount('error') > 0) {
         file.emit('error', err)
-        logger.warn(err)
+        request.log.warn(err)
       } else {
-        logger.error(err)
+        request.log.error(err)
         // ignore next error event
         file.on('error', (err) => {
-          logger.error('fileLimit: suppressed file stream error, %s', err.messsage)
+          request.log.error('fileLimit: suppressed file stream error, %s', err.messsage)
         })
       }
       // ignore all data
       file.resume()
+      request.raw.unpipe(request.busboy)
     })
 
     return part
@@ -522,7 +527,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        return handlePartFile(part, this.log)
+        return handlePartFile(part, this)
       }
     }
   }
@@ -533,7 +538,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        part = await handlePartFile(part, this.log)
+        part = await handlePartFile(part, this)
         yield part
       }
     }

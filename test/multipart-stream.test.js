@@ -88,7 +88,6 @@ test('should emit fileSize limitation error during streaming', async function (t
       await sendToWormhole(part.file, true)
       reply.code(200).send()
     } catch (error) {
-      req.raw.unpipe(req.raw.bb)
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
