@@ -20,7 +20,7 @@ const { once } = EventEmitter
 const filePath = path.join(__dirname, '../README.md')
 
 test('should throw fileSize limitation error on small payload', async function (t) {
-  t.plan(4)
+  t.plan(3)
 
   const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
@@ -30,18 +30,12 @@ test('should throw fileSize limitation error on small payload', async function (
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    let part
     try {
-      part = await req.file({ limits: { fileSize: 2 } })
+      await req.file({ limits: { fileSize: 2 } })
       reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      try {
-        // We need to wait before the stream is drained and the busboy firing 'onEnd' event
-        await eos(part.file)
-      } catch (error) {
-        t.ok(error, 'eos error')
-      }
+      await eos(error.part.file)
       reply.code(500).send()
     }
   })
@@ -82,13 +76,13 @@ test('should emit fileSize limitation error during streaming', async function (t
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    let part
     try {
-      part = await req.file({ limits: { fileSize: 16500 } })
+      const part = await req.file({ limits: { fileSize: 16500 } })
       await sendToWormhole(part.file, true)
       reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      await eos(error.part.file)
       reply.code(500).send()
     }
   })
@@ -137,11 +131,10 @@ test('should emit fileSize limitation error during streaming', async function (t
 
   pump(form, req)
 
-  const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 500)
-  res.resume()
-
   try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
     await once(res, 'end')
   } catch (error) {
     t.error(error, 'request')
