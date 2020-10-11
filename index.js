@@ -436,6 +436,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       bb.removeListener('field', onField)
       bb.removeListener('file', onFile)
       bb.removeListener('close', cleanup)
+      request.unpipe(bb)
     }
 
     return parts
