@@ -143,8 +143,12 @@ test('should emit fileSize limitation error during streaming', async function (t
 
   pump(form, req)
 
-  const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 500)
-  res.resume()
-  await once(res, 'end')
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
 })
