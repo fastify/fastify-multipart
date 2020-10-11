@@ -453,10 +453,6 @@ function fastifyMultipart (fastify, options = {}, done) {
       return Promise.reject(err)
     }
 
-    file.once('error', (err) => {
-      logger.error(err, 'file error')
-    })
-
     file.once('limit', () => {
       const err = new RequestFileTooLargeError()
       err.part = part
