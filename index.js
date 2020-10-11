@@ -329,6 +329,8 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     const bb = busboy(busboyOptions)
 
+    request.bb = bb
+
     request.on('close', cleanup)
 
     bb
@@ -436,7 +438,6 @@ function fastifyMultipart (fastify, options = {}, done) {
       bb.removeListener('field', onField)
       bb.removeListener('file', onFile)
       bb.removeListener('close', cleanup)
-      request.unpipe(bb)
     }
 
     return parts
