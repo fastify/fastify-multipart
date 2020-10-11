@@ -13,6 +13,7 @@ const { Readable } = require('readable-stream')
 const stream = require('stream')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
+const eos = util.promisify(stream.finished)
 const EventEmitter = require('events')
 const { once } = EventEmitter
 
@@ -63,7 +64,7 @@ test('should throw fileSize limitation error on small payload', async function (
 })
 
 test('should emit fileSize limitation error during streaming', async function (t) {
-  t.plan(4)
+  t.plan(5)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -81,8 +82,12 @@ test('should emit fileSize limitation error during streaming', async function (t
       reply.code(200).send()
     } catch (error) {
       t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      // We need to wait before the stream is drained and the busboy firing 'onEnd' event
-      await sendToWormhole(part.file)
+      try {
+        // We need to wait before the stream is drained and the busboy firing 'onEnd' event
+        await eos(part.file)
+      } catch (error) {
+        t.ok(error, 'eos error')
+      }
       reply.code(500).send()
     }
   })
