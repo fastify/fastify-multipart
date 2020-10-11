@@ -174,10 +174,14 @@ test('should throw on file limit error', async function (t) {
 
   pump(form, req)
 
-  const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 500)
-  res.resume()
-  await once(res, 'end')
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
 })
 
 test('should throw on file limit error, after highWaterMark', async function (t) {
@@ -246,10 +250,14 @@ test('should throw on file limit error, after highWaterMark', async function (t)
 
   pump(form, req)
 
-  const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 500)
-  res.resume()
-  await once(res, 'end')
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
 })
 
 test('should store file on disk, remove on response error, serial', async function (t) {
