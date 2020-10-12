@@ -9,11 +9,12 @@ const http = require('http')
 const path = require('path')
 const fs = require('fs')
 const stream = require('stream')
+const { once } = require('events')
 const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should be able to attach all parsed fields and files and make it accessible through "req.body"', function (t) {
+test('should be able to attach all parsed fields and files and make it accessible through "req.body"', async function (t) {
   t.plan(6)
 
   const fastify = Fastify()
@@ -36,37 +37,37 @@ test('should be able to attach all parsed fields and files and make it accessibl
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('upload', fs.createReadStream(filePath))
-    form.append('hello', 'world')
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
-  })
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('hello', 'world')
+
+  try {
+    await pump(form, req)
+  } catch (error) {
+    t.error(error, 'formData request pump: no err')
+  }
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
 })
 
-test('should be able to define a custom "onFile" handler', function (t) {
+test('should be able to define a custom "onFile" handler', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
@@ -94,34 +95,34 @@ test('should be able to define a custom "onFile" handler', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('upload', fs.createReadStream(filePath))
-    form.append('hello', 'world')
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
-  })
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('hello', 'world')
+
+  try {
+    await pump(form, req)
+  } catch (error) {
+    t.error(error, 'formData request pump: no err')
+  }
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
 })
 
 test('should not process requests with content-type other than multipart', function (t) {
