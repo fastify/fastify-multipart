@@ -10,6 +10,7 @@ const path = require('path')
 const fs = require('fs')
 const concat = require('concat-stream')
 const stream = require('stream')
+const { once } = require('events')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
 
@@ -539,8 +540,10 @@ test('should also work with multipartIterator', function (t) {
   })
 })
 
-test('should receive all field', function (t) {
+test('should receive all fields', async function (t) {
   t.plan(11)
+
+  const original = fs.readFileSync(filePath, 'utf8')
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -555,7 +558,6 @@ test('should receive all field', function (t) {
     }
 
     for await (const part of req.parts()) {
-      recvField[part.fieldname] = true
       if (part.file) {
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'README.md')
@@ -563,18 +565,16 @@ test('should receive all field', function (t) {
         t.equal(part.mimetype, 'text/markdown')
         t.ok(part.fields.upload)
 
-        const original = fs.readFileSync(filePath, 'utf8')
         await pump(
           part.file,
           concat(function (buf) {
             t.equal(buf.toString(), original)
           })
         )
-        // wait for 1s to mimic situation that user side takes a long time to process every part
-        await new Promise((resolve, reject) => {
-          setTimeout(resolve, 1000)
-        })
+        await new Promise(setImmediate)
       }
+
+      recvField[part.fieldname] = true
     }
 
     t.equal(recvField.upload, true)
@@ -584,35 +584,34 @@ test('should receive all field', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
-    // request
-    const form = new FormData()
-    var opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
+  await fastify.listen(0)
 
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      // consume all data without processing
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    const rs = fs.createReadStream(filePath)
-    form.append('upload', rs)
-    form.append('hello', 'world')
-    form.append('willbe', 'dropped')
+  // request
+  const form = new FormData()
+  var opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
-  })
+  const req = http.request(opts)
+  const rs = fs.createReadStream(filePath)
+  form.append('upload', rs)
+  form.append('hello', 'world')
+  form.append('willbe', 'dropped')
+
+  try {
+    await pump(form, req)
+  } catch (error) {
+    t.error(error, 'formData request pump: no err')
+  }
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
 })
