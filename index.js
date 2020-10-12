@@ -292,26 +292,33 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     this.log.debug('starting multipart parsing')
 
-    let worker
-    let lastValue
+    let values = []
+    let pendingHandler = null
 
     // only one file / field can be processed at a time
     // "null" will close the consumer side
     const ch = (val) => {
-      if (typeof val === 'function') {
-        worker = val
+      if (pendingHandler) {
+        pendingHandler(val)
+        pendingHandler = null
       } else {
-        lastValue = val
-      }
-      if (worker && lastValue !== undefined) {
-        worker(lastValue)
-        worker = undefined
-        lastValue = undefined
+        values.push(val)
       }
     }
+
+    const handle = (handler) => {
+      if (values.length > 0) {
+        const value = values[0]
+        values = values.slice(1)
+        handler(value)
+      } else {
+        pendingHandler = handler
+      }
+    }
+
     const parts = () => {
       return new Promise((resolve, reject) => {
-        ch((val) => {
+        handle((val) => {
           if (val instanceof Error) return reject(val)
           resolve(val)
         })
