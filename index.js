@@ -336,6 +336,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       .on('file', onFile)
       .on('close', cleanup)
       .on('error', onEnd)
+      .on('end', onEnd)
       .on('finish', onEnd)
 
     bb.on('partsLimit', function () {
@@ -424,18 +425,19 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     function onEnd (error) {
       cleanup()
-      bb.removeListener('finish', onEnd)
-      bb.removeListener('error', onEnd)
       ch(error || lastError)
     }
 
     function cleanup () {
-      // keep finish listener to wait all data flushed
-      // keep error listener to wait stream error
-      request.removeListener('close', cleanup)
       bb.removeListener('field', onField)
       bb.removeListener('file', onFile)
       bb.removeListener('close', cleanup)
+      bb.removeListener('end', cleanup)
+      bb.removeListener('error', onEnd)
+      bb.removeListener('partsLimit', onEnd)
+      bb.removeListener('filesLimit', onEnd)
+      bb.removeListener('fieldsLimit', onEnd)
+      bb.removeListener('finish', onEnd)
     }
 
     return parts
