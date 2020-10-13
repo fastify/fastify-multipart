@@ -544,6 +544,7 @@ test('should receive all fields', async function (t) {
   t.plan(11)
 
   const original = fs.readFileSync(filePath, 'utf8')
+  const immediate = util.promisify(setImmediate)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -571,7 +572,7 @@ test('should receive all fields', async function (t) {
             t.equal(buf.toString(), original)
           })
         )
-        await new Promise(setImmediate)
+        await immediate()
       }
 
       recvField[part.fieldname] = true
