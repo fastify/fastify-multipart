@@ -430,15 +430,8 @@ function fastifyMultipart (fastify, options = {}, done) {
     }
 
     function cleanup () {
-      bb.removeListener('field', onField)
-      bb.removeListener('file', onFile)
-      bb.removeListener('close', cleanup)
-      bb.removeListener('end', cleanup)
-      bb.removeListener('error', onEnd)
-      bb.removeListener('partsLimit', onEnd)
-      bb.removeListener('filesLimit', onEnd)
-      bb.removeListener('fieldsLimit', onEnd)
-      bb.removeListener('finish', onEnd)
+      request.unpipe(bb)
+      bb.removeAllListeners()
     }
 
     return parts
