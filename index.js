@@ -423,9 +423,10 @@ function fastifyMultipart (fastify, options = {}, done) {
       lastError = err
     }
 
-    function onEnd (error) {
+    function onEnd (err) {
       cleanup()
-      ch(error || lastError)
+
+      ch(err || lastError)
     }
 
     function cleanup () {
@@ -443,39 +444,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     return parts
   }
 
-  async function handlePartFile (part, request) {
-    const file = part.file
-    if (file.truncated) {
-      // ensure that stream is consumed, any error is suppressed
-      await sendToWormhole(file)
-
-      // throw on consumer side
-      const err = new RequestFileTooLargeError()
-      err.part = part
-      return Promise.reject(err)
-    }
-
-    file.once('limit', () => {
-      const err = new RequestFileTooLargeError()
-      err.part = part
-
-      if (file.listenerCount('error') > 0) {
-        file.emit('error', err)
-        request.log.warn(err)
-      } else {
-        request.log.error(err)
-        // ignore next error event
-        file.on('error', (err) => {
-          request.log.error('fileLimit: suppressed file stream error, %s', err.messsage)
-        })
-      }
-      // ignore all data
-      file.resume()
-    })
-
-    return part
-  }
-
   async function saveRequestFiles (options) {
     const requestFiles = []
 
@@ -488,6 +456,12 @@ function fastifyMultipart (fastify, options = {}, done) {
         await pump(file.file, target)
         this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
+        // busboy set truncated to true when the configured file size limit was reached
+        if (file.file.truncated) {
+          const err = new RequestFileTooLargeError()
+          err.part = file
+          throw err
+        }
       } catch (error) {
         try {
           await unlink(filepath)
@@ -521,7 +495,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        return handlePartFile(part, this)
+        return part
       }
     }
   }
@@ -532,7 +506,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        part = await handlePartFile(part, this)
         yield part
       }
     }

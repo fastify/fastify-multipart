@@ -92,6 +92,8 @@ If you do set upload limits, be sure to catch the error. An error or exception w
 **Note**: if the file stream that is provided by `data.file` is not consumed (like in the example below with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
+**Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can listen to `data.file.on('limit')` or check at the of the stream the property `data.file.truncated`. 
+
 ```js
 try {
   const data = await req.file()
@@ -157,6 +159,8 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 ## Upload files to disk and work with temporary file paths
 
 This will store all files in the operating system default directory for temporary files. As soon as the response ends all files are removed.
+
+**Note**: if you set a `fileSize` limit `req.saveRequestFiles()` will throw an `RequestFileTooLargeError` error.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {

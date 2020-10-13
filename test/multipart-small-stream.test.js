@@ -6,66 +6,40 @@ const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('http')
-const crypto = require('crypto')
-const { Readable } = require('readable-stream')
+const path = require('path')
+const fs = require('fs')
 const stream = require('stream')
 const pump = util.promisify(stream.pipeline)
-const sendToWormhole = require('stream-wormhole')
-const eos = util.promisify(stream.finished)
 const EventEmitter = require('events')
+const sendToWormhole = require('stream-wormhole')
 const { once } = EventEmitter
 
-test('should emit fileSize limitation error during streaming', async function (t) {
-  t.plan(4)
+const filePath = path.join(__dirname, '../README.md')
+
+test('should throw fileSize limitation error on small payload', async function (t) {
+  t.plan(2)
 
   const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
-  const hashInput = crypto.createHash('sha256')
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    let part
-    try {
-      part = await req.file({ limits: { fileSize: 16500 } })
-      await sendToWormhole(part.file, true)
-      reply.code(200).send()
-    } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      // We need to wait before the stream is drained and the busboy firing 'onEnd' event
-      await eos(part.file)
+    const part = await req.file({ limits: { fileSize: 2 } })
+    await sendToWormhole(part.file)
+    if (part.file.truncated) {
       reply.code(500).send()
+    } else {
+      reply.code(200).send()
     }
   })
 
   await fastify.listen(0)
 
   // request
-  const knownLength = 1024 * 1024 // 1MB
-  let total = knownLength
-  const form = new FormData({ maxDataSize: total })
-  const rs = new Readable({
-    read (n) {
-      if (n > total) {
-        n = total
-      }
-
-      var buf = Buffer.alloc(n).fill('x')
-      hashInput.update(buf)
-      this.push(buf)
-
-      total -= n
-
-      if (total === 0) {
-        t.pass('finished generating')
-        hashInput.end()
-        this.push(null)
-      }
-    }
-  })
-
+  const form = new FormData()
   const opts = {
     protocol: 'http:',
     hostname: 'localhost',
@@ -76,11 +50,7 @@ test('should emit fileSize limitation error during streaming', async function (t
   }
 
   const req = http.request(opts)
-  form.append('upload', rs, {
-    filename: 'random-data',
-    contentType: 'binary/octect-stream',
-    knownLength
-  })
+  form.append('upload', fs.createReadStream(filePath))
 
   pump(form, req)
 
