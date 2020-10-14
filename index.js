@@ -336,6 +336,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       .on('file', onFile)
       .on('close', cleanup)
       .on('error', onEnd)
+      .on('end', onEnd)
       .on('finish', onEnd)
 
     bb.on('partsLimit', function () {
@@ -422,52 +423,18 @@ function fastifyMultipart (fastify, options = {}, done) {
       lastError = err
     }
 
-    function onEnd (error) {
+    function onEnd (err) {
       cleanup()
-      bb.removeListener('finish', onEnd)
-      bb.removeListener('error', onEnd)
-      ch(error || lastError)
+
+      ch(err || lastError)
     }
 
     function cleanup () {
-      // keep finish listener to wait all data flushed
-      // keep error listener to wait stream error
-      request.removeListener('close', cleanup)
-      bb.removeListener('field', onField)
-      bb.removeListener('file', onFile)
-      bb.removeListener('close', cleanup)
+      request.unpipe(bb)
+      bb.removeAllListeners()
     }
 
     return parts
-  }
-
-  async function handlePartFile (part, logger) {
-    const file = part.file
-    if (file.truncated) {
-      // ensure that stream is consumed, any error is suppressed
-      await sendToWormhole(file)
-      // throw on consumer side
-      return Promise.reject(new RequestFileTooLargeError())
-    }
-
-    file.once('limit', () => {
-      const err = new RequestFileTooLargeError()
-
-      if (file.listenerCount('error') > 0) {
-        file.emit('error', err)
-        logger.warn(err)
-      } else {
-        logger.error(err)
-        // ignore next error event
-        file.on('error', (err) => {
-          logger.error('fileLimit: suppressed file stream error, %s', err.messsage)
-        })
-      }
-      // ignore all data
-      file.resume()
-    })
-
-    return part
   }
 
   async function saveRequestFiles (options) {
@@ -482,9 +449,20 @@ function fastifyMultipart (fastify, options = {}, done) {
         await pump(file.file, target)
         this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
-      } catch (error) {
-        this.log.error(error)
-        await unlink(filepath)
+        // busboy set truncated to true when the configured file size limit was reached
+        if (file.file.truncated) {
+          const err = new RequestFileTooLargeError()
+          err.part = file
+          throw err
+        }
+      } catch (err) {
+        try {
+          await unlink(filepath)
+        } catch (err) {
+          this.log.debug({ err }, 'could not delete file')
+        }
+
+        throw err
       }
     }
 
@@ -499,7 +477,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       try {
         await unlink(filepath)
       } catch (error) {
-        this.log.error(error)
+        this.log.error(error, 'could not delete file')
       }
     }
   }
@@ -510,7 +488,7 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        return handlePartFile(part, this.log)
+        return part
       }
     }
   }
@@ -521,7 +499,6 @@ function fastifyMultipart (fastify, options = {}, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        part = await handlePartFile(part, this.log)
         yield part
       }
     }

@@ -6,20 +6,22 @@ const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('http')
+const crypto = require('crypto')
+const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
 const { access } = require('fs').promises
 const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 const EventEmitter = require('events')
 const { once } = EventEmitter
+const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
 test('should store file on disk, remove on response', async function (t) {
   t.plan(10)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -135,10 +137,133 @@ test('should store file on disk, remove on response error', async function (t) {
   await once(ee, 'response')
 })
 
+test('should throw on file limit error', async function (t) {
+  t.plan(4)
+
+  const fastify = Fastify({ logger: { level: 'debug' } })
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ limits: { fileSize: 500 } })
+      reply.code(200).send()
+    } catch (error) {
+      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.equal(error.part.fieldname, 'upload')
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should throw on file limit error, after highWaterMark', async function (t) {
+  t.plan(5)
+
+  const hashInput = crypto.createHash('sha256')
+  const fastify = Fastify({ logger: { level: 'debug' } })
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ limits: { fileSize: 17000 } })
+      reply.code(200).send()
+    } catch (error) {
+      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.equal(error.part.fieldname, 'upload2')
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+
+  // request
+  const knownLength = 1024 * 1024 // 1MB
+  let total = knownLength
+  const form = new FormData({ maxDataSize: total })
+  const rs = new Readable({
+    read (n) {
+      if (n > total) {
+        n = total
+      }
+
+      var buf = Buffer.alloc(n).fill('x')
+      hashInput.update(buf)
+      this.push(buf)
+
+      total -= n
+
+      if (total === 0) {
+        t.pass('finished generating')
+        hashInput.end()
+        this.push(null)
+      }
+    }
+  })
+
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload2', rs, {
+    filename: 'random-data',
+    contentType: 'binary/octect-stream',
+    knownLength
+  })
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
 test('should store file on disk, remove on response error, serial', async function (t) {
   t.plan(18)
 
-  const fastify = Fastify()
+  const fastify = Fastify({ logger: { level: 'debug' } })
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
