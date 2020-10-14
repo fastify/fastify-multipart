@@ -540,7 +540,7 @@ test('should also work with multipartIterator', function (t) {
   })
 })
 
-test('should receive all fields', async function (t) {
+test('should not miss fields if part handler takes much time than formdata parsing', async function (t) {
   t.plan(11)
 
   const original = fs.readFileSync(filePath, 'utf8')
