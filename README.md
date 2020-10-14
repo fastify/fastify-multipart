@@ -160,8 +160,6 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 
 This will store all files in the operating system default directory for temporary files. As soon as the response ends all files are removed.
 
-**Note**: if you set a `fileSize` limit `req.saveRequestFiles()` is able to throw an `RequestFileTooLargeError` error.
-
 ```js
 fastify.post('/upload/files', async function (req, reply) {
   // stores files to tmp dir and return files
@@ -174,6 +172,21 @@ fastify.post('/upload/files', async function (req, reply) {
   files[0].fields // other parsed parts
 
   reply.send()
+})
+```
+
+## Handle file size limitation
+
+If you set a `fileSize` limit `req.saveRequestFiles()` is able to throw an `RequestFileTooLargeError` error.
+
+```js
+fastify.post('/upload/files', async function (req, reply) {
+  try {
+    const files = await req.saveRequestFiles({ limits: { fileSize: 17000 } })
+    reply.send()
+  } catch (error) {
+    // error instanceof fastify.multipartErrors.RequestFileTooLargeError
+  }
 })
 ```
 

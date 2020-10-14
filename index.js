@@ -455,14 +455,14 @@ function fastifyMultipart (fastify, options = {}, done) {
           err.part = file
           throw err
         }
-      } catch (error) {
+      } catch (err) {
         try {
           await unlink(filepath)
-        } catch (error) {
-          this.log.debug('saveRequestFiles: could not delete file, %s', error.messsage)
+        } catch (err) {
+          this.log.debug({ err }, 'could not delete file')
         }
 
-        throw error
+        throw err
       }
     }
 
@@ -477,7 +477,7 @@ function fastifyMultipart (fastify, options = {}, done) {
       try {
         await unlink(filepath)
       } catch (error) {
-        this.log.error(error)
+        this.log.error(error, 'could not delete file')
       }
     }
   }
