@@ -10,6 +10,7 @@ const path = require('path')
 const fs = require('fs')
 const concat = require('concat-stream')
 const stream = require('stream')
+const { once } = require('events')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
 
@@ -537,4 +538,81 @@ test('should also work with multipartIterator', function (t) {
       t.error(error, 'formData request pump: no err')
     }
   })
+})
+
+test('should not miss fields if part handler takes much time than formdata parsing', async function (t) {
+  t.plan(11)
+
+  const original = fs.readFileSync(filePath, 'utf8')
+  const immediate = util.promisify(setImmediate)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    const recvField = {
+      upload: false,
+      hello: false,
+      willbe: false
+    }
+
+    for await (const part of req.parts()) {
+      if (part.file) {
+        t.equal(part.fieldname, 'upload')
+        t.equal(part.filename, 'README.md')
+        t.equal(part.encoding, '7bit')
+        t.equal(part.mimetype, 'text/markdown')
+        t.ok(part.fields.upload)
+
+        await pump(
+          part.file,
+          concat(function (buf) {
+            t.equal(buf.toString(), original)
+          })
+        )
+        await immediate()
+      }
+
+      recvField[part.fieldname] = true
+    }
+
+    t.equal(recvField.upload, true)
+    t.equal(recvField.hello, true)
+    t.equal(recvField.willbe, true)
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen(0)
+
+  // request
+  const form = new FormData()
+  var opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  const rs = fs.createReadStream(filePath)
+  form.append('upload', rs)
+  form.append('hello', 'world')
+  form.append('willbe', 'dropped')
+
+  try {
+    await pump(form, req)
+  } catch (error) {
+    t.error(error, 'formData request pump: no err')
+  }
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
 })
