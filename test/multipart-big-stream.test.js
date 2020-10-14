@@ -17,7 +17,7 @@ const { once } = EventEmitter
 test('should emit fileSize limitation error during streaming', async function (t) {
   t.plan(3)
 
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
   const hashInput = crypto.createHash('sha256')
 

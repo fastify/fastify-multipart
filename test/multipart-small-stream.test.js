@@ -19,7 +19,7 @@ const filePath = path.join(__dirname, '../README.md')
 test('should throw fileSize limitation error on small payload', async function (t) {
   t.plan(2)
 
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)

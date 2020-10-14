@@ -21,7 +21,7 @@ const filePath = path.join(__dirname, '../README.md')
 test('should store file on disk, remove on response', async function (t) {
   t.plan(10)
 
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -140,7 +140,7 @@ test('should store file on disk, remove on response error', async function (t) {
 test('should throw on file limit error', async function (t) {
   t.plan(4)
 
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -188,7 +188,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
   t.plan(5)
 
   const hashInput = crypto.createHash('sha256')
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
@@ -263,7 +263,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
 test('should store file on disk, remove on response error, serial', async function (t) {
   t.plan(18)
 
-  const fastify = Fastify({ logger: { level: 'debug' } })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
