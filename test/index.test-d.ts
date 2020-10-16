@@ -1,5 +1,6 @@
 import fastify from 'fastify'
-import fastifyMultipart, {Multipart, MultipartFields} from '..'
+import fastifyMultipart from '..'
+import { Multipart, MultipartFields } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
