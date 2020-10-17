@@ -23,7 +23,9 @@ export interface MultipartFields {
     [x: string]: Multipart | Multipart[];
 }
 
-export interface Multipart {
+export type Multipart<T = true> = T extends true ? MultipartFile : MultipartValue<T>;
+
+interface MultipartFile {
   toBuffer: () => Promise<Buffer>,
   file: NodeJS.ReadableStream,
   filepath: string,
@@ -32,6 +34,10 @@ export interface Multipart {
   encoding: string,
   mimetype: string,
   fields: MultipartFields
+}
+
+interface MultipartValue<T> {
+  value: T
 }
 
 interface MultipartErrors {

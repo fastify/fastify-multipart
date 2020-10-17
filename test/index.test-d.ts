@@ -1,10 +1,10 @@
 import fastify from 'fastify'
 import fastifyMultipart from '..'
-import { MultipartFields } from '..'
+import { Multipart, MultipartFields } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
-import { expectType } from 'tsd'
+import { expectError, expectType } from 'tsd'
 
 const pump = util.promisify(pipeline)
 
@@ -56,6 +56,25 @@ const runServer = async () => {
     await pump(data.file, fs.createWriteStream(data.filename))
 
     reply.send()
+  })
+
+  // Multiple fields including scalar values
+  app.post<{Body: {file: Multipart, foo: Multipart<string>}}>('/upload/stringvalue', async (req, reply) => {
+    expectError(req.body.foo.file);
+    expectType<string>(req.body.foo.value);
+
+    expectType<NodeJS.ReadableStream>(req.body.file.file)
+    expectError(req.body.file.value);
+    reply.send();
+  })
+
+  app.post<{Body: {file: Multipart, num: Multipart<number>}}>('/upload/stringvalue', async (req, reply) => {
+    expectType<number>(req.body.num.value);
+    reply.send();
+
+    // file is a file
+    expectType<NodeJS.ReadableStream>(req.body.file.file)
+    expectError(req.body.file.value);
   })
 
   // busboy
