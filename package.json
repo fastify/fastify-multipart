@@ -11,11 +11,11 @@
     "fastify-error": "^0.2.0",
     "fastify-plugin": "^3.0.0",
     "hexoid": "^1.0.0",
-    "stream-wormhole": "^1.1.0",
-    "@types/busboy": "^0.2.3"
+    "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
+    "@types/busboy": "^0.2.3",
     "@typescript-eslint/parser": "^4.0.0",
     "climem": "^1.0.3",
     "eslint": "^7.7.0",

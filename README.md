@@ -16,8 +16,10 @@ Fastify plugin to parse the multipart content-type. Supports:
 Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 
 ## Install
-```
+```sh
 npm i fastify-multipart
+# Typescript support
+npm i @types/busboy
 ```
 
 ## Usage
