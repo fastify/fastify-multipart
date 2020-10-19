@@ -20,6 +20,16 @@ fastify.post('/upload/stream/single', async function (req, reply) {
   reply.send()
 })
 
+fastify.post('/upload/stream/single-buf', async function (req, reply) {
+  for await (const part of req.parts()) {
+    if (part.file) {
+      await part.toBuffer()
+      console.log(part)
+    }
+  }
+  reply.send()
+})
+
 fastify.post('/upload/stream/files', async function (req, reply) {
   const parts = await req.files()
   for await (const part of parts) {
