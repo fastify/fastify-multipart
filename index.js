@@ -463,7 +463,7 @@ function fastifyMultipart (fastify, options = {}, done) {
           throw err
         }
       } catch (err) {
-        this.log.error(err)
+        this.log.error({ err }, 'save request file')
         throw err
       }
     }
