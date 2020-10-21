@@ -454,8 +454,8 @@ function fastifyMultipart (fastify, options = {}, done) {
       const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)
-        this.tmpUploads.push(filepath)
         requestFiles.push({ ...file, filepath })
+        this.tmpUploads.push(filepath)
         // busboy set truncated to true when the configured file size limit was reached
         if (file.file.truncated) {
           const err = new RequestFileTooLargeError()
@@ -463,12 +463,7 @@ function fastifyMultipart (fastify, options = {}, done) {
           throw err
         }
       } catch (err) {
-        try {
-          await unlink(filepath)
-        } catch (err) {
-          this.log.debug({ err }, 'could not delete file')
-        }
-
+        this.log.error({ err }, 'save request file')
         throw err
       }
     }
