@@ -30,7 +30,7 @@
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
     "readable-stream": "^3.6.0",
-    "snazzy": "^8.0.0",
+    "snazzy": "^9.0.0",
     "standard": "^15.0.0",
     "tap": "^14.10.8",
     "tsd": "^0.13.1",
