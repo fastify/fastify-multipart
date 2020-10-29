@@ -447,24 +447,35 @@ function fastifyMultipart (fastify, options = {}, done) {
   async function saveRequestFiles (options) {
     const requestFiles = []
 
-    const files = await this.files(options)
+    const parts = await this.parts(options)
     this.tmpUploads = []
-    for await (const file of files) {
-      const filepath = path.join(os.tmpdir(), toID() + path.extname(file.filename))
-      const target = createWriteStream(filepath)
-      try {
-        await pump(file.file, target)
-        requestFiles.push({ ...file, filepath })
-        this.tmpUploads.push(filepath)
-        // busboy set truncated to true when the configured file size limit was reached
-        if (file.file.truncated) {
-          const err = new RequestFileTooLargeError()
-          err.part = file
+    if (this.body === undefined) { this.body = {} }
+    for await (const part of parts) {
+      if (part.file) {
+        const filepath = path.join(os.tmpdir(), toID() + path.extname(part.filename))
+        const target = createWriteStream(filepath)
+        try {
+          await pump(part.file, target)
+          requestFiles.push({ ...part, filepath })
+          this.tmpUploads.push(filepath)
+          // busboy set truncated to true when the configured file size limit was reached
+          if (part.file.truncated) {
+            const err = new RequestFileTooLargeError()
+            err.part = part
+            throw err
+          }
+        } catch (err) {
+          this.log.error({ err }, 'save request file')
           throw err
         }
-      } catch (err) {
-        this.log.error({ err }, 'save request file')
-        throw err
+      } else {
+        if (this.body[part.fieldname] === undefined) {
+          this.body[part.fieldname] = part.value
+        } else if (Array.isArray(this.body[part.fieldname])) {
+          this.body[part.fieldname].push(part.value)
+        } else {
+          this.body[part.fieldname] = [this.body[part.fieldname], part.value]
+        }
       }
     }
 
