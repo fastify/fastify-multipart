@@ -35,8 +35,8 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -45,7 +45,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -53,7 +53,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myField', 'hello')
     form.append('myCheck', 'true')
     form.append('myFile', rs)
@@ -80,8 +80,8 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -90,7 +90,7 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -98,7 +98,7 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myFile', rs)
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
@@ -153,8 +153,8 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -163,7 +163,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -171,9 +171,9 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       })
     })
 
-    var rs1 = fs.createReadStream(filePath)
-    var rs2 = fs.createReadStream(filePath)
-    var rs3 = fs.createReadStream(filePath)
+    const rs1 = fs.createReadStream(filePath)
+    const rs2 = fs.createReadStream(filePath)
+    const rs3 = fs.createReadStream(filePath)
     form.append('myFile', rs1)
     form.append('myFileTwo', rs2)
     form.append('myFileThree', rs3)
@@ -220,8 +220,8 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -230,7 +230,7 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -238,9 +238,9 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
       })
     })
 
-    var rs1 = fs.createReadStream(path.join(__dirname, '..', '..', 'README.md'))
-    var rs2 = fs.createReadStream(path.join(__dirname, '..', '..', 'LICENSE'))
-    var rs3 = fs.createReadStream(path.join(__dirname, '..', '..', 'form.html'))
+    const rs1 = fs.createReadStream(path.join(__dirname, '..', '..', 'README.md'))
+    const rs2 = fs.createReadStream(path.join(__dirname, '..', '..', 'LICENSE'))
+    const rs3 = fs.createReadStream(path.join(__dirname, '..', '..', 'form.html'))
     form.append('myFile', rs1)
     form.append('myFile', rs2)
     form.append('myFile', rs3)
@@ -269,8 +269,8 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -279,7 +279,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -327,8 +327,8 @@ test('addToBody option and custom stream management', { skip: process.platform =
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -337,7 +337,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -345,7 +345,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myField', 'hello')
     form.append('myCheck', 'true')
     form.append('myFile', rs)
@@ -385,8 +385,8 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -395,7 +395,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -403,7 +403,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myFile', rs)
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
@@ -431,8 +431,8 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -441,7 +441,7 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
@@ -449,7 +449,7 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myFile', rs)
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')
@@ -502,8 +502,8 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -512,7 +512,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -522,7 +522,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myField', 'hello')
     form.append('myFile', rs)
     pump(form, req, function (err) {
@@ -573,8 +573,8 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
   await fastify.listen(0)
 
   // request
-  var form = new FormData()
-  var opts = {
+  const form = new FormData()
+  const opts = {
     protocol: 'http:',
     hostname: 'localhost',
     port: fastify.server.address().port,
@@ -584,7 +584,7 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
   }
 
   return new Promise((resolve, reject) => {
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -594,7 +594,7 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
       })
     })
 
-    var rs = fs.createReadStream(filePath)
+    const rs = fs.createReadStream(filePath)
     form.append('myField', 'hello')
     form.append('myFile', rs)
     pump(form, req, function (err) {
@@ -630,8 +630,8 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
 
     fastify.listen(0, function () {
       // request
-      var form = new FormData()
-      var opts = {
+      const form = new FormData()
+      const opts = {
         protocol: 'http:',
         hostname: 'localhost',
         port: fastify.server.address().port,
@@ -640,7 +640,7 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
         method: 'POST'
       }
 
-      var req = http.request(opts, (res) => {
+      const req = http.request(opts, (res) => {
         t.equal(res.statusCode, 400)
         res.resume()
         res.on('end', () => {
@@ -648,7 +648,7 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
         })
       })
 
-      var rs = fs.createReadStream(filePath)
+      const rs = fs.createReadStream(filePath)
       // missing the myField parameter
       form.append('myFile', rs)
       pump(form, req, function (err) {
@@ -693,8 +693,8 @@ test('addToBody without files and shared schema', { skip: process.platform === '
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -703,7 +703,7 @@ test('addToBody without files and shared schema', { skip: process.platform === '
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
@@ -761,8 +761,8 @@ test('addToBody with __proto__ field', t => {
 
   fastify.listen(0, function () {
     // request
-    var form = new FormData()
-    var opts = {
+    const form = new FormData()
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -771,7 +771,7 @@ test('addToBody with __proto__ field', t => {
       method: 'POST'
     }
 
-    var req = http.request(opts, (res) => {
+    const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {

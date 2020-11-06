@@ -63,16 +63,16 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
   })
 
   fastify.listen(0, function () {
-    var knownLength = 1024 * 1024 * 1024
-    var total = knownLength
-    var form = new FormData({ maxDataSize: total })
-    var rs = new Readable({
+    const knownLength = 1024 * 1024 * 1024
+    let total = knownLength
+    const form = new FormData({ maxDataSize: total })
+    const rs = new Readable({
       read (n) {
         if (n > total) {
           n = total
         }
 
-        var buf = Buffer.alloc(n).fill('x')
+        const buf = Buffer.alloc(n).fill('x')
         hashInput.update(buf)
         this.push(buf)
 
@@ -92,7 +92,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
       knownLength
     })
 
-    var opts = {
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -101,7 +101,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
       method: 'POST'
     }
 
-    var req = http.request(opts, () => { fastify.close(noop) })
+    const req = http.request(opts, () => { fastify.close(noop) })
 
     pump(form, req, function (err) {
       t.error(err, 'client pump: no err')

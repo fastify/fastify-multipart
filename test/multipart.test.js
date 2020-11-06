@@ -49,7 +49,7 @@ test('should parse forms', function (t) {
   fastify.listen(0, async function () {
     // request
     const form = new FormData()
-    var opts = {
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -209,7 +209,7 @@ test('should error if it is not multipart', function (t) {
 
   fastify.listen(0, function () {
     // request
-    var opts = {
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -510,7 +510,7 @@ test('should also work with multipartIterator', function (t) {
   fastify.listen(0, async function () {
     // request
     const form = new FormData()
-    var opts = {
+    const opts = {
       protocol: 'http:',
       hostname: 'localhost',
       port: fastify.server.address().port,
@@ -589,7 +589,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
 
   // request
   const form = new FormData()
-  var opts = {
+  const opts = {
     protocol: 'http:',
     hostname: 'localhost',
     port: fastify.server.address().port,
