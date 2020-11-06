@@ -46,7 +46,7 @@ test('should emit fileSize limitation error during streaming', async function (t
         n = total
       }
 
-      var buf = Buffer.alloc(n).fill('x')
+      const buf = Buffer.alloc(n).fill('x')
       hashInput.update(buf)
       this.push(buf)
 

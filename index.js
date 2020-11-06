@@ -99,7 +99,7 @@ function busboy (options) {
   }
 }
 
-function fastifyMultipart (fastify, options = {}, done) {
+function fastifyMultipart (fastify, options, done) {
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
@@ -223,10 +223,10 @@ function fastifyMultipart (fastify, options = {}, done) {
 
     const busboyOptions = deepmerge.all([{ headers: req.headers }, options || {}, opts || {}])
     const stream = busboy(busboyOptions)
-    var completed = false
-    var files = 0
-    var count = 0
-    var callDoneOnNextEos = false
+    let completed = false
+    let files = 0
+    let count = 0
+    let callDoneOnNextEos = false
 
     req.on('error', function (err) {
       stream.destroy()

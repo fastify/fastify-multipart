@@ -7,7 +7,7 @@ const pump = require('pump')
 const knownLength = 1024 * 1024 * 1024
 
 function next () {
-  var total = knownLength
+  let total = knownLength
   const form = new FormData({ maxDataSize: total })
   const rs = new Readable({
     read (n) {
@@ -17,7 +17,7 @@ function next () {
 
       // poor man random data
       // do not use in prod, it can leak sensitive informations
-      var buf = Buffer.allocUnsafe(n)
+      const buf = Buffer.allocUnsafe(n)
       this.push(buf)
 
       total -= n
@@ -35,7 +35,7 @@ function next () {
     knownLength
   })
 
-  var opts = {
+  const opts = {
     protocol: 'http:',
     hostname: 'localhost',
     port: 3000,
@@ -44,7 +44,7 @@ function next () {
     method: 'POST'
   }
 
-  var req = http.request(opts, next)
+  const req = http.request(opts, next)
 
   pump(form, req)
 }
