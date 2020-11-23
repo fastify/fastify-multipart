@@ -5,6 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
+    "@types/busboy": "^0.2.3",
     "busboy": "^0.3.1",
     "deepmerge": "^4.2.2",
     "end-of-stream": "^1.4.4",
@@ -15,7 +16,6 @@
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
-    "@types/busboy": "^0.2.3",
     "@typescript-eslint/parser": "^4.0.0",
     "climem": "^1.0.3",
     "eslint": "^7.7.0",
