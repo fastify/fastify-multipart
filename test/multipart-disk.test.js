@@ -325,3 +325,70 @@ test('should store file on disk, remove on response error, serial', async functi
   await send()
   await send()
 })
+
+test('should process large files correctly', async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+    await req.saveRequestFiles()
+    return { ok: true }
+  })
+
+  await fastify.listen(0)
+
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  const knownLength = 73550
+  const rs = getMockFileStream(knownLength)
+
+  form.append('upload', rs, {
+    filename: 'random-data',
+    contentType: 'binary/octect-stream',
+    knownLength
+  })
+
+  pump(form, req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+})
+
+function getMockFileStream (length) {
+  let total = length
+
+  const rs = new Readable({
+    read (n) {
+      if (n > total) {
+        n = total
+      }
+
+      const buf = Buffer.alloc(n).fill('x')
+      this.push(buf)
+
+      total -= n
+
+      if (total === 0) {
+        this.push(null)
+      }
+    }
+  })
+
+  return rs
+}

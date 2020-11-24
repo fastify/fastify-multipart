@@ -358,6 +358,11 @@ function fastifyMultipart (fastify, options, done) {
       onError(new FieldsLimitError())
     })
 
+    // TODO: Won't need after https://github.com/mscdex/busboy/pull/237/files
+    if (bb._writableState.autoDestroy) {
+      bb._writableState.autoDestroy = false
+    }
+
     request.pipe(bb)
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
