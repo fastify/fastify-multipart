@@ -14,6 +14,7 @@ const runServer = async () => {
   app.register(fastifyMultipart, {
     addToBody: true,
     sharedSchemaId: 'sharedId',
+    throwFileSizeLimit: false,
     // stream should be of type streams.Readable
     // body should be of type fastifyMulipart.Record<string, BodyEntry>
     onFile: (fieldName: string, stream: any, filename: string, encoding: string, mimetype: string, body: Record<string, any>) => {
