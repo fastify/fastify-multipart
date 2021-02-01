@@ -201,8 +201,8 @@ fastify.register(fastifyMultipart, { throwFileSizeLimit: true })
 fastify.post('/upload/file', async function (req, reply) {
   try {
     const file = await req.file({ throwFileSizeLimit: true, limits: { fileSize: 17000 } })
-    //const files = await req.files({ limits: { fileSize: 17000 } })
-    //const parts = await req.parts({ limits: { fileSize: 17000 } })
+    //const files = await req.files({ throwFileSizeLimit: true, limits: { fileSize: 17000 } })
+    //const parts = await req.parts({ throwFileSizeLimit: true, limits: { fileSize: 17000 } })
     reply.send()
   } catch (error) {
     // error instanceof fastify.multipartErrors.RequestFileTooLargeError
