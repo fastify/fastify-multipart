@@ -192,6 +192,24 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
+If you enable `throwFileSizeLimit` to `true`, it will throw an `RequestFileTooLargeError` error when you call any of the below actions.
+
+```js
+// globally enable
+fastify.register(fastifyMultipart, { throwFileSizeLimit: true })
+
+fastify.post('/upload/file', async function (req, reply) {
+  try {
+    const file = await req.file({ throwFileSizeLimit: true, limits: { fileSize: 17000 } })
+    //const files = await req.files({ limits: { fileSize: 17000 } })
+    //const parts = await req.parts({ limits: { fileSize: 17000 } })
+    reply.send()
+  } catch (error) {
+    // error instanceof fastify.multipartErrors.RequestFileTooLargeError
+  }
+})
+```
+
 ## Parse all fields and assign them to the body
 
 This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by fastify.
