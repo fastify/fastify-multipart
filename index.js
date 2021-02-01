@@ -400,6 +400,12 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
+      if (opts.throwFileSizeLimit || options.throwFileSizeLimit) {
+        file.on('limit', function () {
+          onError(new RequestFileTooLargeError())
+        })
+      }
+
       const value = {
         fieldname: name,
         filename,
