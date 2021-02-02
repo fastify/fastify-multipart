@@ -477,13 +477,13 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
   })
 })
 
-test('should throw error due to file size limit exceed - global setting (Default: false)', function (t) {
+test('should throw error due to file size limit exceed (Default: true)', function (t) {
   t.plan(4)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart, { throwFileSizeLimit: true, limits: { fileSize: 1 } })
+  fastify.register(multipart, { limits: { fileSize: 1 } })
 
   fastify.post('/', async function (req, reply) {
     try {
@@ -528,8 +528,8 @@ test('should throw error due to file size limit exceed - global setting (Default
   })
 })
 
-test('should throw error due to file size limit exceed - files setting (Default: false)', function (t) {
-  t.plan(4)
+test('should not throw error due to file size limit exceed - files setting (Default: true)', function (t) {
+  t.plan(3)
 
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
@@ -537,17 +537,12 @@ test('should throw error due to file size limit exceed - files setting (Default:
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    try {
-      const parts = await req.files({ throwFileSizeLimit: true, limits: { fileSize: 1 } })
-      for await (const part of parts) {
-        t.ok(part.file)
-        await sendToWormhole(part.file)
-      }
-      reply.code(200).send()
-    } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      reply.code(500).send()
+    const parts = await req.files({ throwFileSizeLimit: false, limits: { fileSize: 1 } })
+    for await (const part of parts) {
+      t.ok(part.file)
+      await sendToWormhole(part.file)
     }
+    reply.code(200).send()
   })
 
   fastify.listen(0, async function () {
@@ -563,7 +558,7 @@ test('should throw error due to file size limit exceed - files setting (Default:
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.equal(res.statusCode, 200)
       res.on('end', () => {
         t.pass('res ended successfully')
       })

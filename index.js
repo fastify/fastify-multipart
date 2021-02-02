@@ -149,6 +149,11 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
+  let throwFileSizeLimit = true
+  if (typeof options.throwFileSizeLimit === 'boolean') {
+    throwFileSizeLimit = options.throwFileSizeLimit
+  }
+
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
   const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
@@ -400,7 +405,11 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      if (opts.throwFileSizeLimit || options.throwFileSizeLimit) {
+      if (typeof opts.throwFileSizeLimit === 'boolean') {
+        throwFileSizeLimit = opts.throwFileSizeLimit
+      }
+
+      if (throwFileSizeLimit) {
         file.on('limit', function () {
           onError(new RequestFileTooLargeError())
         })
