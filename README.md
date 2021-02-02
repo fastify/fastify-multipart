@@ -206,6 +206,7 @@ fastify.post('/upload/file', async function (req, reply) {
   const file = await req.file({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
   //const files = await req.files({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
   //const parts = await req.parts({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const files = await req.saveRequestFiles({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
   reply.send()
 })
 ```

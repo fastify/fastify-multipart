@@ -406,12 +406,6 @@ function fastifyMultipart (fastify, options, done) {
         throwFileSizeLimit = opts.throwFileSizeLimit
       }
 
-      if (throwFileSizeLimit) {
-        file.on('limit', function () {
-          onError(new RequestFileTooLargeError())
-        })
-      }
-
       const value = {
         fieldname: name,
         filename,
@@ -432,6 +426,15 @@ function fastifyMultipart (fastify, options, done) {
           return this._buf
         }
       }
+
+      if (throwFileSizeLimit) {
+        file.on('limit', function () {
+          const err = new RequestFileTooLargeError()
+          err.part = value
+          onError(err)
+        })
+      }
+
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
@@ -473,12 +476,6 @@ function fastifyMultipart (fastify, options, done) {
         await pump(file.file, target)
         requestFiles.push({ ...file, filepath })
         this.tmpUploads.push(filepath)
-        // busboy set truncated to true when the configured file size limit was reached
-        if (file.file.truncated) {
-          const err = new RequestFileTooLargeError()
-          err.part = file
-          throw err
-        }
       } catch (err) {
         this.log.error({ err }, 'save request file')
         throw err
