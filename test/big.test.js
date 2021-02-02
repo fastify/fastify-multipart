@@ -25,7 +25,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    for await (const part of req.multipartIterator()) {
+    for await (const part of req.parts()) {
       if (part.file) {
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'random-data')

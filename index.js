@@ -174,9 +174,6 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
 
   fastify.decorateRequest('parts', getMultipartIterator)
-  // keeping multipartIterator to avoid bumping a major
-  // TODO remove on 4.x
-  fastify.decorateRequest('multipartIterator', getMultipartIterator)
 
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', null)
