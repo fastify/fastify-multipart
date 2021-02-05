@@ -149,6 +149,11 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
+  let throwFileSizeLimit = true
+  if (typeof options.throwFileSizeLimit === 'boolean') {
+    throwFileSizeLimit = options.throwFileSizeLimit
+  }
+
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
   const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
@@ -169,9 +174,6 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
 
   fastify.decorateRequest('parts', getMultipartIterator)
-  // keeping multipartIterator to avoid bumping a major
-  // TODO remove on 4.x
-  fastify.decorateRequest('multipartIterator', getMultipartIterator)
 
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', null)
@@ -400,6 +402,10 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
+      if (typeof opts.throwFileSizeLimit === 'boolean') {
+        throwFileSizeLimit = opts.throwFileSizeLimit
+      }
+
       const value = {
         fieldname: name,
         filename,
@@ -420,6 +426,15 @@ function fastifyMultipart (fastify, options, done) {
           return this._buf
         }
       }
+
+      if (throwFileSizeLimit) {
+        file.on('limit', function () {
+          const err = new RequestFileTooLargeError()
+          err.part = value
+          onError(err)
+        })
+      }
+
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
@@ -461,12 +476,6 @@ function fastifyMultipart (fastify, options, done) {
         await pump(file.file, target)
         requestFiles.push({ ...file, filepath })
         this.tmpUploads.push(filepath)
-        // busboy set truncated to true when the configured file size limit was reached
-        if (file.file.truncated) {
-          const err = new RequestFileTooLargeError()
-          err.part = file
-          throw err
-        }
       } catch (err) {
         this.log.error({ err }, 'save request file')
         throw err

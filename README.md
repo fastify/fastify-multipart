@@ -179,16 +179,35 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## Handle file size limitation
 
-If you set a `fileSize` limit `req.saveRequestFiles()` is able to throw an `RequestFileTooLargeError` error.
+If you set a `fileSize` limit, it is able to throw an `RequestFileTooLargeError` error when limit reached.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
   try {
+    //const file = await req.file({ limits: { fileSize: 17000 } })
+    //const files = await req.files({ limits: { fileSize: 17000 } })
+    //const parts = await req.parts({ limits: { fileSize: 17000 } })
     const files = await req.saveRequestFiles({ limits: { fileSize: 17000 } })
     reply.send()
   } catch (error) {
     // error instanceof fastify.multipartErrors.RequestFileTooLargeError
   }
+})
+```
+
+If you want to fallback to the handling before `4.0.0`, you can disable the throwing behavior by passing `throwFileSizeLimit`.
+Note: It will not affect the behavior of `saveRequestFiles()`
+
+```js
+// globally disable
+fastify.register(fastifyMultipart, { throwFileSizeLimit: false })
+
+fastify.post('/upload/file', async function (req, reply) {
+  const file = await req.file({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const files = await req.files({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const parts = await req.parts({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const files = await req.saveRequestFiles({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  reply.send()
 })
 ```
 
