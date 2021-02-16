@@ -26,7 +26,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-typescript": "^0.14.0",
     "fastify": "^3.2.1",
-    "form-data": "^3.0.0",
+    "form-data": "^4.0.0",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
     "readable-stream": "^3.6.0",
