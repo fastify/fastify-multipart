@@ -181,6 +181,88 @@ test('should error if it is not multipart', { skip: process.platform === 'win32'
   })
 })
 
+test('should error if handler is not a function', { skip: process.platform === 'win32' }, function (t) {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.tearDown(fastify.close.bind(fastify))
+  fastify.register(multipart)
+
+  fastify.post('/', function (req, reply) {
+    const handler = null
+
+    req.multipart(handler, function (err) {
+      t.ok(err)
+      reply.code(500).send()
+    })
+  })
+
+  fastify.listen(0, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      res.resume()
+      res.on('end', () => {
+        t.equal(res.statusCode, 500)
+        t.pass('res ended successfully')
+      })
+    })
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('should error if callback is not a function', { skip: process.platform === 'win32' }, function (t) {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.tearDown(fastify.close.bind(fastify))
+  fastify.register(multipart)
+
+  fastify.post('/', function (req) {
+    const callback = null
+    req.multipart(handler, callback)
+
+    function handler () {}
+  })
+
+  fastify.listen(0, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      res.resume()
+      res.on('end', () => {
+        t.equal(res.statusCode, 500)
+        t.pass('res ended successfully')
+      })
+    })
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 test('should error if it is invalid multipart', { skip: process.platform === 'win32' }, function (t) {
   t.plan(5)
 
