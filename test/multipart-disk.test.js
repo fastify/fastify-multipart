@@ -10,7 +10,8 @@ const crypto = require('crypto')
 const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
-const { access } = require('fs').promises
+const os = require('os')
+const { access, chmod, rm, open } = require('fs').promises
 const stream = require('stream')
 const EventEmitter = require('events')
 const { once } = EventEmitter
@@ -177,6 +178,125 @@ test('should throw on file limit error', async function (t) {
   try {
     const [res] = await once(req, 'response')
     t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should throw on file save error', async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(require('..'))
+
+  const fileId = 'testRequestFileId'
+
+  let counter = 0
+  function toID () {
+    return fileId + counter++
+  }
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ toID })
+      reply.code(200).send()
+    } catch (error) {
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+
+  const tempFilePath = path.join(os.tmpdir(), fileId + 0 + path.extname(filePath))
+
+  await open(tempFilePath, 'a') // touch
+  await chmod(tempFilePath, '444') // readonly
+
+  t.tearDown(() => rm(tempFilePath))
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  const readStream = fs.createReadStream(filePath)
+  form.append('upload', readStream)
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should throw on request files cleanup error', async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(require('..'))
+
+  const fileId = 'testRequestFileId'
+
+  let counter = 0
+  function toID () {
+    return fileId + counter++
+  }
+
+  const tempFilePath = path.join(os.tmpdir(), fileId + 0 + path.extname(filePath))
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ toID })
+      // temp file saved, remove before the onResponse hook
+      await rm(tempFilePath)
+      reply.code(200).send()
+    } catch (error) {
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  const readStream = fs.createReadStream(filePath)
+  form.append('upload', readStream)
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {

@@ -462,11 +462,12 @@ function fastifyMultipart (fastify, options, done) {
 
   async function saveRequestFiles (options) {
     const requestFiles = []
+    const generateId = (options && options.toID) || toID
 
     const files = await this.files(options)
     this.tmpUploads = []
     for await (const file of files) {
-      const filepath = path.join(os.tmpdir(), toID() + path.extname(file.filename))
+      const filepath = path.join(os.tmpdir(), generateId() + path.extname(file.filename))
       const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)

@@ -66,7 +66,7 @@ declare module "fastify" {
         files: (options?: busboy.BusboyConfig) => AsyncIterableIterator<Multipart>
 
         // Disk mode
-        saveRequestFiles: (options?: busboy.BusboyConfig) => Promise<Array<Multipart>>
+        saveRequestFiles: (options?: busboy.BusboyConfig & { toID: () => string }) => Promise<Array<Multipart>>
         cleanRequestFiles: () => Promise<void>
         tmpUploads: Array<Multipart>
     }
