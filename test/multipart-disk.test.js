@@ -232,7 +232,7 @@ test('should throw on file save error', async function (t) {
   }
 })
 
-test('should not throw on request files cleanup error', async function (t) {
+test('should not throw on request files cleanup error', { skip: process.platform === 'win32' }, async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
