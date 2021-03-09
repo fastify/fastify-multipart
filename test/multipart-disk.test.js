@@ -10,8 +10,8 @@ const crypto = require('crypto')
 const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
-const os = require('os')
-const { access, chmod, open, unlink } = require('fs').promises
+const { access } = require('fs').promises
+const rimraf = require('rimraf')
 const stream = require('stream')
 const EventEmitter = require('events')
 const { once } = EventEmitter
@@ -193,18 +193,11 @@ test('should throw on file save error', async function (t) {
 
   fastify.register(require('..'))
 
-  const fileId = 'testRequestFileId'
-
-  let counter = 0
-  function toID () {
-    return fileId + counter++
-  }
-
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
     try {
-      await req.saveRequestFiles({ toID })
+      await req.saveRequestFiles({ tmpdir: 'something' })
       reply.code(200).send()
     } catch (error) {
       reply.code(500).send()
@@ -212,13 +205,6 @@ test('should throw on file save error', async function (t) {
   })
 
   await fastify.listen(0)
-
-  const tempFilePath = path.join(os.tmpdir(), fileId + 0 + path.extname(filePath))
-
-  await open(tempFilePath, 'a') // touch
-  await chmod(tempFilePath, '444') // readonly
-
-  t.tearDown(() => unlink(tempFilePath))
 
   // request
   const form = new FormData()
@@ -246,7 +232,7 @@ test('should throw on file save error', async function (t) {
   }
 })
 
-test('should throw on request files cleanup error', async function (t) {
+test('should not throw on request files cleanup error', async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
@@ -254,22 +240,15 @@ test('should throw on request files cleanup error', async function (t) {
 
   fastify.register(require('..'))
 
-  const fileId = 'testRequestFileId'
-
-  let counter = 0
-  function toID () {
-    return fileId + counter++
-  }
-
-  const tempFilePath = path.join(os.tmpdir(), fileId + 0 + path.extname(filePath))
+  const tmpdir = t.testdir()
 
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
     try {
-      await req.saveRequestFiles({ toID })
+      await req.saveRequestFiles({ tmpdir })
       // temp file saved, remove before the onResponse hook
-      await unlink(tempFilePath)
+      rimraf.sync(tmpdir)
       reply.code(200).send()
     } catch (error) {
       reply.code(500).send()
