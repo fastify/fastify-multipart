@@ -11,7 +11,7 @@ const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
-const { access, chmod, rm, open } = require('fs').promises
+const { access, chmod, open, unlink } = require('fs').promises
 const stream = require('stream')
 const EventEmitter = require('events')
 const { once } = EventEmitter
@@ -218,7 +218,7 @@ test('should throw on file save error', async function (t) {
   await open(tempFilePath, 'a') // touch
   await chmod(tempFilePath, '444') // readonly
 
-  t.tearDown(() => rm(tempFilePath))
+  t.tearDown(() => unlink(tempFilePath))
 
   // request
   const form = new FormData()
@@ -269,7 +269,7 @@ test('should throw on request files cleanup error', async function (t) {
     try {
       await req.saveRequestFiles({ toID })
       // temp file saved, remove before the onResponse hook
-      await rm(tempFilePath)
+      await unlink(tempFilePath)
       reply.code(200).send()
     } catch (error) {
       reply.code(500).send()
