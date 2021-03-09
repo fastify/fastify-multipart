@@ -19,7 +19,7 @@ jobs:
       matrix:
         node-version: [10.x, 12.x, 14.x]
         os: [ubuntu-latest, windows-latest, macOS-latest]
-    name: ${{ matrix.os }} ${{ matrix.node-version }}
+    name: ${{ matrix.os }} Node ${{ matrix.node-version }}
 
     steps:
       - uses: actions/checkout@v2
