@@ -504,6 +504,9 @@ function fastifyMultipart (fastify, options, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
+        if (part.file.truncated) {
+          throw new RequestFileTooLargeError()
+        }
         return part
       }
     }

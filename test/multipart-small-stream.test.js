@@ -30,7 +30,7 @@ test('should throw fileSize limitation error on small payload', async function (
     const part = await req.file({ limits: { fileSize: 2 } })
     await sendToWormhole(part.file)
     if (part.file.truncated) {
-      reply.code(500).send()
+      reply.code(413).send()
     } else {
       reply.code(200).send()
     }
@@ -56,7 +56,7 @@ test('should throw fileSize limitation error on small payload', async function (
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.equal(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
   } catch (error) {
