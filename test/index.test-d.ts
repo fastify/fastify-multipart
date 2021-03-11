@@ -130,6 +130,14 @@ const runServer = async () => {
     reply.send()
   })
 
+  // upload files to disk with busboy options
+  app.post('/upload/files', async function (req, reply) {
+    const options: busboy.BusboyConfig = { limits: { fileSize: 1000 } };
+    await req.saveRequestFiles(options)
+
+    reply.send()
+  })
+
   // access all errors
   app.post('/upload/files', async function (req, reply) {
     const { FilesLimitError } = app.multipartErrors
