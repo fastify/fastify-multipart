@@ -504,6 +504,10 @@ function fastifyMultipart (fastify, options, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
+        // part.file.truncated is true when a configured file size limit is reached
+        if (part.file.truncated && throwFileSizeLimit) {
+          throw new RequestFileTooLargeError()
+        }
         return part
       }
     }
