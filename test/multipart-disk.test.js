@@ -11,6 +11,7 @@ const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
 const { access } = require('fs').promises
+const rimraf = require('rimraf')
 const stream = require('stream')
 const EventEmitter = require('events')
 const { once } = EventEmitter
@@ -177,6 +178,104 @@ test('should throw on file limit error', async function (t) {
   try {
     const [res] = await once(req, 'response')
     t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should throw on file save error', async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(require('..'))
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ tmpdir: 'something' })
+      reply.code(200).send()
+    } catch (error) {
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  const readStream = fs.createReadStream(filePath)
+  form.append('upload', readStream)
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 500)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should not throw on request files cleanup error', { skip: process.platform === 'win32' }, async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(require('..'))
+
+  const tmpdir = t.testdir()
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles({ tmpdir })
+      // temp file saved, remove before the onResponse hook
+      rimraf.sync(tmpdir)
+      reply.code(200).send()
+    } catch (error) {
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen(0)
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+  const readStream = fs.createReadStream(filePath)
+  form.append('upload', readStream)
+
+  pump(form, req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {
