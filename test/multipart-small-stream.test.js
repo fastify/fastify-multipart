@@ -16,7 +16,7 @@ const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should throw fileSize limitation error on small payload', async function (t) {
+test('should throw fileSize limitation error on small payload', { skip: process.platform === 'win32' }, async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
@@ -61,7 +61,7 @@ test('should throw fileSize limitation error on small payload', async function (
   }
 })
 
-test('should not throw and error when throwFileSizeLimit option is false', async function (t) {
+test('should not throw and error when throwFileSizeLimit option is false', { skip: process.platform === 'win32' }, async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
