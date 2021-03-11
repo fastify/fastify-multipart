@@ -534,10 +534,10 @@ test('should not throw error due to file size limit exceed - files setting (Defa
   const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  fastify.register(multipart, { throwFileSizeLimit: false })
 
   fastify.post('/', async function (req, reply) {
-    const parts = await req.files({ throwFileSizeLimit: false, limits: { fileSize: 1 } })
+    const parts = await req.files({ limits: { fileSize: 1 } })
     for await (const part of parts) {
       t.ok(part.file)
       await sendToWormhole(part.file)
