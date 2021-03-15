@@ -139,6 +139,78 @@ test('should call finished when both files are pumped', { skip: process.platform
   })
 })
 
+test('should call finished if one of the streams closes prematurely', { skip: process.platform === 'win32' }, function (t) {
+  t.plan(5)
+
+  const fastify = Fastify({
+    logger: {
+      level: 'debug'
+    }
+  })
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', function (req, reply) {
+    let fileCount = 0
+    t.ok(req.isMultipart())
+
+    req.multipart(handler, function () {
+      t.equal(fileCount, 1)
+      reply.code(200).send()
+    })
+
+    function handler (field, file, filename, encoding, mimetype) {
+      const saveTo = path.join(os.tmpdir(), path.basename(filename))
+      eos(file, function () {
+        fileCount++
+      })
+
+      file.on('data', function () {
+        if (fileCount === 0) {
+          this.destroy()
+        }
+      })
+
+      pump(file, fs.createWriteStream(saveTo), () => {})
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const stream1 = fs.createReadStream(filePath)
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('upload1', stream1, {
+      filename: 'random-data1'
+    })
+    form.append('upload2', stream1, {
+      filename: 'random-data2'
+    })
+
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
 test('should error if it is not multipart', { skip: process.platform === 'win32' }, function (t) {
   t.plan(4)
 
