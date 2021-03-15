@@ -227,8 +227,6 @@ function fastifyMultipart (fastify, options, done) {
     const stream = busboy(busboyOptions)
     let completed = false
     let files = 0
-    let count = 0
-    let callDoneOnNextEos = false
 
     req.on('error', function (err) {
       stream.destroy()
@@ -240,11 +238,9 @@ function fastifyMultipart (fastify, options, done) {
 
     stream.on('finish', function () {
       log.debug('finished receiving stream, total %d files', files)
-      if (!completed && count === files) {
+      if (!completed) {
         completed = true
         setImmediate(done)
-      } else {
-        callDoneOnNextEos = true
       }
     })
 
@@ -270,17 +266,6 @@ function fastifyMultipart (fastify, options, done) {
       if (err) {
         completed = true
         done(err)
-        return
-      }
-
-      if (completed) {
-        return
-      }
-
-      ++count
-      if (callDoneOnNextEos && count === files) {
-        completed = true
-        done()
       }
     }
 
