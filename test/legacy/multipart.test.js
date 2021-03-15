@@ -142,11 +142,7 @@ test('should call finished when both files are pumped', { skip: process.platform
 test('should call finished if one of the streams closes prematurely', { skip: process.platform === 'win32' }, function (t) {
   t.plan(5)
 
-  const fastify = Fastify({
-    logger: {
-      level: 'debug'
-    }
-  })
+  const fastify = Fastify()
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
