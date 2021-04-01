@@ -72,9 +72,9 @@ fastify.listen(3000, err => {
 })
 ```
 
-You can also pass optional arguments to busboy when registering with fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
+You can also pass optional arguments to busboy when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
 
-**Note**: if the file stream that is provided by `data.file` is not consumed (like in the example above with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
+**Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 ```js
@@ -92,7 +92,7 @@ fastify.register(require('fastify-multipart'), {
 
 If you do set upload limits, be sure to catch the error. An error or exception will occur if a limit is reached. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
 
-**Note**: if the file stream that is provided by `data.file` is not consumed (like in the example below with the usage of pump) the promise won't be fulfilled at the end of the multipart processing.
+**Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 **Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can listen to `data.file.on('limit')` or check at the end of the stream the property `data.file.truncated`. 
@@ -180,7 +180,7 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## Handle file size limitation
 
-If you set a `fileSize` limit, it is able to throw an `RequestFileTooLargeError` error when limit reached.
+If you set a `fileSize` limit, it is able to throw a `RequestFileTooLargeError` error when limit reached.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
@@ -214,7 +214,7 @@ fastify.post('/upload/file', async function (req, reply) {
 
 ## Parse all fields and assign them to the body
 
-This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by fastify.
+This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by Fastify.
 
 ```js
 fastify.register(require('fastify-multipart'), { attachFieldsToBody: true })
@@ -225,7 +225,7 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
-You can also define a `onFile` handler to avoid accumulate all files in memory.
+You can also define an `onFile` handler to avoid accumulating all files in memory.
 
 ```js
 async function onFile(part) {
@@ -241,7 +241,7 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## JSON Schema body validation
 
-If you enable `attachFieldsToBody` and set `sharedSchemaId` a shared JSON Schema is added which can be used to validate parsed multipart fields.
+If you enable `attachFieldsToBody` and set `sharedSchemaId` a shared JSON Schema is added, which can be used to validate parsed multipart fields.
 
 ```js
 const opts = {
@@ -279,7 +279,7 @@ fastify.post('/upload/files', {
 
 ## Access all errors
 
-We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derivated from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
+We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
