@@ -1,4 +1,4 @@
 ts: false
 jsx: false
 flow: false
-coverage: true
+coverage: false
