@@ -18,7 +18,7 @@ test('should parse forms', { skip: process.platform === 'win32' }, function (t) 
   t.plan(14)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { limits: { fields: 1 } })
 
@@ -83,7 +83,7 @@ test('should call finished when both files are pumped', { skip: process.platform
   t.plan(10)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -143,7 +143,7 @@ test('should call finished if one of the streams closes prematurely', { skip: pr
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -212,7 +212,7 @@ test('should error if it is not multipart', { skip: process.platform === 'win32'
 
   const fastify = Fastify()
 
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
@@ -254,7 +254,7 @@ test('should error if handler is not a function', { skip: process.platform === '
 
   const fastify = Fastify()
 
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
@@ -296,7 +296,7 @@ test('should error if callback is not a function', { skip: process.platform === 
 
   const fastify = Fastify()
 
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
   fastify.register(multipart)
 
   fastify.post('/', function (req) {
@@ -336,7 +336,7 @@ test('should error if it is invalid multipart', { skip: process.platform === 'wi
 
   const fastify = Fastify()
 
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
   fastify.register(multipart)
 
   fastify.post('/', function (req, reply) {
@@ -380,7 +380,7 @@ test('should override options', { skip: process.platform === 'win32' }, function
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { limits: { fileSize: 1 } })
 
@@ -429,7 +429,7 @@ test('should not allow __proto__', { skip: process.platform === 'win32' }, funct
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { limits: { fields: 1 } })
 
@@ -437,7 +437,7 @@ test('should not allow __proto__', { skip: process.platform === 'win32' }, funct
     t.ok(req.isMultipart())
 
     const mp = req.multipart(handler, function (err) {
-      t.is(err.message, '__proto__ is not allowed as field name')
+      t.equal(err.message, '__proto__ is not allowed as field name')
       reply.code(500).send()
     })
 

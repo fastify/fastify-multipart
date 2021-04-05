@@ -17,7 +17,7 @@ test('should be able to get whole buffer by accessing "content" on part', functi
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -68,7 +68,7 @@ test('should be able to access "content" multiple times without reading the stre
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 

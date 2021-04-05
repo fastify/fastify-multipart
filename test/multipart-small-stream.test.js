@@ -20,7 +20,7 @@ test('should throw fileSize limitation error on small payload', { skip: process.
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -65,7 +65,7 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 

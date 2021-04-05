@@ -14,7 +14,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
   t.plan(8)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true })
 
@@ -67,7 +67,7 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
 
@@ -110,7 +110,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
   t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   let fileCounter = 0
   const opts = {
@@ -187,7 +187,7 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true
@@ -254,7 +254,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true
@@ -300,7 +300,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
   t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -359,7 +359,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -415,7 +415,7 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -461,7 +461,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
   t.plan(9)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, {
     addToBody: true,
@@ -533,7 +533,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
 
 test('addToBody with shared schema (async/await)', { skip: process.platform === 'win32' }, async (t) => {
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   await fastify.register(multipart, {
     addToBody: true,
@@ -607,7 +607,7 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, {
     addToBody: true,
@@ -662,7 +662,7 @@ test('addToBody without files and shared schema', { skip: process.platform === '
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -723,7 +723,7 @@ test('addToBody option does not change behaviour on not-multipart request', { sk
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true })
   fastify.get('/', async (req, rep) => { rep.send('hello') })
@@ -736,7 +736,7 @@ test('addToBody option does not change behaviour on not-multipart request', { sk
       port: fastify.server.address().port
     }, (err, res) => {
       t.error(err)
-      t.strictEqual(res.payload, 'hello')
+      t.equal(res.payload, 'hello')
     })
   })
 })
@@ -745,7 +745,7 @@ test('addToBody with __proto__ field', t => {
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,

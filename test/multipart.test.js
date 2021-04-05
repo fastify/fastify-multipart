@@ -20,7 +20,7 @@ test('should parse forms', function (t) {
   t.plan(8)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -83,7 +83,7 @@ test('should respond when all files are processed', function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -132,7 +132,7 @@ test('should group parts with the same name to an array', function (t) {
   t.plan(15)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -191,7 +191,7 @@ test('should error if it is not multipart', function (t) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -202,7 +202,7 @@ test('should error if it is not multipart', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.InvalidMultipartContentTypeError)
+      t.ok(error instanceof fastify.multipartErrors.InvalidMultipartContentTypeError)
       reply.code(500).send()
     }
   })
@@ -231,7 +231,7 @@ test('should error if boundary is empty', function (t) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -277,7 +277,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -290,7 +290,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       }
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.FilesLimitError)
+      t.ok(error instanceof fastify.multipartErrors.FilesLimitError)
       reply.code(500).send()
     }
   })
@@ -329,7 +329,7 @@ test('should be able to configure limits globally with plugin register options',
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { limits: { files: 1 } })
 
@@ -342,7 +342,7 @@ test('should be able to configure limits globally with plugin register options',
       }
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.FilesLimitError)
+      t.ok(error instanceof fastify.multipartErrors.FilesLimitError)
       reply.code(500).send()
     }
   })
@@ -381,7 +381,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -392,7 +392,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
       }
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.FieldsLimitError)
+      t.ok(error instanceof fastify.multipartErrors.FieldsLimitError)
       reply.code(500).send()
     }
   })
@@ -431,7 +431,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -442,7 +442,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
       }
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.PartsLimitError)
+      t.ok(error instanceof fastify.multipartErrors.PartsLimitError)
       reply.code(500).send()
     }
   })
@@ -481,7 +481,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { limits: { fileSize: 1 } })
 
@@ -494,7 +494,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
       }
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
   })
@@ -532,7 +532,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { throwFileSizeLimit: false })
 
@@ -581,7 +581,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
   const immediate = util.promisify(setImmediate)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
