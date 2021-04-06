@@ -21,7 +21,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
@@ -72,8 +72,8 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
   fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
 
   fastify.post('/', function (req, reply) {
-    t.equals(req.body.myFile[0].limit, true)
-    t.equals(req.body.myFile[0].data, undefined)
+    t.equal(req.body.myFile[0].limit, true)
+    t.equal(req.body.myFile[0].data, undefined)
 
     reply.send('ok')
   })
@@ -123,7 +123,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -131,7 +131,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       mimetype: 'text/markdown'
     }])
 
-    t.like(req.body.myFileTwo, [{
+    t.match(req.body.myFileTwo, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -139,7 +139,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       mimetype: 'text/markdown'
     }])
 
-    t.like(req.body.myFileThree, [{
+    t.match(req.body.myFileThree, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -195,7 +195,7 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
+    t.hasStrict(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -262,7 +262,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myField, ['1', '2', '3'])
+    t.match(req.body.myField, ['1', '2', '3'])
 
     reply.send('ok')
   })
@@ -314,7 +314,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -372,7 +372,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -489,7 +489,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
       }
     }, function (req, reply) {
       t.equal(req.body.myField, 'hello')
-      t.like(req.body.myFile, [{
+      t.match(req.body.myFile, [{
         data: [],
         encoding: '7bit',
         filename: 'README.md',
@@ -560,7 +560,7 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
     }
   }, function (req, reply) {
     t.equal(req.body.myField, 'hello')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
