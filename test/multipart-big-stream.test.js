@@ -18,7 +18,7 @@ test('should emit fileSize limitation error during streaming', async function (t
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
   const hashInput = crypto.createHash('sha256')
 
   fastify.register(multipart)

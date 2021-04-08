@@ -17,7 +17,7 @@ test('should be able to use JSON schema to validate request', function (t) {
   t.plan(6)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -81,7 +81,7 @@ test('should throw because JSON schema is invalid', function (t) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 

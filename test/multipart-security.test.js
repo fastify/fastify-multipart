@@ -17,7 +17,7 @@ test('should not allow __proto__ as file name', function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -28,7 +28,7 @@ test('should not allow __proto__ as file name', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -67,7 +67,7 @@ test('should not allow __proto__ as field name', function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -78,7 +78,7 @@ test('should not allow __proto__ as field name', function (t) {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })

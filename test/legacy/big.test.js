@@ -20,7 +20,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
   const hashInput = crypto.createHash('sha256')
   let sent = false
 
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 

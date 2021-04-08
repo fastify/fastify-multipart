@@ -14,14 +14,14 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
   t.plan(8)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true })
 
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
@@ -67,13 +67,13 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
 
   fastify.post('/', function (req, reply) {
-    t.equals(req.body.myFile[0].limit, true)
-    t.equals(req.body.myFile[0].data, undefined)
+    t.equal(req.body.myFile[0].limit, true)
+    t.equal(req.body.myFile[0].data, undefined)
 
     reply.send('ok')
   })
@@ -110,7 +110,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
   t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   let fileCounter = 0
   const opts = {
@@ -123,7 +123,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -131,7 +131,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       mimetype: 'text/markdown'
     }])
 
-    t.like(req.body.myFileTwo, [{
+    t.match(req.body.myFileTwo, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -139,7 +139,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
       mimetype: 'text/markdown'
     }])
 
-    t.like(req.body.myFileThree, [{
+    t.match(req.body.myFileThree, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -184,10 +184,10 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
 })
 
 test('addToBody option and multiple files in one field', { skip: process.platform === 'win32' }, t => {
-  t.plan(4)
+  t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true
@@ -195,26 +195,25 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
-      data: [],
+    t.match(req.body.myFile, [{
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
     }, {
-      data: [],
       encoding: '7bit',
       filename: 'LICENSE',
       limit: false,
       mimetype: 'application/octet-stream'
     }, {
-      data: [],
       encoding: '7bit',
       filename: 'form.html',
       limit: false,
       mimetype: 'text/html'
     }])
-
+    req.body.myFile.forEach(x => {
+      t.equal(Buffer.isBuffer(x.data), true)
+    })
     reply.send('ok')
   })
 
@@ -254,7 +253,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true
@@ -262,7 +261,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myField, ['1', '2', '3'])
+    t.match(req.body.myField, ['1', '2', '3'])
 
     reply.send('ok')
   })
@@ -300,7 +299,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
   t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -314,7 +313,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
   fastify.post('/', function (req, reply) {
     t.equal(req.body.myField, 'hello')
     t.equal(req.body.myCheck, 'true')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -359,7 +358,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -372,7 +371,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -415,7 +414,7 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -461,7 +460,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
   t.plan(9)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, {
     addToBody: true,
@@ -489,7 +488,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
       }
     }, function (req, reply) {
       t.equal(req.body.myField, 'hello')
-      t.like(req.body.myFile, [{
+      t.match(req.body.myFile, [{
         data: [],
         encoding: '7bit',
         filename: 'README.md',
@@ -533,7 +532,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
 
 test('addToBody with shared schema (async/await)', { skip: process.platform === 'win32' }, async (t) => {
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   await fastify.register(multipart, {
     addToBody: true,
@@ -560,7 +559,7 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
     }
   }, function (req, reply) {
     t.equal(req.body.myField, 'hello')
-    t.like(req.body.myFile, [{
+    t.match(req.body.myFile, [{
       data: [],
       encoding: '7bit',
       filename: 'README.md',
@@ -607,7 +606,7 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, {
     addToBody: true,
@@ -662,7 +661,7 @@ test('addToBody without files and shared schema', { skip: process.platform === '
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,
@@ -723,7 +722,7 @@ test('addToBody option does not change behaviour on not-multipart request', { sk
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { addToBody: true })
   fastify.get('/', async (req, rep) => { rep.send('hello') })
@@ -736,7 +735,7 @@ test('addToBody option does not change behaviour on not-multipart request', { sk
       port: fastify.server.address().port
     }, (err, res) => {
       t.error(err)
-      t.strictEqual(res.payload, 'hello')
+      t.equal(res.payload, 'hello')
     })
   })
 })
@@ -745,7 +744,7 @@ test('addToBody with __proto__ field', t => {
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   const opts = {
     addToBody: true,

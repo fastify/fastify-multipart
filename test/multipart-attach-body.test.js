@@ -18,7 +18,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
   t.plan(6)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { attachFieldsToBody: true })
 
@@ -71,7 +71,7 @@ test('should be able to define a custom "onFile" handler', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   async function onFile (part) {
     t.pass('custom onFile handler')
@@ -129,7 +129,7 @@ test('should not process requests with content-type other than multipart', funct
   t.plan(3)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart, { attachFieldsToBody: true })
 

@@ -23,7 +23,7 @@ test('should store file on disk, remove on response', async function (t) {
   t.plan(10)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -84,7 +84,7 @@ test('should store file on disk, remove on response error', async function (t) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -142,7 +142,7 @@ test('should throw on file limit error', async function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -153,7 +153,7 @@ test('should throw on file limit error', async function (t) {
       await req.saveRequestFiles({ limits: { fileSize: 500 } })
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       t.equal(error.part.fieldname, 'upload')
       reply.code(500).send()
     }
@@ -189,7 +189,7 @@ test('should throw on file save error', async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(require('..'))
 
@@ -236,7 +236,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(require('..'))
 
@@ -288,7 +288,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
 
   const hashInput = crypto.createHash('sha256')
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -299,7 +299,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
       await req.saveRequestFiles({ limits: { fileSize: 17000 } })
       reply.code(200).send()
     } catch (error) {
-      t.true(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       t.equal(error.part.fieldname, 'upload2')
       reply.code(500).send()
     }
@@ -363,7 +363,7 @@ test('should store file on disk, remove on response error, serial', async functi
   t.plan(18)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
@@ -429,7 +429,7 @@ test('should process large files correctly', async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.tearDown(fastify.close.bind(fastify))
+  t.teardown(fastify.close.bind(fastify))
 
   fastify.register(multipart)
 
