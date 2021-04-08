@@ -184,7 +184,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
 })
 
 test('addToBody option and multiple files in one field', { skip: process.platform === 'win32' }, t => {
-  t.plan(4)
+  t.plan(7)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -195,26 +195,25 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
   fastify.register(multipart, opts)
 
   fastify.post('/', function (req, reply) {
-    t.hasStrict(req.body.myFile, [{
-      data: [],
+    t.match(req.body.myFile, [{
       encoding: '7bit',
       filename: 'README.md',
       limit: false,
       mimetype: 'text/markdown'
     }, {
-      data: [],
       encoding: '7bit',
       filename: 'LICENSE',
       limit: false,
       mimetype: 'application/octet-stream'
     }, {
-      data: [],
       encoding: '7bit',
       filename: 'form.html',
       limit: false,
       mimetype: 'text/html'
     }])
-
+    req.body.myFile.forEach(x => {
+      t.equal(Buffer.isBuffer(x.data), true)
+    })
     reply.send('ok')
   })
 

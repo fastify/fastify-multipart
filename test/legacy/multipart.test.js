@@ -31,8 +31,8 @@ test('should parse forms', { skip: process.platform === 'win32' }, function (t) 
     })
 
     mp.on('field', function (name, value) {
-      t.notEqual(name, 'willbe', 'Busboy fields limit ignored')
-      t.notEqual(value, 'dropped', 'Busboy fields limit ignored')
+      t.not(name, 'willbe', 'Busboy fields limit ignored')
+      t.not(value, 'dropped', 'Busboy fields limit ignored')
       t.equal(name, 'hello')
       t.equal(value, 'world')
     })
