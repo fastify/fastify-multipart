@@ -141,6 +141,14 @@ const runServer = async () => {
   // access all errors
   app.post('/upload/files', async function (req, reply) {
     const { FilesLimitError } = app.multipartErrors
+
+    // test instanceof Error
+    const a = new FilesLimitError();
+    if (a instanceof FilesLimitError) {
+      console.log("FilesLimitError occurred.");
+    }
+
+    reply.send();
   })
 
   await app.ready()
