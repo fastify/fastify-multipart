@@ -1,6 +1,6 @@
 import fastify from 'fastify'
 import fastifyMultipart from '..'
-import { Multipart, MultipartFields } from '..'
+import { Multipart, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
@@ -28,6 +28,13 @@ const runServer = async () => {
       fileSize: 200,
       files: 2,
       headerPairs: 200
+    }
+  })
+
+  app.register(fastifyMultipart, {
+    attachFieldsToBody: true,
+    onFile: (part: MultipartFile) => {
+      console.log(part)
     }
   })
 
