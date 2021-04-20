@@ -5,6 +5,7 @@ import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
+import { FastifyErrorConstructor } from "fastify-error"
 
 const pump = util.promisify(pipeline)
 
@@ -141,6 +142,21 @@ const runServer = async () => {
   // access all errors
   app.post('/upload/files', async function (req, reply) {
     const { FilesLimitError } = app.multipartErrors
+
+    expectType<FastifyErrorConstructor>(app.multipartErrors.FieldsLimitError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.FilesLimitError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.InvalidMultipartContentTypeError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.PartsLimitError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.PrototypeViolationError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.RequestFileTooLargeError);
+
+    // test instanceof Error
+    const a = new FilesLimitError();
+    if (a instanceof FilesLimitError) {
+      console.log("FilesLimitError occurred.");
+    }
+
+    reply.send();
   })
 
   await app.ready()

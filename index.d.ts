@@ -1,7 +1,7 @@
 import * as busboy from "busboy";
 import { FastifyPlugin } from "fastify";
 import { Readable } from 'stream';
-import { FastifyError } from "fastify-error";
+import { FastifyErrorConstructor } from "fastify-error";
 
 type MultipartHandler = (
     field: string,
@@ -41,12 +41,12 @@ interface MultipartValue<T> {
 }
 
 interface MultipartErrors {
-    PartsLimitError: FastifyError,
-    FilesLimitError: FastifyError,
-    FieldsLimitError: FastifyError,
-    PrototypeViolationError: FastifyError,
-    InvalidMultipartContentTypeError: FastifyError,
-    RequestFileTooLargeError: FastifyError
+    PartsLimitError: FastifyErrorConstructor,
+    FilesLimitError: FastifyErrorConstructor,
+    FieldsLimitError: FastifyErrorConstructor,
+    PrototypeViolationError: FastifyErrorConstructor,
+    InvalidMultipartContentTypeError: FastifyErrorConstructor,
+    RequestFileTooLargeError: FastifyErrorConstructor
 }
 
 declare module "fastify" {
