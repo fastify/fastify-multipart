@@ -1,5 +1,5 @@
 import * as busboy from "busboy";
-import { FastifyPlugin } from "fastify";
+import { FastifyPluginCallback } from "fastify";
 import { Readable } from 'stream';
 import { FastifyErrorConstructor } from "fastify-error";
 
@@ -25,7 +25,7 @@ export interface MultipartFields {
 
 export type Multipart<T = true> = T extends true ? MultipartFile : MultipartValue<T>;
 
-interface MultipartFile {
+export interface MultipartFile {
   toBuffer: () => Promise<Buffer>,
   file: NodeJS.ReadableStream,
   filepath: string,
@@ -36,7 +36,7 @@ interface MultipartFile {
   fields: MultipartFields
 }
 
-interface MultipartValue<T> {
+export interface MultipartValue<T> {
   value: T
 }
 
@@ -76,16 +76,11 @@ declare module "fastify" {
     }
 }
 
-export interface FastifyMultipartOptions {
+export interface FastifyMultipartBaseOptions {
     /**
      * Append the multipart parameters to the body object
      */
     addToBody?: boolean;
-
-    /**
-     * Only valid in the promise api. Append the multipart parameters to the body object.
-     */
-    attachFieldsToBody?: boolean
 
     /**
      * Add a shared schema to validate the input fields
@@ -97,10 +92,6 @@ export interface FastifyMultipartOptions {
      */
     throwFileSizeLimit?: boolean
 
-    /**
-     * Manage the file stream like you need
-     */
-    onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void | Promise<void>;
 
     limits?: {
         /**
@@ -135,5 +126,29 @@ export interface FastifyMultipartOptions {
     }
 }
 
-declare const fastifyMultipart: FastifyPlugin<FastifyMultipartOptions>;
+export interface FastifyMultipartOptions extends FastifyMultipartBaseOptions {
+    /**
+     * Only valid in the promise api. Append the multipart parameters to the body object.
+     */
+    attachFieldsToBody?: false
+
+    /**
+     * Manage the file stream like you need
+     */
+     onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void | Promise<void>;
+}
+
+export interface FastifyMultipartAttactFieldsToBodyOptions extends FastifyMultipartBaseOptions {
+    /**
+     * Only valid in the promise api. Append the multipart parameters to the body object.
+     */
+    attachFieldsToBody: true
+
+    /**
+     * Manage the file stream like you need
+     */
+    onFile?: (part: MultipartFile) => void | Promise<void>;
+}
+
+declare const fastifyMultipart: FastifyPluginCallback<FastifyMultipartOptions | FastifyMultipartAttactFieldsToBodyOptions>;
 export default fastifyMultipart;
