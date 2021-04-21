@@ -20,7 +20,7 @@ Under the hood it uses [busboy](https://github.com/mscdex/busboy).
 ```sh
 npm i fastify-multipart
 # Typescript support
-npm i @types/busboy
+npm i -D @types/busboy
 ```
 
 ## Usage
