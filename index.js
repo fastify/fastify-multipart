@@ -145,6 +145,7 @@ function fastifyMultipart (fastify, options, done) {
             await part.toBuffer()
           }
         }
+        delete part.fields
       }
     })
   }
