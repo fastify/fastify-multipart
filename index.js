@@ -443,7 +443,6 @@ function fastifyMultipart (fastify, options, done) {
 
     function cleanup () {
       request.unpipe(bb)
-      bb.removeAllListeners()
     }
 
     return parts
