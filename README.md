@@ -123,7 +123,7 @@ fastify.post('/', async function (req, reply) {
 
 ```js
 fastify.post('/', async function (req, reply) {
-  const parts = await req.files()
+  const parts = req.files()
   for await (const part of parts) {
     await pump(part.file, fs.createWriteStream(part.filename))
   }
@@ -135,7 +135,7 @@ fastify.post('/', async function (req, reply) {
 
 ```js
 fastify.post('/upload/raw/any', async function (req, reply) {
-  const parts = await req.parts()
+  const parts = req.parts()
   for await (const part of parts) {
     if (part.file) {
       await pump(part.file, fs.createWriteStream(part.filename))
@@ -185,10 +185,10 @@ If you set a `fileSize` limit, it is able to throw a `RequestFileTooLargeError` 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
   try {
-    //const file = await req.file({ limits: { fileSize: 17000 } })
-    //const files = await req.files({ limits: { fileSize: 17000 } })
-    //const parts = await req.parts({ limits: { fileSize: 17000 } })
-    const files = await req.saveRequestFiles({ limits: { fileSize: 17000 } })
+    const file = await req.file({ limits: { fileSize: 17000 } })
+    //const files = req.files({ limits: { fileSize: 17000 } })
+    //const parts = req.parts({ limits: { fileSize: 17000 } })
+    //const files = await req.saveRequestFiles({ limits: { fileSize: 17000 } })
     reply.send()
   } catch (error) {
     // error instanceof fastify.multipartErrors.RequestFileTooLargeError
@@ -205,8 +205,8 @@ fastify.register(fastifyMultipart, { throwFileSizeLimit: false })
 
 fastify.post('/upload/file', async function (req, reply) {
   const file = await req.file({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
-  //const files = await req.files({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
-  //const parts = await req.parts({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const files = req.files({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
+  //const parts = req.parts({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
   //const files = await req.saveRequestFiles({ throwFileSizeLimit: false, limits: { fileSize: 17000 } })
   reply.send()
 })
@@ -220,8 +220,8 @@ This allows you to parse all fields automatically and assign them to the `reques
 fastify.register(require('fastify-multipart'), { attachFieldsToBody: true })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const uploadValue = await req.body.upload.toBuffer()  // access files
-  const fooValue = await req.body.foo.value           // other fields
+  const uploadValue = await req.body.upload.toBuffer() // access files
+  const fooValue = req.body.foo.value                  // other fields
   const body = Object.fromEntries(
     Object.keys(req.body).map((key) => [key, req.body[key].value])
   ) // Request body in key-value pairs, like req.body in Express (Node 12+)
@@ -238,7 +238,7 @@ async function onFile(part) {
 fastify.register(require('fastify-multipart'), { attachFieldsToBody: true, onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const fooValue = await req.body.foo.value           // other fields
+  const fooValue = req.body.foo.value // other fields
 })
 ```
 

@@ -88,7 +88,7 @@ test('should respond when all files are processed', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    const parts = await req.files()
+    const parts = req.files()
     for await (const part of parts) {
       t.ok(part.file)
       await sendToWormhole(part.file)
@@ -137,7 +137,7 @@ test('should group parts with the same name to an array', function (t) {
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    const parts = await req.parts()
+    const parts = req.parts()
     for await (const part of parts) {
       t.ok(part)
       if (Array.isArray(part.fields.upload)) {
@@ -283,7 +283,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
 
   fastify.post('/', async function (req, reply) {
     try {
-      const parts = await req.files({ limits: { files: 1 } })
+      const parts = req.files({ limits: { files: 1 } })
       for await (const part of parts) {
         t.ok(part.file)
         await sendToWormhole(part.file)
@@ -335,7 +335,7 @@ test('should be able to configure limits globally with plugin register options',
 
   fastify.post('/', async function (req, reply) {
     try {
-      const parts = await req.files()
+      const parts = req.files()
       for await (const part of parts) {
         t.ok(part.file)
         await sendToWormhole(part.file)
@@ -487,7 +487,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
 
   fastify.post('/', async function (req, reply) {
     try {
-      const parts = await req.files()
+      const parts = req.files()
       for await (const part of parts) {
         t.ok(part.file)
         await sendToWormhole(part.file)
@@ -537,7 +537,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
   fastify.register(multipart, { throwFileSizeLimit: false })
 
   fastify.post('/', async function (req, reply) {
-    const parts = await req.files({ limits: { fileSize: 1 } })
+    const parts = req.files({ limits: { fileSize: 1 } })
     for await (const part of parts) {
       t.ok(part.file)
       await sendToWormhole(part.file)

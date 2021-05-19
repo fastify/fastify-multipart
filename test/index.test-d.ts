@@ -96,7 +96,7 @@ const runServer = async () => {
 
   // handle multiple file streams
   app.post('/', async (req, reply) => {
-    const parts = await req.files()
+    const parts = req.files()
     for await (const part of parts) {
       await pump(part.file, fs.createWriteStream(part.filename))
     }
@@ -105,7 +105,7 @@ const runServer = async () => {
 
   // handle multiple file streams and fields
   app.post('/upload/raw/any', async function (req, reply) {
-    const parts = await req.parts()
+    const parts = req.parts()
     for await (const part of parts) {
       if (part.file) {
         await pump(part.file, fs.createWriteStream(part.filename))
