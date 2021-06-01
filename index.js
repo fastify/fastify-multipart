@@ -63,6 +63,8 @@ function attachToBody (options, req, reply, next) {
       mp.destroy(new Error('__proto__ is not allowed as field name'))
       return
     }
+
+    key = key.replace('[]', '')
     if (body[key] === undefined) {
       body[key] = value
     } else if (Array.isArray(body[key])) {
@@ -367,6 +369,7 @@ function fastifyMultipart (fastify, options, done) {
         fields: body
       }
 
+      name = name.replace('[]', '')
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
@@ -420,6 +423,7 @@ function fastifyMultipart (fastify, options, done) {
         })
       }
 
+      name = name.replace('[]', '')
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
