@@ -32,6 +32,7 @@ function attachToBody (options, req, reply, next) {
   }
 
   const consumerStream = options.onFile || defaultConsumer
+  const removeBracketsOnFieldName = options.removeBracketsOnFieldName || false
   const body = {}
   const mp = req.multipart((field, file, filename, encoding, mimetype) => {
     body[field] = body[field] || []
@@ -64,7 +65,8 @@ function attachToBody (options, req, reply, next) {
       return
     }
 
-    key = key.replace('[]', '')
+    if (removeBracketsOnFieldName) { key = key.replace('[]', '') }
+
     if (body[key] === undefined) {
       body[key] = value
     } else if (Array.isArray(body[key])) {
@@ -369,7 +371,6 @@ function fastifyMultipart (fastify, options, done) {
         fields: body
       }
 
-      name = name.replace('[]', '')
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
@@ -423,7 +424,6 @@ function fastifyMultipart (fastify, options, done) {
         })
       }
 
-      name = name.replace('[]', '')
       if (body[name] === undefined) {
         body[name] = value
       } else if (Array.isArray(body[name])) {
@@ -447,6 +447,7 @@ function fastifyMultipart (fastify, options, done) {
 
     function cleanup () {
       request.unpipe(bb)
+      bb.removeAllListeners()
     }
 
     return parts
