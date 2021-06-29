@@ -2,7 +2,7 @@ import fastify from 'fastify'
 import fastifyMultipart from '..'
 import { Multipart, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
-import { pipeline } from 'stream'
+import { pipeline, Readable } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from "fastify-error"
@@ -55,7 +55,7 @@ const runServer = async () => {
   app.post('/', async (req, reply) => {
     const data = await req.file()
 
-    expectType<NodeJS.ReadableStream>(data.file)
+    expectType<Readable>(data.file)
     expectType<MultipartFields>(data.fields)
     expectType<string>(data.fieldname)
     expectType<string>(data.filename)

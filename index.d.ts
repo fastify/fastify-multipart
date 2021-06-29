@@ -27,7 +27,7 @@ export type Multipart<T = true> = T extends true ? MultipartFile : MultipartValu
 
 export interface MultipartFile {
   toBuffer: () => Promise<Buffer>,
-  file: NodeJS.ReadableStream,
+  file: Readable,
   filepath: string,
   fieldname: string,
   filename: string,
