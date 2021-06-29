@@ -72,7 +72,7 @@ const runServer = async () => {
     expectError(req.body.foo.file);
     expectType<string>(req.body.foo.value);
 
-    expectType<NodeJS.ReadableStream>(req.body.file.file)
+    expectType<Readable>(req.body.file.file)
     expectError(req.body.file.value);
     reply.send();
   })
@@ -82,7 +82,7 @@ const runServer = async () => {
     reply.send();
 
     // file is a file
-    expectType<NodeJS.ReadableStream>(req.body.file.file)
+    expectType<Readable>(req.body.file.file)
     expectError(req.body.file.value);
   })
 
