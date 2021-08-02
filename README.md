@@ -90,21 +90,18 @@ fastify.register(require('fastify-multipart'), {
 });
 ```
 
-If you do set upload limits, be sure to catch the error. An error or exception will occur if a limit is reached. These events are documented in more detail [here](https://github.com/mscdex/busboy#busboy-special-events).
-
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 **Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can listen to `data.file.on('limit')` or check at the end of the stream the property `data.file.truncated`. 
 
 ```js
-try {
-  const data = await req.file()
-  await pump(data.file, fs.createWriteStream(data.filename))
-} catch (error) {
-  if (error instanceof fastify.multipartErrors.FilesLimitError) {
-    // handle error
-  }
+const data = await req.file()
+await pump(data.file, fs.createWriteStream(data.filename))
+if (data.file.truncated) {
+  // you may need to delete the part of the file that has been saved on disk
+  // before the `limits.fileSize` has been reached
+  reply.send(new fastify.multipartErrors.FilesLimitError());    
 }
 ``` 
 
