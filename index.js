@@ -321,6 +321,7 @@ function fastifyMultipart (fastify, options, done) {
       opts
     ])
 
+    this.log.trace({ busboyOptions }, 'Providing options to busboy')
     const bb = busboy(busboyOptions)
 
     request.on('close', cleanup)
@@ -406,6 +407,14 @@ function fastifyMultipart (fastify, options, done) {
           const fileChunks = []
           for await (const chunk of this.file) {
             fileChunks.push(chunk)
+
+            if (throwFileSizeLimit && this.file.truncated) {
+              const err = new RequestFileTooLargeError()
+              err.part = this
+
+              onError(err)
+              throw err
+            }
           }
           this._buf = Buffer.concat(fileChunks)
           return this._buf
