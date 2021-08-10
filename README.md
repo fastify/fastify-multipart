@@ -93,7 +93,10 @@ fastify.register(require('fastify-multipart'), {
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
-**Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can listen to `data.file.on('limit')` or check at the end of the stream the property `data.file.truncated`. 
+**Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can:
+- listen to `data.file.on('limit')`
+- or check at the end of the stream the property `data.file.truncated`
+- or call `data.file.toBuffer()` and wait for the error to be thrown
 
 ```js
 const data = await req.file()
@@ -103,6 +106,15 @@ if (data.file.truncated) {
   // before the `limits.fileSize` has been reached
   reply.send(new fastify.multipartErrors.FilesLimitError());    
 }
+
+// OR
+const data = await req.file()
+try {
+  const buffer = await data.toBuffer()
+} catch (err) {
+  // fileSize limit reached!
+}
+
 ``` 
 
 Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.multipartIterator` function.
