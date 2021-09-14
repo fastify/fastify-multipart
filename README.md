@@ -239,6 +239,10 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
+**Note**: if you assign all fields to the body and don't define an `onFile` handler, you won't be able to read the files through streams, as they are already read and their contents are accumulated in memory.
+You can only use the `toBuffer` method to read the content.
+If you try to read from a stream and pipe to a new file, you will obtain an empty new file.
+
 ## JSON Schema body validation
 
 If you enable `attachFieldsToBody` and set `sharedSchemaId` a shared JSON Schema is added, which can be used to validate parsed multipart fields.
