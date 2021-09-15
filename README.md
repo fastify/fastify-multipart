@@ -117,7 +117,7 @@ try {
 
 ``` 
 
-Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.multipartIterator` function.
+Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.parts` function.
 
 ```js
 fastify.post('/', async function (req, reply) {

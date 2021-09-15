@@ -53,13 +53,11 @@ declare module "fastify" {
     interface FastifyRequest {
         isMultipart: () => boolean;
 
+        // promise api
         parts: (options?: busboy.BusboyConfig) =>  AsyncIterableIterator<Multipart>
 
         // legacy
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
-
-        // promise api
-        multipartIterator: (options?: busboy.BusboyConfig) => AsyncIterableIterator<Multipart>
 
         // Stream mode
         file: (options?: busboy.BusboyConfig) => Promise<Multipart>
