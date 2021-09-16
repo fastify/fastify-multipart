@@ -11,7 +11,7 @@ type MultipartHandler = (
     mimetype: string,
 ) => void;
 
-interface BodyEntry {
+export interface BodyEntry {
     data: Buffer,
     filename: string,
     encoding: string,
