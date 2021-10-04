@@ -274,7 +274,7 @@ fastify.post('/upload/files', {
       properties: {
         // field that uses the shared schema
         myField: { $ref: '#mySharedSchema'},
-        // or another field that uses shared schema
+        // or another field that uses the shared schema
         myFiles: { type: 'array', items: fastify.getSchema('mySharedSchema') },
         // or a field that doesn't use the shared schema
         hello: {
