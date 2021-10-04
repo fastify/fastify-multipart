@@ -310,7 +310,7 @@ The shared schema, that is added, will look like this:
 ```
 
 ### JSON Schema non-file field
-When sending fields with the body (`attachFieldsToBody` set to true), a field might look like this:
+When sending fields with the body (`attachFieldsToBody` set to true), the field might look like this in the `request.body`:
 ```json
 {
   "hello": "world"
