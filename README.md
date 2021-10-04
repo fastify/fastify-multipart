@@ -328,7 +328,16 @@ The mentioned field will be converted, by the plugin, to a more complex field un
 }
 ```
 
-It is important to know that this conversion happens BEFORE the field is validated, so keep that in mind when writing the JSON schema for validation for fields that don't use the shared schema.
+It is important to know that this conversion happens BEFORE the field is validated, so keep that in mind when writing the JSON schema for validation for fields that don't use the shared schema. The schema for validation for the field mentioned above should look like this:
+```js
+hello: {
+  properties: {
+    value: { 
+      type: 'string'
+    }
+  }
+}
+```
 
 ## Access all errors
 
