@@ -272,10 +272,11 @@ fastify.post('/upload/files', {
       type: 'object',
       required: ['myField'],
       properties: {
+        // field that uses the shared schema
         myField: { $ref: '#mySharedSchema'},
-        // or
+        // or another field that uses the shared schema
         myFiles: { type: 'array', items: fastify.getSchema('mySharedSchema') },
-        // or
+        // or a field that doesn't use the shared schema
         hello: {
           properties: {
             value: { 
@@ -291,6 +292,52 @@ fastify.post('/upload/files', {
   console.log({ body: req.body })
   reply.send('done')
 })
+```
+
+If provided, the `sharedSchemaId` parameter must be a string ID and a shared schema will be added to your fastify instance so you will be able to apply the validation to your service (like in the example mentioned above).
+
+The shared schema, that is added, will look like this:
+```js
+{
+  type: 'object',
+  properties: {
+    encoding: { type: 'string' },
+    filename: { type: 'string' },
+    limit: { type: 'boolean' },
+    mimetype: { type: 'string' }
+  }
+}
+```
+
+### JSON Schema non-file field
+When sending fields with the body (`attachFieldsToBody` set to true), the field might look like this in the `request.body`:
+```json
+{
+  "hello": "world"
+}
+```
+The mentioned field will be converted, by this plugin, to a more complex field. The converted field will look something like this:
+```js
+{ 
+  hello: {
+    fieldname: "hello",
+    value: "world",
+    fieldnameTruncated: false,
+    valueTruncated: false,
+    fields: body
+  }
+}
+```
+
+It is important to know that this conversion happens BEFORE the field is validated, so keep that in mind when writing the JSON schema for validation for fields that don't use the shared schema. The schema for validation for the field mentioned above should look like this:
+```js
+hello: {
+  properties: {
+    value: { 
+      type: 'string'
+    }
+  }
+}
 ```
 
 ## Access all errors
