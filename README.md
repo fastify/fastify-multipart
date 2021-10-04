@@ -293,6 +293,21 @@ fastify.post('/upload/files', {
 })
 ```
 
+If provided, the `sharedSchemaId` parameter must be a string ID and a shared schema will be added to your fastify instance so you will be able to apply the validation to your service (like in the example mentioned above).
+
+The shared schema, that is added, will look like this:
+```js
+{
+  type: 'object',
+  properties: {
+    encoding: { type: 'string' },
+    filename: { type: 'string' },
+    limit: { type: 'boolean' },
+    mimetype: { type: 'string' }
+  }
+}
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
