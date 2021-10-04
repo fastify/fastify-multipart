@@ -272,10 +272,11 @@ fastify.post('/upload/files', {
       type: 'object',
       required: ['myField'],
       properties: {
+        // field that uses the shared schema
         myField: { $ref: '#mySharedSchema'},
-        // or
+        // or another field that uses shared schema
         myFiles: { type: 'array', items: fastify.getSchema('mySharedSchema') },
-        // or
+        // or a field that doesn't use the shared schema
         hello: {
           properties: {
             value: { 
@@ -307,6 +308,27 @@ The shared schema, that is added, will look like this:
   }
 }
 ```
+**Note**:
+When sending fields with the body (`attachFieldsToBody` set to true), a field might look like this:
+```json
+{
+  "hello": "world"
+}
+```
+The mentioned field will be converted, by the plugin, to a more complex field under the hood. The converted field will look something like this:
+```js
+{ 
+  hello: {
+    fieldname: "hello",
+    value: "world",
+    fieldnameTruncated: false,
+    valueTruncated: false,
+    fields: body
+  }
+}
+```
+
+It is important to know that this conversion happens BEFORE the field is validated, so keep that in mind when writing the JSON schema for validation for fields that don't use the shared schema.
 
 ## Access all errors
 
