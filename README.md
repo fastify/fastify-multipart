@@ -308,14 +308,15 @@ The shared schema, that is added, will look like this:
   }
 }
 ```
-**Note**:
+
+### JSON Schema non-file field
 When sending fields with the body (`attachFieldsToBody` set to true), a field might look like this:
 ```json
 {
   "hello": "world"
 }
 ```
-The mentioned field will be converted, by the plugin, to a more complex field under the hood. The converted field will look something like this:
+The mentioned field will be converted, by this plugin, to a more complex field. The converted field will look something like this:
 ```js
 { 
   hello: {
