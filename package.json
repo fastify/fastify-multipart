@@ -14,7 +14,7 @@
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
-    "@types/busboy": "^0.2.3",
+    "@types/busboy": "^0.3.1",
     "@types/node": "^16.0.0",
     "@typescript-eslint/parser": "^4.0.0",
     "climem": "^1.0.3",
