@@ -160,6 +160,7 @@ function fastifyMultipart (fastify, options, done) {
   const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request file too large, please check multipart config', 413)
   const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
   const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
+  const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 
   fastify.decorate('multipartErrors', {
     PartsLimitError,
@@ -353,15 +354,36 @@ function fastifyMultipart (fastify, options, done) {
 
     request.pipe(bb)
 
-    function onField (name, fieldValue, fieldnameTruncated, valueTruncated) {
+    function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
+      let mimetype
+
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
         onError(new PrototypeViolationError())
         return
       }
 
+      // If it is a JSON field, parse it
+      if (contentType.startsWith('application/json')) {
+        // If the value was truncated, it can never be a valid JSON. Don't even try to parse
+        if (valueTruncated) {
+          onError(new InvalidJSONFieldError())
+          return
+        }
+
+        try {
+          fieldValue = JSON.parse(fieldValue)
+          mimetype = 'application/json'
+        } catch (e) {
+          onError(new InvalidJSONFieldError())
+          return
+        }
+      }
+
       const value = {
         fieldname: name,
+        mimetype,
+        encoding,
         value: fieldValue,
         fieldnameTruncated,
         valueTruncated,

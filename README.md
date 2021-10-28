@@ -340,6 +340,25 @@ hello: {
 }
 ```
 
+#### JSON non-file fields
+
+If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`. 
+
+The schema for validation for JSON fields should look like this:
+
+```js
+hello: {
+  properties: {
+    value: { 
+      type: 'object',
+      properties: {
+        /* ... */
+      }
+    }
+  }
+}
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
