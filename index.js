@@ -14,6 +14,7 @@ const sendToWormhole = require('stream-wormhole')
 const deepmerge = require('deepmerge')
 const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
+const secureJSON = require('secure-json-parse')
 
 const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
@@ -372,7 +373,7 @@ function fastifyMultipart (fastify, options, done) {
         }
 
         try {
-          fieldValue = JSON.parse(fieldValue)
+          fieldValue = secureJSON.parse(fieldValue)
           mimetype = 'application/json'
         } catch (e) {
           onError(new InvalidJSONFieldError())

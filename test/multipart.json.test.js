@@ -21,7 +21,7 @@ test('should parse JSON fields forms if content-type is set', function (t) {
     for await (const part of req.parts()) {
       t.notOk(part.filename)
       t.equal(part.mimetype, 'application/json')
-      t.type(part.value, 'object')
+      t.same(part.value, { a: 'b' })
     }
 
     reply.code(200).send()

@@ -344,7 +344,7 @@ hello: {
 
 If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`. 
 
-The schema for validation for JSON fields should look like this:
+The schema to validate JSON fields should look like this:
 
 ```js
 hello: {
