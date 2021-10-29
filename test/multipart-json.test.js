@@ -206,3 +206,129 @@ test('should always reject JSON parsing if the value was truncated', function (t
     }
   })
 })
+
+test('should be able to use JSON schema to validate request when value is a string', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
+
+  fastify.post(
+    '/',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['field'],
+          properties: {
+            field: {
+              allOf: [{ $ref: '#mySharedSchema' }, { properties: { value: { type: 'string' } } }]
+            }
+          }
+        }
+      }
+    },
+    async function (req, reply) {
+      t.ok(req.isMultipart())
+
+      t.same(Object.keys(req.body), ['field'])
+      t.equal(req.body.field.value, '{"a":"b"}')
+
+      reply.code(200).send()
+    }
+  )
+
+  fastify.listen(0, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, res => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('field', JSON.stringify({ a: 'b' }))
+
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
+  })
+})
+
+test('should be able to use JSON schema to validate request when value is a JSON', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
+
+  fastify.post(
+    '/',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['field'],
+          properties: {
+            field: {
+              allOf: [{ $ref: '#mySharedSchema' }, { properties: { value: { type: 'object' } } }]
+            }
+          }
+        }
+      }
+    },
+    async function (req, reply) {
+      t.ok(req.isMultipart())
+
+      t.same(Object.keys(req.body), ['field'])
+      t.same(req.body.field.value, { a: 'b' })
+
+      reply.code(200).send()
+    }
+  )
+
+  fastify.listen(0, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, res => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('field', JSON.stringify({ a: 'b' }), { contentType: 'application/json' })
+
+    try {
+      await pump(form, req)
+    } catch (error) {
+      t.error(error, 'formData request pump: no err')
+    }
+  })
+})
