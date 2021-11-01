@@ -11,6 +11,7 @@
     "fastify-error": "^0.3.0",
     "fastify-plugin": "^3.0.0",
     "hexoid": "^1.0.0",
+    "secure-json-parse": "^2.4.0",
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {

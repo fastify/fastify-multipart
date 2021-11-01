@@ -340,6 +340,66 @@ hello: {
 }
 ```
 
+#### JSON non-file fields
+
+If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`. 
+
+The schema to validate JSON fields should look like this:
+
+```js
+hello: {
+  properties: {
+    value: { 
+      type: 'object',
+      properties: {
+        /* ... */
+      }
+    }
+  }
+}
+```
+
+If you also use the shared JSON schema as shown above, this is a full example which validates the entire field:
+
+```js
+const opts = {
+  attachFieldsToBody: true,
+  sharedSchemaId: '#mySharedSchema'
+}
+fastify.register(require('fastify-multipart'), opts)
+
+fastify.post('/upload/files', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['field'],
+      properties: {
+        field: {
+          allOf: [
+            { $ref: '#mySharedSchema' }, 
+            { 
+              properties: { 
+                value: { 
+                  type: 'object'
+                  properties: {
+                    child: {
+                      type: 'string'
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
