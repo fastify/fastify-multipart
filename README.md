@@ -359,6 +359,47 @@ hello: {
 }
 ```
 
+If you also use the shared JSON schema as shown above, this is a full example which validates the entire field:
+
+```js
+const opts = {
+  attachFieldsToBody: true,
+  sharedSchemaId: '#mySharedSchema'
+}
+fastify.register(require('fastify-multipart'), opts)
+
+fastify.post('/upload/files', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['field'],
+      properties: {
+        field: {
+          allOf: [
+            { $ref: '#mySharedSchema' }, 
+            { 
+              properties: { 
+                value: { 
+                  type: 'object'
+                  properties: {
+                    child: {
+                      type: 'string'
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
