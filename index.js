@@ -1,6 +1,6 @@
 'use strict'
 
-const Busboy = require('busboy')
+const Busboy = require('@fastify/busboy')
 const os = require('os')
 const fp = require('fastify-plugin')
 const eos = require('end-of-stream')

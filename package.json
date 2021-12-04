@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "busboy": "^0.3.1",
+    "@fastify/busboy": "^1.0.0-next2",
     "deepmerge": "^4.2.2",
     "end-of-stream": "^1.4.4",
     "fastify-error": "^0.3.0",
@@ -15,9 +15,8 @@
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
-    "@types/busboy": "^0.2.3",
-    "@types/node": "^16.0.0",
-    "@typescript-eslint/parser": "^4.0.0",
+    "@types/node": "^16.11.11",
+    "@typescript-eslint/parser": "^4.33.0",
     "climem": "^1.0.3",
     "eslint": "^7.7.0",
     "eslint-config-standard": "^16.0.0",
@@ -26,7 +25,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^3.2.1",
+    "fastify": "^3.24.1",
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
     "pre-commit": "^1.2.2",
@@ -36,7 +35,7 @@
     "standard": "^16.0.1",
     "tap": "^15.0.1",
     "tsd": "^0.19.0",
-    "typescript": "^4.0.2"
+    "typescript": "^4.5.2"
   },
   "scripts": {
     "coverage": "tap \"test/**/*.test.js\" --coverage-report=html",
