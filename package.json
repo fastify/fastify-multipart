@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@fastify/busboy": "^1.0.0-next2",
+    "@fastify/busboy": "^1.0.0",
     "deepmerge": "^4.2.2",
     "end-of-stream": "^1.4.4",
     "fastify-error": "^0.3.0",
