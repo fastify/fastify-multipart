@@ -14,13 +14,11 @@ Fastify plugin to parse the multipart content-type. Supports:
 - Mode to attach all fields to the request body
 - Tested across Linux/Mac/Windows
 
-Under the hood it uses [busboy](https://github.com/mscdex/busboy).
+Under the hood it uses [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 ## Install
 ```sh
-npm i fastify-multipart
-# Typescript support
-npm i -D @types/busboy
+npm i --save fastify-multipart
 ```
 
 ## Usage
@@ -72,10 +70,10 @@ fastify.listen(3000, err => {
 })
 ```
 
-You can also pass optional arguments to busboy when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [busboy documentation](https://github.com/mscdex/busboy#busboy-methods).
+You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
 
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
-This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
+This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 ```js
 fastify.register(require('fastify-multipart'), {
@@ -91,7 +89,7 @@ fastify.register(require('fastify-multipart'), {
 ```
 
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
-This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
+This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 **Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can:
 - listen to `data.file.on('limit')`
