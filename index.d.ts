@@ -1,4 +1,4 @@
-import * as busboy from "busboy";
+import { Busboy, BusboyConfig } from "@fastify/busboy";
 import { FastifyPluginCallback } from "fastify";
 import { Readable } from 'stream';
 import { FastifyErrorConstructor } from "fastify-error";
@@ -54,17 +54,17 @@ declare module "fastify" {
         isMultipart: () => boolean;
 
         // promise api
-        parts: (options?: busboy.BusboyConfig) =>  AsyncIterableIterator<Multipart>
+        parts: (options?: BusboyConfig) =>  AsyncIterableIterator<Multipart>
 
         // legacy
-        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: busboy.BusboyConfig) => busboy.Busboy;
+        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: BusboyConfig) => Busboy;
 
         // Stream mode
-        file: (options?: busboy.BusboyConfig) => Promise<Multipart>
-        files: (options?: busboy.BusboyConfig) => AsyncIterableIterator<Multipart>
+        file: (options?: BusboyConfig) => Promise<Multipart>
+        files: (options?: BusboyConfig) => AsyncIterableIterator<Multipart>
 
         // Disk mode
-        saveRequestFiles: (options?: busboy.BusboyConfig & { tmpdir?: string }) => Promise<Array<Multipart>>
+        saveRequestFiles: (options?: BusboyConfig & { tmpdir?: string }) => Promise<Array<Multipart>>
         cleanRequestFiles: () => Promise<void>
         tmpUploads: Array<Multipart>
     }

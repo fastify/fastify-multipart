@@ -1,6 +1,6 @@
 'use strict'
 
-const Busboy = require('busboy')
+const Busboy = require('@fastify/busboy')
 const os = require('os')
 const fp = require('fastify-plugin')
 const eos = require('end-of-stream')
@@ -347,11 +347,6 @@ function fastifyMultipart (fastify, options, done) {
     bb.on('fieldsLimit', function () {
       onError(new FieldsLimitError())
     })
-
-    // TODO: Won't need after https://github.com/mscdex/busboy/pull/237/files
-    if (bb._writableState.autoDestroy) {
-      bb._writableState.autoDestroy = false
-    }
 
     request.pipe(bb)
 

@@ -6,6 +6,7 @@ import { pipeline, Readable } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from "fastify-error"
+import { BusboyConfig } from "@fastify/busboy";
 
 const pump = util.promisify(pipeline)
 
@@ -45,6 +46,7 @@ const runServer = async () => {
     }, (err) => {
       throw err
     }, {
+      headers: { 'content-type': 'multipart/form-data' },
       limits: {
         fileSize: 10000
       }
@@ -88,7 +90,7 @@ const runServer = async () => {
 
   // busboy
   app.post('/', async function (req, reply) {
-    const options: busboy.BusboyConfig = { limits: { fileSize: 1000 } };
+    const options: BusboyConfig = { headers: { 'content-type': 'multipart/form-data' }, limits: { fileSize: 1000 } };
     const data = await req.file(options)
     await pump(data.file, fs.createWriteStream(data.filename))
     reply.send()
@@ -140,7 +142,7 @@ const runServer = async () => {
 
   // upload files to disk with busboy options
   app.post('/upload/files', async function (req, reply) {
-    const options: busboy.BusboyConfig = { limits: { fileSize: 1000 } };
+    const options: BusboyConfig = { headers: { 'content-type': 'multipart/form-data' }, limits: { fileSize: 1000 } };
     await req.saveRequestFiles(options)
 
     reply.send()
