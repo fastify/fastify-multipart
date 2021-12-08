@@ -54,17 +54,17 @@ declare module "fastify" {
         isMultipart: () => boolean;
 
         // promise api
-        parts: (options?: Partial<BusboyConfig>) =>  AsyncIterableIterator<Multipart>
+        parts: (options?: Omit<BusboyConfig, 'headers'>) =>  AsyncIterableIterator<Multipart>
 
         // legacy
-        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: Partial<BusboyConfig>) => Busboy;
+        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: Omit<BusboyConfig, 'headers'>) => Busboy;
 
         // Stream mode
-        file: (options?: Partial<BusboyConfig>) => Promise<Multipart>
-        files: (options?: Partial<BusboyConfig>) => AsyncIterableIterator<Multipart>
+        file: (options?: Omit<BusboyConfig, 'headers'>) => Promise<Multipart>
+        files: (options?: Omit<BusboyConfig, 'headers'>) => AsyncIterableIterator<Multipart>
 
         // Disk mode
-        saveRequestFiles: (options?: Partial<BusboyConfig> & { tmpdir?: string }) => Promise<Array<Multipart>>
+        saveRequestFiles: (options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }) => Promise<Array<Multipart>>
         cleanRequestFiles: () => Promise<void>
         tmpUploads: Array<Multipart>
     }
