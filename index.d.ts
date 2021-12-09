@@ -1,4 +1,4 @@
-import { Busboy, BusboyConfig } from "@fastify/busboy";
+import { Busboy, BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 import { FastifyPluginCallback } from "fastify";
 import { Readable } from 'stream';
 import { FastifyErrorConstructor } from "fastify-error";
@@ -27,7 +27,7 @@ export type Multipart<T = true> = T extends true ? MultipartFile : MultipartValu
 
 export interface MultipartFile {
   toBuffer: () => Promise<Buffer>,
-  file: Readable,
+  file: BusboyFileStream,
   filepath: string,
   fieldname: string,
   filename: string,

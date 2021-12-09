@@ -6,7 +6,7 @@ import { pipeline, Readable } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from "fastify-error"
-import { BusboyConfig } from "@fastify/busboy";
+import { BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 
 const pump = util.promisify(pipeline)
 
@@ -56,7 +56,8 @@ const runServer = async () => {
   app.post('/', async (req, reply) => {
     const data = await req.file()
 
-    expectType<Readable>(data.file)
+    expectType<BusboyFileStream>(data.file)
+    expectType<boolean>(data.file.truncated)
     expectType<MultipartFields>(data.fields)
     expectType<string>(data.fieldname)
     expectType<string>(data.filename)
@@ -73,7 +74,7 @@ const runServer = async () => {
     expectError(req.body.foo.file);
     expectType<string>(req.body.foo.value);
 
-    expectType<Readable>(req.body.file.file)
+    expectType<BusboyFileStream>(req.body.file.file)
     expectError(req.body.file.value);
     reply.send();
   })
@@ -83,7 +84,7 @@ const runServer = async () => {
     reply.send();
 
     // file is a file
-    expectType<Readable>(req.body.file.file)
+    expectType<BusboyFileStream>(req.body.file.file)
     expectError(req.body.file.value);
   })
 
