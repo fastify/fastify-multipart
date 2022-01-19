@@ -1,4 +1,4 @@
-busboy# fastify-multipart
+# fastify-multipart
 
 ![CI](https://github.com/fastify/fastify-multipart/workflows/CI/badge.svg)
 [![NPM version](https://img.shields.io/npm/v/fastify-multipart.svg?style=flat)](https://www.npmjs.com/package/fastify-multipart)
