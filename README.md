@@ -42,6 +42,7 @@ fastify.post('/', async function (req, reply) {
   const data = await req.file()
 
   data.file // stream
+  data.fields // other parsed parts
   data.fieldname
   data.filename
   data.encoding
@@ -59,8 +60,6 @@ fastify.post('/', async function (req, reply) {
   // sensitive files that could cause security risks
   
   // also, consider that if the file stream is not consumed, the promise will never fulfill
-
-  data.fields // other parsed parts (available only AFTER the stream is consumed)
 
   reply.send()
 })
