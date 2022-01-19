@@ -72,9 +72,6 @@ fastify.listen(3000, err => {
 
 You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
 
-**Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
-This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
-
 ```js
 fastify.register(require('fastify-multipart'), {
   limits: {
