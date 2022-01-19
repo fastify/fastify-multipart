@@ -1,4 +1,4 @@
-# fastify-multipart
+busboy# fastify-multipart
 
 ![CI](https://github.com/fastify/fastify-multipart/workflows/CI/badge.svg)
 [![NPM version](https://img.shields.io/npm/v/fastify-multipart.svg?style=flat)](https://www.npmjs.com/package/fastify-multipart)
@@ -69,6 +69,11 @@ fastify.listen(3000, err => {
   console.log(`server listening on ${fastify.server.address().port}`)
 })
 ```
+
+**Note** about `data.fields`: `busboy` consumes the multipart in serial order (stream). Therefore, the order of form fields is *VERY IMPORTANT* to how `fastify-multipart` can display the fields to you.
+We would recommend you to place the value fields first before any of the file fields.
+It can ensure your fields will be accessible before start consuming any file.
+If you cannot control the order of the placed fields, be sure to read `data.fields` *AFTER* consuming the stream, or it will contain only the fields parsed at that moment.
 
 You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
 
