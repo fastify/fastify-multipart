@@ -72,7 +72,7 @@ fastify.listen(3000, err => {
 
 **Note** about `data.fields`: `busboy` consumes the multipart in serial order (stream). Therefore, the order of form fields is *VERY IMPORTANT* to how `fastify-multipart` can display the fields to you.
 We would recommend you place the value fields first before any of the file fields.
-It can ensure your fields will be accessible before start consuming any file.
+It will ensure your fields are accessible before it starts consuming any files.
 If you cannot control the order of the placed fields, be sure to read `data.fields` *AFTER* consuming the stream, or it will only contain the fields parsed at that moment.
 
 You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
