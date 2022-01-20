@@ -316,6 +316,7 @@ function fastifyMultipart (fastify, options, done) {
 
     const body = {}
     let lastError = null
+    let currentFile = null
     const request = this.raw
     const busboyOptions = deepmerge.all([
       { headers: Object.assign({}, request.headers) },
@@ -327,6 +328,7 @@ function fastifyMultipart (fastify, options, done) {
     const bb = busboy(busboyOptions)
 
     request.on('close', cleanup)
+    request.on('error', cleanup)
 
     bb
       .on('field', onField)
@@ -454,12 +456,13 @@ function fastifyMultipart (fastify, options, done) {
       } else {
         body[name] = [body[name], value]
       }
-
+      currentFile = file
       ch(value)
     }
 
     function onError (err) {
       lastError = err
+      currentFile = null
     }
 
     function onEnd (err) {
@@ -468,8 +471,12 @@ function fastifyMultipart (fastify, options, done) {
       ch(err || lastError)
     }
 
-    function cleanup () {
+    function cleanup (err) {
       request.unpipe(bb)
+      // in node 10 it seems that error handler is not called but request.aborted is set
+      if ((err || request.aborted) && currentFile) {
+        currentFile.destroy()
+      }
     }
 
     return parts
