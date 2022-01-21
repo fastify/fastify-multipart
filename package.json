@@ -28,7 +28,7 @@
     "fastify": "^3.24.1",
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
-    "noop-stream": "^0.1.0",
+    "noop-stream": "^1.0.0",
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
     "readable-stream": "^3.6.0",
