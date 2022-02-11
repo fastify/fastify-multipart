@@ -478,3 +478,55 @@ test('should not allow __proto__', { skip: process.platform === 'win32' }, funct
     })
   })
 })
+
+test('should not allow constructor', { skip: process.platform === 'win32' }, function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { limits: { fields: 1 } })
+
+  fastify.post('/', function (req, reply) {
+    t.ok(req.isMultipart())
+
+    const mp = req.multipart(handler, function (err) {
+      t.equal(err.message, 'constructor is not allowed as field name')
+      reply.code(500).send()
+    })
+
+    mp.on('field', function (name, value) {
+      t.fail('should not be called')
+    })
+
+    function handler (field, file, filename, encoding, mimetype) {
+      t.fail('should not be called')
+    }
+  })
+
+  fastify.listen(0, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    const rs = fs.createReadStream(filePath)
+    form.append('constructor', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})

@@ -60,8 +60,8 @@ function attachToBody (options, req, reply, next) {
   }, options)
 
   mp.on('field', (key, value) => {
-    if (key === '__proto__') {
-      mp.destroy(new Error('__proto__ is not allowed as field name'))
+    if (key === '__proto__' || key === 'constructor') {
+      mp.destroy(new Error(`${key} is not allowed as field name`))
       return
     }
     if (body[key] === undefined) {
@@ -257,8 +257,8 @@ function fastifyMultipart (fastify, options, done) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
       files++
       eos(file, waitForFiles)
-      if (field === '__proto__') {
-        file.destroy(new Error('__proto__ is not allowed as field name'))
+      if (field === '__proto__' || field === 'constructor') {
+        file.destroy(new Error(`${field} is not allowed as field name`))
         return
       }
       handler(field, file, filename, encoding, mimetype)
