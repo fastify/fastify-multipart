@@ -1,7 +1,7 @@
 import { Busboy, BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 import { FastifyPluginCallback } from "fastify";
 import { Readable } from 'stream';
-import { FastifyErrorConstructor } from "fastify-error";
+import { FastifyErrorConstructor } from "@fastify/error";
 
 type MultipartHandler = (
     field: string,

@@ -5,7 +5,7 @@ import * as util from 'util'
 import { pipeline, Readable } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
-import { FastifyErrorConstructor } from "fastify-error"
+import { FastifyErrorConstructor } from "@fastify/error"
 import { BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 
 const pump = util.promisify(pipeline)
