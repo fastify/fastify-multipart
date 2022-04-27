@@ -1,14 +1,14 @@
 {
-  "name": "fastify-multipart",
-  "version": "5.3.1",
+  "name": "@fastify/multipart",
+  "version": "6.0.0",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
     "@fastify/busboy": "^1.0.0",
+    "@fastify/error": "^2.0.0",
     "deepmerge": "^4.2.2",
     "end-of-stream": "^1.4.4",
-    "fastify-error": "^1.0.0",
     "fastify-plugin": "^3.0.0",
     "hexoid": "^1.0.0",
     "secure-json-parse": "^2.4.0",
@@ -60,5 +60,8 @@
   "license": "MIT",
   "tsd": {
     "directory": "test"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
