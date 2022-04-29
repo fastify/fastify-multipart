@@ -1,7 +1,7 @@
-# fastify-multipart
+# @fastify/multipart
 
 ![CI](https://github.com/fastify/fastify-multipart/workflows/CI/badge.svg)
-[![NPM version](https://img.shields.io/npm/v/fastify-multipart.svg?style=flat)](https://www.npmjs.com/package/fastify-multipart)
+[![NPM version](https://img.shields.io/npm/v/@fastify/multipart.svg?style=flat)](https://www.npmjs.com/package/@fastify/multipart)
 [![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-multipart/badge.svg)](https://snyk.io/test/github/fastify/fastify-multipart)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://standardjs.com/)
 
@@ -18,7 +18,7 @@ Under the hood it uses [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 ## Install
 ```sh
-npm i --save fastify-multipart
+npm i --save @fastify/multipart
 ```
 
 ## Usage
@@ -33,7 +33,7 @@ const path = require('path')
 const { pipeline } = require('stream')
 const pump = util.promisify(pipeline)
 
-fastify.register(require('fastify-multipart'))
+fastify.register(require('@fastify/multipart'))
 
 fastify.post('/', async function (req, reply) {
   // process a single file
@@ -70,7 +70,7 @@ fastify.listen(3000, err => {
 })
 ```
 
-**Note** about `data.fields`: `busboy` consumes the multipart in serial order (stream). Therefore, the order of form fields is *VERY IMPORTANT* to how `fastify-multipart` can display the fields to you.
+**Note** about `data.fields`: `busboy` consumes the multipart in serial order (stream). Therefore, the order of form fields is *VERY IMPORTANT* to how `@fastify/multipart` can display the fields to you.
 We would recommend you place the value fields first before any of the file fields.
 It will ensure your fields are accessible before it starts consuming any files.
 If you cannot control the order of the placed fields, be sure to read `data.fields` *AFTER* consuming the stream, or it will only contain the fields parsed at that moment.
@@ -78,7 +78,7 @@ If you cannot control the order of the placed fields, be sure to read `data.fiel
 You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
 
 ```js
-fastify.register(require('fastify-multipart'), {
+fastify.register(require('@fastify/multipart'), {
   limits: {
     fieldNameSize: 100, // Max field name size in bytes
     fieldSize: 100,     // Max field value size in bytes
@@ -226,7 +226,7 @@ fastify.post('/upload/file', async function (req, reply) {
 This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/master/docs/Hooks.md#manage-errors-from-a-hook) by Fastify.
 
 ```js
-fastify.register(require('fastify-multipart'), { attachFieldsToBody: true })
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true })
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = await req.body.upload.toBuffer() // access files
@@ -244,7 +244,7 @@ async function onFile(part) {
   await pump(part.file, fs.createWriteStream(part.filename))
 }
 
-fastify.register(require('fastify-multipart'), { attachFieldsToBody: true, onFile })
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
   const fooValue = req.body.foo.value // other fields
@@ -264,7 +264,7 @@ const opts = {
   attachFieldsToBody: true,
   sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(require('fastify-multipart'), opts)
+fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
@@ -366,7 +366,7 @@ const opts = {
   attachFieldsToBody: true,
   sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(require('fastify-multipart'), opts)
+fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
@@ -402,7 +402,7 @@ fastify.post('/upload/files', {
 
 ## Access all errors
 
-We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [fastify-error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
+We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [@fastify/error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {

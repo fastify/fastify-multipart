@@ -14,7 +14,7 @@ const concat = require('concat-stream')
 const fs = require('fs')
 const pump = require('pump')
 
-fastify.register(require('fastify-multipart'))
+fastify.register(require('@fastify/multipart'))
 
 fastify.post('/', function (req, reply) {
   // you can use this request's decorator to check if the request is multipart
@@ -68,7 +68,7 @@ You can also pass optional arguments to busboy when registering with fastify. Th
 This behavior is inherited from [busboy](https://github.com/mscdex/busboy).
 
 ```js
-fastify.register(require('fastify-multipart'), {
+fastify.register(require('@fastify/multipart'), {
   limits: {
     fieldNameSize: 100, // Max field name size in bytes
     fieldSize: 1000000, // Max field value size in bytes
@@ -132,7 +132,7 @@ const options = {
   limit: { /*...*/ } // You can the limit options in any case
 }
 
-fastify.register(require('fastify-multipart'), options)
+fastify.register(require('@fastify/multipart'), options)
 
 fastify.post('/', function (req, reply) {
   console.log(req.body)
