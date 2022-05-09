@@ -28,7 +28,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
       mimetype: 'text/markdown'
     }])
     t.type(req.body.myFile[0].data, Buffer)
-    t.equal(req.body.myFile[0].data.toString('utf8').substr(0, 19), '# fastify-multipart')
+    t.equal(req.body.myFile[0].data.toString('utf8').substr(0, 20), '# @fastify/multipart')
 
     reply.send('ok')
   })
