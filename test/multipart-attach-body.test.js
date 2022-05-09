@@ -37,7 +37,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
     reply.code(200).send()
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -95,7 +95,7 @@ test('should be able to define a custom "onFile" handler', async function (t) {
     reply.code(200).send()
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -137,7 +137,7 @@ test('should not process requests with content-type other than multipart', funct
     return { hello: req.body.name }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     const opts = {
       protocol: 'http:',
       hostname: 'localhost',

@@ -33,7 +33,7 @@ test('should not allow __proto__ as file name', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -83,7 +83,7 @@ test('should not allow __proto__ as field name', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {

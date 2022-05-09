@@ -34,7 +34,7 @@ test('should emit fileSize limitation error during streaming', async function (t
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const knownLength = 1024 * 1024 // 1MB

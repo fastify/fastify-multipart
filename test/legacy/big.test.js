@@ -62,7 +62,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     const knownLength = 1024 * 1024 * 1024
     let total = knownLength
     const form = new FormData({ maxDataSize: total })

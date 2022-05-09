@@ -56,7 +56,7 @@ test('should store file on disk, remove on response', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -109,7 +109,7 @@ test('should store file on disk, remove on response error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -159,7 +159,7 @@ test('should throw on file limit error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -204,7 +204,7 @@ test('should throw on file save error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -255,7 +255,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -305,7 +305,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const knownLength = 1024 * 1024 // 1MB
@@ -389,7 +389,7 @@ test('should store file on disk, remove on response error, serial', async functi
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   async function send () {
     // request
@@ -439,7 +439,7 @@ test('should process large files correctly', async function (t) {
     return { ok: true }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   const form = new FormData()
   const opts = {

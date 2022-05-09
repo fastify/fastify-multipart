@@ -33,7 +33,7 @@ test('should throw fileSize limitation error on small payload', { skip: process.
     reply.code(200).send()
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -78,7 +78,7 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
     reply.code(200).send()
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()

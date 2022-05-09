@@ -26,7 +26,7 @@ test('should respond when all files are processed', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     const url = `http://localhost:${fastify.server.address().port}`
     const form = new FormData()
 

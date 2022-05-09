@@ -35,7 +35,7 @@ test('should finish with error on partial upload', async function (t) {
     return 'ok'
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   const dataSize = 1024 * 6
   // request
   const form = new FormData()

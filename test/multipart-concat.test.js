@@ -35,7 +35,7 @@ test('should be able to get whole buffer by accessing "content" on part', functi
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -88,7 +88,7 @@ test('should be able to access "content" multiple times without reading the stre
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {

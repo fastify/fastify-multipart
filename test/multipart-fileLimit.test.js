@@ -40,7 +40,7 @@ test('should throw fileSize limitation error when consuming the stream', async f
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -101,7 +101,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()

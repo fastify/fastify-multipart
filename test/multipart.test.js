@@ -46,7 +46,7 @@ test('should parse forms', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -96,7 +96,7 @@ test('should respond when all files are processed', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -153,7 +153,7 @@ test('should group parts with the same name to an array', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -207,7 +207,7 @@ test('should error if it is not multipart', function (t) {
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const opts = {
       protocol: 'http:',
@@ -247,7 +247,7 @@ test('should error if boundary is empty', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -295,7 +295,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -347,7 +347,7 @@ test('should be able to configure limits globally with plugin register options',
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -397,7 +397,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -447,7 +447,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -499,7 +499,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -545,7 +545,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -619,7 +619,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
     reply.code(200).send()
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
