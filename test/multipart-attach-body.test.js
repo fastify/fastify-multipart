@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -8,9 +7,7 @@ const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const stream = require('stream')
 const { once } = require('events')
-const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -53,12 +50,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
   form.append('hello', 'world')
-
-  try {
-    await pump(form, req)
-  } catch (error) {
-    t.error(error, 'formData request pump: no err')
-  }
+  form.pipe(req)
 
   const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)
@@ -111,12 +103,7 @@ test('should be able to define a custom "onFile" handler', async function (t) {
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
   form.append('hello', 'world')
-
-  try {
-    await pump(form, req)
-  } catch (error) {
-    t.error(error, 'formData request pump: no err')
-  }
+  form.pipe(req)
 
   const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)

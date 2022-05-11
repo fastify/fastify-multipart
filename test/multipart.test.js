@@ -71,11 +71,7 @@ test('should parse forms', function (t) {
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -120,11 +116,7 @@ test('should respond when all files are processed', function (t) {
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -179,11 +171,7 @@ test('should group parts with the same name to an array', function (t) {
     form.append('hello', 'foo')
     form.append('hello', 'bar')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -265,11 +253,7 @@ test('should error if boundary is empty', function (t) {
       t.equal(res.statusCode, 500)
     })
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -316,12 +300,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -419,11 +398,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -469,11 +444,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -520,11 +491,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -565,12 +532,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -638,11 +600,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
   form.append('hello', 'world')
   form.append('willbe', 'dropped')
 
-  try {
-    await pump(form, req)
-  } catch (error) {
-    t.error(error, 'formData request pump: no err')
-  }
+  form.pipe(req)
 
   const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)

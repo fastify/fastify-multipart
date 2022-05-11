@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -8,8 +7,6 @@ const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -68,12 +65,7 @@ test('should be able to use JSON schema to validate request', function (t) {
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('hello', 'world')
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -92,6 +84,7 @@ test('should throw because JSON schema is invalid', function (t) {
         required: ['hello'],
         properties: {
           hello: {
+            type: 'object',
             properties: {
               value: {
                 type: 'string',
@@ -127,11 +120,6 @@ test('should throw because JSON schema is invalid', function (t) {
       })
     })
     form.append('hello', 'world')
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })

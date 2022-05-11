@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -8,8 +7,6 @@ const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 const EventEmitter = require('events')
 const sendToWormhole = require('stream-wormhole')
 const { once } = EventEmitter
@@ -49,7 +46,7 @@ test('should throw fileSize limitation error on small payload', { skip: process.
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -94,7 +91,7 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')

@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -8,8 +7,6 @@ const multipart = require('..')
 const http = require('http')
 const crypto = require('crypto')
 const { Readable } = require('readable-stream')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
 const EventEmitter = require('events')
 const { once } = EventEmitter
@@ -76,7 +73,7 @@ test('should emit fileSize limitation error during streaming', async function (t
     knownLength
   })
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
