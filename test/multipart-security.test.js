@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -8,8 +7,6 @@ const multipart = require('..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -33,7 +30,7 @@ test('should not allow __proto__ as file name', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -55,11 +52,7 @@ test('should not allow __proto__ as file name', function (t) {
     const rs = fs.createReadStream(filePath)
     form.append('__proto__', rs)
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -83,7 +76,7 @@ test('should not allow __proto__ as field name', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -104,10 +97,6 @@ test('should not allow __proto__ as field name', function (t) {
     })
     form.append('__proto__', 'world')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })

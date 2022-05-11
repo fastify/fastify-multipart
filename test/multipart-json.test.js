@@ -1,13 +1,10 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('http')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 
 test('should parse JSON fields forms if content-type is set', function (t) {
   t.plan(5)
@@ -27,7 +24,7 @@ test('should parse JSON fields forms if content-type is set', function (t) {
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -48,12 +45,7 @@ test('should parse JSON fields forms if content-type is set', function (t) {
     })
 
     form.append('json', JSON.stringify({ a: 'b' }), { contentType: 'application/json' })
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -75,7 +67,7 @@ test('should not parse JSON fields forms if no content-type is set', function (t
     reply.code(200).send()
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -97,11 +89,7 @@ test('should not parse JSON fields forms if no content-type is set', function (t
 
     form.append('json', JSON.stringify({ a: 'b' }))
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -126,7 +114,7 @@ test('should throw error when parsing JSON fields failed', function (t) {
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -147,12 +135,7 @@ test('should throw error when parsing JSON fields failed', function (t) {
     })
 
     form.append('object', 'INVALID', { contentType: 'application/json' })
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -177,7 +160,7 @@ test('should always reject JSON parsing if the value was truncated', function (t
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -198,12 +181,7 @@ test('should always reject JSON parsing if the value was truncated', function (t
     })
 
     form.append('object', JSON.stringify({ a: 'b' }), { contentType: 'application/json' })
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -224,7 +202,10 @@ test('should be able to use JSON schema to validate request when value is a stri
           required: ['field'],
           properties: {
             field: {
-              allOf: [{ $ref: '#mySharedSchema' }, { properties: { value: { type: 'string' } } }]
+              allOf: [{ $ref: '#mySharedSchema' }, {
+                type: 'object',
+                properties: { value: { type: 'string' } }
+              }]
             }
           }
         }
@@ -240,7 +221,7 @@ test('should be able to use JSON schema to validate request when value is a stri
     }
   )
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -261,12 +242,7 @@ test('should be able to use JSON schema to validate request when value is a stri
     })
 
     form.append('field', JSON.stringify({ a: 'b' }))
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -287,7 +263,7 @@ test('should be able to use JSON schema to validate request when value is a JSON
           required: ['field'],
           properties: {
             field: {
-              allOf: [{ $ref: '#mySharedSchema' }, { properties: { value: { type: 'object' } } }]
+              allOf: [{ $ref: '#mySharedSchema' }, { type: 'object', properties: { value: { type: 'object' } } }]
             }
           }
         }
@@ -303,7 +279,7 @@ test('should be able to use JSON schema to validate request when value is a JSON
     }
   )
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -324,12 +300,7 @@ test('should be able to use JSON schema to validate request when value is a JSON
     })
 
     form.append('field', JSON.stringify({ a: 'b' }), { contentType: 'application/json' })
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
@@ -350,7 +321,7 @@ test('should return 400 when the field validation fails', function (t) {
           required: ['field'],
           properties: {
             field: {
-              allOf: [{ $ref: '#mySharedSchema' }, { properties: { value: { type: 'object' } } }]
+              allOf: [{ $ref: '#mySharedSchema' }, { type: 'object', properties: { value: { type: 'object' } } }]
             }
           }
         }
@@ -362,7 +333,7 @@ test('should return 400 when the field validation fails', function (t) {
     }
   )
 
-  fastify.listen(0, async function () {
+  fastify.listen({ port: 0 }, async function () {
     // request
     const form = new FormData()
     const opts = {
@@ -383,11 +354,6 @@ test('should return 400 when the field validation fails', function (t) {
     })
 
     form.append('field', JSON.stringify('abc'), { contentType: 'application/json' })
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })

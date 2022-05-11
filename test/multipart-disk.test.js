@@ -1,6 +1,5 @@
 'use strict'
 
-const util = require('util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
@@ -12,10 +11,8 @@ const path = require('path')
 const fs = require('fs')
 const { access } = require('fs').promises
 const rimraf = require('rimraf')
-const stream = require('stream')
 const EventEmitter = require('events')
 const { once } = EventEmitter
-const pump = util.promisify(stream.pipeline)
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -56,7 +53,7 @@ test('should store file on disk, remove on response', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -71,7 +68,7 @@ test('should store file on disk, remove on response', async function (t) {
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
 
-  pump(form, req)
+  form.pipe(req)
 
   const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)
@@ -109,7 +106,7 @@ test('should store file on disk, remove on response error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -131,7 +128,7 @@ test('should store file on disk, remove on response error', async function (t) {
   form.append('upload', fs.createReadStream(filePath))
 
   try {
-    await pump(form, req)
+    await form.pipe(req)
   } catch (error) {
     t.error(error, 'formData request pump: no err')
   }
@@ -159,7 +156,7 @@ test('should throw on file limit error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
   // request
   const form = new FormData()
   const opts = {
@@ -173,7 +170,7 @@ test('should throw on file limit error', async function (t) {
   const req = http.request(opts)
   form.append('upload', fs.createReadStream(filePath))
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -204,7 +201,7 @@ test('should throw on file save error', async function (t) {
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -220,7 +217,7 @@ test('should throw on file save error', async function (t) {
   const readStream = fs.createReadStream(filePath)
   form.append('upload', readStream)
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -255,7 +252,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -271,7 +268,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
   const readStream = fs.createReadStream(filePath)
   form.append('upload', readStream)
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -305,7 +302,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const knownLength = 1024 * 1024 // 1MB
@@ -347,7 +344,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
     knownLength
   })
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -389,7 +386,7 @@ test('should store file on disk, remove on response error, serial', async functi
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   async function send () {
     // request
@@ -413,7 +410,7 @@ test('should store file on disk, remove on response error, serial', async functi
     form.append('upload', fs.createReadStream(filePath))
 
     try {
-      await pump(form, req)
+      await form.pipe(req)
     } catch (error) {
       t.error(error, 'formData request pump: no err')
     }
@@ -439,7 +436,7 @@ test('should process large files correctly', async function (t) {
     return { ok: true }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   const form = new FormData()
   const opts = {
@@ -461,7 +458,7 @@ test('should process large files correctly', async function (t) {
     knownLength
   })
 
-  pump(form, req)
+  form.pipe(req)
 
   const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)

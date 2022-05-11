@@ -1,14 +1,11 @@
 'use strict'
 
-const util = require('util')
 const crypto = require('crypto')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('http')
-const stream = require('stream')
-const pump = util.promisify(stream.pipeline)
 const EventEmitter = require('events')
 const { once } = EventEmitter
 
@@ -40,13 +37,12 @@ test('should throw fileSize limitation error when consuming the stream', async f
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
   const opts = {
-    protocol: 'http:',
-    hostname: 'localhost',
+    hostname: '127.0.0.1',
     port: fastify.server.address().port,
     path: '/',
     headers: form.getHeaders(),
@@ -59,7 +55,7 @@ test('should throw fileSize limitation error when consuming the stream', async f
   const req = http.request(opts)
   form.append('upload', randomFileBuffer)
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
@@ -101,7 +97,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
     }
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -120,13 +116,12 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
   const req = http.request(opts)
   form.append('upload', randomFileBuffer)
 
-  pump(form, req)
+  form.pipe(req)
 
   try {
     const [res] = await once(req, 'response')
     t.equal(res.statusCode, 413)
     res.resume()
-    await once(res, 'end')
   } catch (error) {
     t.error(error, 'request')
   }

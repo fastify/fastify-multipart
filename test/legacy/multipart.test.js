@@ -50,7 +50,7 @@ test('should parse forms', { skip: process.platform === 'win32' }, function (t) 
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -110,7 +110,7 @@ test('should call finished when both files are pumped', { skip: process.platform
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -172,7 +172,7 @@ test('should call finished if one of the streams closes prematurely', { skip: pr
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -229,7 +229,7 @@ test('should error if it is not multipart', { skip: process.platform === 'win32'
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const opts = {
       protocol: 'http:',
@@ -266,7 +266,7 @@ test('should error if handler is not a function', { skip: process.platform === '
     })
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -306,7 +306,7 @@ test('should error if callback is not a function', { skip: process.platform === 
     function handler () {}
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -353,7 +353,7 @@ test('should error if it is invalid multipart', { skip: process.platform === 'wi
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -397,7 +397,7 @@ test('should override options', { skip: process.platform === 'win32' }, function
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -450,7 +450,7 @@ test('should not allow __proto__', { skip: process.platform === 'win32' }, funct
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -504,7 +504,7 @@ test('should not allow constructor', { skip: process.platform === 'win32' }, fun
     }
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {

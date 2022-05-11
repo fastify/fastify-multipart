@@ -33,7 +33,7 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -78,7 +78,7 @@ test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t 
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -151,7 +151,7 @@ test('addToBody option and multiple files', { skip: process.platform === 'win32'
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -217,7 +217,7 @@ test('addToBody option and multiple files in one field', { skip: process.platfor
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -266,7 +266,7 @@ test('addToBody option and multiple strings in one field', { skip: process.platf
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -324,7 +324,7 @@ test('addToBody option and custom stream management', { skip: process.platform =
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -382,7 +382,7 @@ test('addToBody option with promise', { skip: process.platform === 'win32' }, t 
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -428,7 +428,7 @@ test('addToBody option with promise in error', { skip: process.platform === 'win
     t.fail('should not execute the handler')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -499,7 +499,7 @@ test('addToBody with shared schema', { skip: process.platform === 'win32' }, (t)
     })
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -569,7 +569,7 @@ test('addToBody with shared schema (async/await)', { skip: process.platform === 
     reply.send('ok')
   })
 
-  await fastify.listen(0)
+  await fastify.listen({ port: 0 })
 
   // request
   const form = new FormData()
@@ -627,7 +627,7 @@ test('addToBody with shared schema error', { skip: process.platform === 'win32' 
       reply.send('ok')
     })
 
-    fastify.listen(0, function () {
+    fastify.listen({ port: 0 }, function () {
       // request
       const form = new FormData()
       const opts = {
@@ -690,7 +690,7 @@ test('addToBody without files and shared schema', { skip: process.platform === '
     reply.send('ok')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -728,7 +728,7 @@ test('addToBody option does not change behaviour on not-multipart request', { sk
   fastify.get('/', async (req, rep) => { rep.send('hello') })
   fastify.post('/', function (req, reply) { })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     fastify.inject({
       method: 'GET',
       url: '/',
@@ -758,7 +758,7 @@ test('addToBody with __proto__ field', t => {
     t.fail('should not be called')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -804,7 +804,7 @@ test('addToBody with constructor field', t => {
     t.fail('should not be called')
   })
 
-  fastify.listen(0, function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
