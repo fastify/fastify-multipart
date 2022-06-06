@@ -66,7 +66,7 @@ test('should be able to attach all parsed field values and files and make it acc
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.register(multipart, { attachFieldsToBody: 'valueOnly' })
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
@@ -119,7 +119,7 @@ test('should be able to attach all parsed field values and files with custom "on
     part.value = decoded
   }
 
-  fastify.register(multipart, { attachFieldsToBody: 'valueOnly', onFile })
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues', onFile })
 
   const original = 'test upload content'
 
