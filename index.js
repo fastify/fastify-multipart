@@ -149,7 +149,8 @@ function fastifyMultipart (fastify, options, done) {
       }
       if (options.attachFieldsToBody === 'keyValues') {
         const body = {}
-        for (const [key, field] of Object.entries(req.body)) {
+        for (const key of Object.keys(req.body)) {
+          const field = req.body[key]
           if (field.value !== undefined) {
             body[key] = field.value
           } else if (field._buf !== undefined) {
