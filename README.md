@@ -298,7 +298,7 @@ fastify.post('/upload/files', {
         // file that gets decoded to string
         myFile: {
           type: 'string',
-          // match a UUID
+          // validate that file contents match a UUID
           pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         },
         hello: {
