@@ -340,7 +340,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
   const req = http.request(opts)
   form.append('upload2', rs, {
     filename: 'random-data',
-    contentType: 'binary/octect-stream',
+    contentType: 'binary/octet-stream',
     knownLength
   })
 
@@ -454,7 +454,7 @@ test('should process large files correctly', async function (t) {
 
   form.append('upload', rs, {
     filename: 'random-data',
-    contentType: 'binary/octect-stream',
+    contentType: 'binary/octet-stream',
     knownLength
   })
 

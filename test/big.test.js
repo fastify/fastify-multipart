@@ -30,7 +30,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'random-data')
         t.equal(part.encoding, '7bit')
-        t.equal(part.mimetype, 'binary/octect-stream')
+        t.equal(part.mimetype, 'binary/octet-stream')
 
         await sendToWormhole(part.file)
       }
@@ -68,7 +68,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
     })
     form.append('upload', rs, {
       filename: 'random-data',
-      contentType: 'binary/octect-stream',
+      contentType: 'binary/octet-stream',
       knownLength
     })
 
