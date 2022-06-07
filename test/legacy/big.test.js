@@ -35,7 +35,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
       t.equal(filename, 'random-data')
       t.equal(field, 'upload')
       t.equal(encoding, '7bit')
-      t.equal(mimetype, 'binary/octect-stream')
+      t.equal(mimetype, 'binary/octet-stream')
       const hashOutput = crypto.createHash('sha256')
 
       pump(file, hashOutput, new Writable({
@@ -88,7 +88,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
     })
     form.append('upload', rs, {
       filename: 'random-data',
-      contentType: 'binary/octect-stream',
+      contentType: 'binary/octet-stream',
       knownLength
     })
 

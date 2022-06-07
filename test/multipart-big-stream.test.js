@@ -69,7 +69,7 @@ test('should emit fileSize limitation error during streaming', async function (t
   const req = http.request(opts)
   form.append('upload', rs, {
     filename: 'random-data',
-    contentType: 'binary/octect-stream',
+    contentType: 'binary/octet-stream',
     knownLength
   })
 
