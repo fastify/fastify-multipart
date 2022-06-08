@@ -10,7 +10,6 @@ const { Readable } = require('readable-stream')
 const path = require('path')
 const fs = require('fs')
 const { access } = require('fs').promises
-const rimraf = require('rimraf')
 const EventEmitter = require('events')
 const { once } = EventEmitter
 
@@ -245,7 +244,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
     try {
       await req.saveRequestFiles({ tmpdir })
       // temp file saved, remove before the onResponse hook
-      rimraf.sync(tmpdir)
+      await fs.promises.rm(tmpdir, { recursive: true, force: true })
       reply.code(200).send()
     } catch (error) {
       reply.code(500).send()

@@ -33,7 +33,6 @@
     "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
     "readable-stream": "^3.6.0",
-    "rimraf": "^3.0.2",
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.0.0",
