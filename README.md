@@ -284,7 +284,7 @@ If you try to read from a stream and pipe to a new file, you will obtain an empt
 
 ## JSON Schema body validation
 
-If you enable `attachFieldsToBody: 'keyValues'` then the response body and JSON Schema validation will behave the similary to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Files will be decoded using `Buffer.toString()` and attached as a body value.
+If you enable `attachFieldsToBody: 'keyValues'` then the response body and JSON Schema validation will behave similarly to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Files will be decoded using `Buffer.toString()` and attached as a body value.
 
 ```js
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
