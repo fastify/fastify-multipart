@@ -120,7 +120,7 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  if (options.attachFieldsToBody === true) {
+  if (options.attachFieldsToBody === true || options.attachFieldsToBody === 'keyValues') {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
         $id: options.sharedSchemaId,
@@ -146,6 +146,18 @@ function fastifyMultipart (fastify, options, done) {
             await part.toBuffer()
           }
         }
+      }
+      if (options.attachFieldsToBody === 'keyValues') {
+        const body = {}
+        for (const key of Object.keys(req.body)) {
+          const field = req.body[key]
+          if (field.value !== undefined) {
+            body[key] = field.value
+          } else if (field._buf !== undefined) {
+            body[key] = field._buf.toString()
+          }
+        }
+        req.body = body
       }
     })
   }

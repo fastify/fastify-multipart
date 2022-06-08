@@ -150,7 +150,7 @@ export interface FastifyMultipartAttactFieldsToBodyOptions extends FastifyMultip
     /**
      * Only valid in the promise api. Append the multipart parameters to the body object.
      */
-    attachFieldsToBody: true
+    attachFieldsToBody: true | 'keyValues';
 
     /**
      * Manage the file stream like you need

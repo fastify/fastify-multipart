@@ -236,6 +236,17 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
+Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values will be attached directly to the body object. By default, all files are converted to a string using `buffer.toString()` used as the value attached to the body.
+
+```js
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
+
+fastify.post('/upload/files', async function (req, reply) {
+  const uploadValue = req.body.upload // access file as string
+  const fooValue = req.body.foo       // other fields
+})
+```
+
 You can also define an `onFile` handler to avoid accumulating all files in memory.
 
 ```js
@@ -250,13 +261,60 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
+The `onFile` handler can also be used with `attachFieldsToBody: 'keyValues'` in order to specify how file buffer values are decoded.
+
+```js
+async function onFile(part) {
+  const buff = await part.toBuffer()
+  const decoded = Buffer.from(buff.toString(), 'base64').toString()
+  part.value = decoded // set `part.value` to specify the request body value
+}
+
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues', onFile })
+
+fastify.post('/upload/files', async function (req, reply) {
+  const uploadValue = req.body.upload // access file as base64 string
+  const fooValue = req.body.foo       // other fields
+})
+```
+
 **Note**: if you assign all fields to the body and don't define an `onFile` handler, you won't be able to read the files through streams, as they are already read and their contents are accumulated in memory.
 You can only use the `toBuffer` method to read the content.
 If you try to read from a stream and pipe to a new file, you will obtain an empty new file.
 
 ## JSON Schema body validation
 
-If you enable `attachFieldsToBody` and set `sharedSchemaId` a shared JSON Schema is added, which can be used to validate parsed multipart fields.
+If you enable `attachFieldsToBody: 'keyValues'` then the response body and JSON Schema validation will behave similarly to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Files will be decoded using `Buffer.toString()` and attached as a body value.
+
+```js
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
+
+fastify.post('/upload/files', {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['myFile'],
+      properties: {
+        // file that gets decoded to string
+        myFile: {
+          type: 'string',
+          // validate that file contents match a UUID
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        },
+        hello: {
+          type: 'string',
+          enum: ['world']
+        }
+      }
+    }
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+```
+
+If you enable `attachFieldsToBody: true` and set `sharedSchemaId` a shared JSON Schema is added, which can be used to validate parsed multipart fields.
 
 ```js
 const opts = {
