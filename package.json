@@ -1,6 +1,6 @@
 {
   "name": "@fastify/multipart",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "types": "index.d.ts",
@@ -26,7 +26,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^4.0.0-rc.2",
+    "fastify": "^4.0.0",
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
     "noop-stream": "^0.1.0",
