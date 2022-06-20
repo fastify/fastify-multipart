@@ -15,7 +15,7 @@
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.1",
+    "@types/node": "^18.0.0",
     "@typescript-eslint/parser": "^4.33.0",
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
