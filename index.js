@@ -11,7 +11,7 @@ const hexoid = require('hexoid')
 const util = require('util')
 const createError = require('@fastify/error')
 const sendToWormhole = require('stream-wormhole')
-const deepmerge = require('deepmerge')
+const deepmergeAll = require('@fastify/deepmerge')({ all: true })
 const { PassThrough, pipeline } = require('stream')
 const pump = util.promisify(pipeline)
 const secureJSON = require('secure-json-parse')
@@ -237,7 +237,7 @@ function fastifyMultipart (fastify, options, done) {
 
     const req = this.raw
 
-    const busboyOptions = deepmerge.all([{ headers: Object.assign({}, req.headers) }, options || {}, opts || {}])
+    const busboyOptions = deepmergeAll({ headers: req.headers }, options || {}, opts || {})
     const stream = busboy(busboyOptions)
     let completed = false
     let files = 0
@@ -330,11 +330,11 @@ function fastifyMultipart (fastify, options, done) {
     let lastError = null
     let currentFile = null
     const request = this.raw
-    const busboyOptions = deepmerge.all([
-      { headers: Object.assign({}, request.headers) },
+    const busboyOptions = deepmergeAll(
+      { headers: request.headers },
       options,
       opts
-    ])
+    )
 
     this.log.trace({ busboyOptions }, 'Providing options to busboy')
     const bb = busboy(busboyOptions)
