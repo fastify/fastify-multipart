@@ -17,7 +17,7 @@ Under the hood it uses [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 ## Install
 ```sh
-npm i --save @fastify/multipart
+npm i @fastify/multipart
 ```
 
 ## Usage
