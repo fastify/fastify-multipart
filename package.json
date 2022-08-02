@@ -15,6 +15,7 @@
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
+    "@fastify/pre-commit": "^2.0.2",
     "@types/node": "^18.0.6",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
@@ -29,7 +30,6 @@
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
     "noop-stream": "^0.1.0",
-    "pre-commit": "^1.2.2",
     "pump": "^3.0.0",
     "readable-stream": "^3.6.0",
     "snazzy": "^9.0.0",
