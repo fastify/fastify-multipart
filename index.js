@@ -156,10 +156,10 @@ function fastifyMultipart (fastify, options, done) {
           } else if (Array.isArray(field)) {
             body[key] = []
             for (const arrayField of field) {
-               if (field.value !== undefined) {
-                 body[key].push(arrayField.value)
-               }
-            }  
+              if (field.value !== undefined) {
+                body[key].push(arrayField.value)
+              }
+            }
           } else if (field._buf !== undefined) {
             body[key] = field._buf.toString()
           }
