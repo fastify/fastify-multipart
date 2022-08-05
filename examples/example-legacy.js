@@ -31,7 +31,7 @@ fastify.post('/upload/files', function (req, reply) {
   }
 })
 
-fastify.listen(3000, err => {
+fastify.listen({ port: 3000 }, err => {
   if (err) throw err
   console.log(`server listening on ${fastify.server.address().port}`)
 })
