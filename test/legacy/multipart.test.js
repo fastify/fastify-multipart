@@ -8,7 +8,7 @@ const http = require('http')
 const path = require('path')
 const fs = require('fs')
 const concat = require('concat-stream')
-const stream = require('readable-stream')
+const stream = require('stream')
 const pump = stream.pipeline
 const eos = stream.finished
 
