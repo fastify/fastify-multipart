@@ -153,6 +153,13 @@ function fastifyMultipart (fastify, options, done) {
           const field = req.body[key]
           if (field.value !== undefined) {
             body[key] = field.value
+          } else if (Array.isArray(field)) {
+            body[key] = field.map(item => {
+              if (item._buf !== undefined) {
+                return item._buf.toString()
+              }
+              return item.value
+            })
           } else if (field._buf !== undefined) {
             body[key] = field._buf.toString()
           }

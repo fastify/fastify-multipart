@@ -40,6 +40,7 @@
     "coverage": "tap \"test/**/*.test.js\" --coverage-report=html",
     "climem": "climem 8999 localhost",
     "lint": "standard | snazzy",
+    "lint:fix": "standard --fix",
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run lint && npm run unit && npm run typescript",
     "typescript": "tsd",
