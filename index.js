@@ -444,16 +444,24 @@ function fastifyMultipart (fastify, options, done) {
             return this._buf
           }
           const fileChunks = []
+          let err
           for await (const chunk of this.file) {
             fileChunks.push(chunk)
 
             if (throwFileSizeLimit && this.file.truncated) {
-              const err = new RequestFileTooLargeError()
+              err = new RequestFileTooLargeError()
               err.part = this
 
               onError(err)
-              throw err
+              fileChunks.length = 0
             }
+          }
+          if (err) {
+            // throwing in the async iterator will
+            // cause the file.destroy() to be called
+            // The stream has already been managed by
+            // busboy instead
+            throw err
           }
           this._buf = Buffer.concat(fileChunks)
           return this._buf
@@ -541,10 +549,6 @@ function fastifyMultipart (fastify, options, done) {
     let part
     while ((part = await parts()) != null) {
       if (part.file) {
-        // part.file.truncated is true when a configured file size limit is reached
-        if (part.file.truncated && throwFileSizeLimit) {
-          throw new RequestFileTooLargeError()
-        }
         return part
       }
     }
