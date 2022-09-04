@@ -3,7 +3,7 @@
 const fastify = require('fastify')()
 const fs = require('fs')
 const path = require('path')
-const pump = require('pump')
+const pump = require('stream').pipeline
 const form = path.join(__dirname, '..', 'form.html')
 
 fastify.register(require('..'))

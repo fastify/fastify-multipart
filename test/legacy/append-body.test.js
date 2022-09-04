@@ -6,7 +6,7 @@ const multipart = require('./../..')
 const http = require('http')
 const path = require('path')
 const fs = require('fs')
-const pump = require('pump')
+const pump = require('stream').pipeline
 
 const filePath = path.join(__dirname, '..', '..', 'README.md')
 

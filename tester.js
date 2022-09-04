@@ -3,7 +3,7 @@
 const http = require('http')
 const Readable = require('stream').Readable
 const FormData = require('form-data')
-const pump = require('pump')
+const pump = require('stream').pipeline
 const knownLength = 1024 * 1024 * 1024
 
 function next () {

@@ -12,7 +12,7 @@
 const fastify = require('fastify')()
 const concat = require('concat-stream')
 const fs = require('fs')
-const pump = require('pump')
+const pump = require('stream').pipeline
 
 fastify.register(require('@fastify/multipart'))
 
