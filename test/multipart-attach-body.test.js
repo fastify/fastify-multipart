@@ -292,3 +292,51 @@ test('should not process requests with content-type other than multipart', funct
     req.end(JSON.stringify({ name: 'world' }))
   })
 })
+
+test('should manage array fields', async function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
+
+  const original = fs.readFileSync(filePath, 'utf8')
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    t.same(req.body, {
+      upload: [original, original],
+      hello: ['hello', 'world']
+    })
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', Readable.from(Buffer.from(JSON.stringify(original))), { contentType: 'application/json' })
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('hello', 'hello')
+  form.append('hello', 'world')
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
+})
