@@ -5,7 +5,7 @@ import { FastifyErrorConstructor } from "@fastify/error";
 
 type MultipartHandler = (
     field: string,
-    file: any,
+    file: BusboyFileStream,
     filename: string,
     encoding: string,
     mimetype: string,
@@ -20,15 +20,14 @@ interface BodyEntry {
 }
 
 export interface MultipartFields {
-    [x: string]: Multipart | Multipart[];
+    [fieldname: string]: Multipart | Multipart[];
 }
 
-export type Multipart<T = true> = T extends true ? MultipartFile : MultipartValue<T>;
+export type Multipart = MultipartFile | MultipartValue;
 
 export interface MultipartFile {
   toBuffer: () => Promise<Buffer>,
   file: BusboyFileStream,
-  filepath: string,
   fieldname: string,
   filename: string,
   encoding: string,
@@ -36,8 +35,21 @@ export interface MultipartFile {
   fields: MultipartFields
 }
 
-export interface MultipartValue<T> {
-  value: T
+export interface SavedMultipartFile extends MultipartFile {
+  /**
+   * Path to the temporary file
+   */
+  filepath: string,
+}
+
+export interface MultipartValue<T = unknown> {
+  value: T;
+  fieldname: string;
+  mimetype?: string;
+  encoding: string;
+  fieldnameTruncated: boolean;
+  valueTruncated: boolean;
+  fields: MultipartFields;
 }
 
 interface MultipartErrors {
@@ -60,13 +72,13 @@ declare module "fastify" {
         multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: Omit<BusboyConfig, 'headers'>) => Busboy;
 
         // Stream mode
-        file: (options?: Omit<BusboyConfig, 'headers'>) => Promise<Multipart>
-        files: (options?: Omit<BusboyConfig, 'headers'>) => AsyncIterableIterator<Multipart>
+        file: (options?: Omit<BusboyConfig, 'headers'>) => Promise<MultipartFile | undefined>
+        files: (options?: Omit<BusboyConfig, 'headers'>) => AsyncIterableIterator<MultipartFile>
 
         // Disk mode
-        saveRequestFiles: (options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }) => Promise<Array<Multipart>>
+        saveRequestFiles: (options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }) => Promise<Array<SavedMultipartFile>>
         cleanRequestFiles: () => Promise<void>
-        tmpUploads: Array<Multipart>
+        tmpUploads: Array<string> | null
     }
 
     interface FastifyInstance {

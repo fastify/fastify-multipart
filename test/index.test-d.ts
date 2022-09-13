@@ -1,8 +1,7 @@
 import fastify from 'fastify'
-import fastifyMultipart from '..'
-import { Multipart, MultipartFields, MultipartFile } from '..'
+import fastifyMultipart, {MultipartValue, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
-import { pipeline, Readable } from 'stream'
+import { pipeline } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from "@fastify/error"
@@ -55,6 +54,7 @@ const runServer = async () => {
   // usage
   app.post('/', async (req, reply) => {
     const data = await req.file()
+    if (data == null) throw new Error('missing file')
 
     expectType<BusboyFileStream>(data.file)
     expectType<boolean>(data.file.truncated)
@@ -70,7 +70,7 @@ const runServer = async () => {
   })
 
   // Multiple fields including scalar values
-  app.post<{Body: {file: Multipart, foo: Multipart<string>}}>('/upload/stringvalue', async (req, reply) => {
+  app.post<{Body: {file: MultipartFile, foo: MultipartValue<string>}}>('/upload/stringvalue', async (req, reply) => {
     expectError(req.body.foo.file);
     expectType<string>(req.body.foo.value);
 
@@ -79,7 +79,7 @@ const runServer = async () => {
     reply.send();
   })
 
-  app.post<{Body: {file: Multipart, num: Multipart<number>}}>('/upload/stringvalue', async (req, reply) => {
+  app.post<{Body: {file: MultipartFile, num: MultipartValue<number>}}>('/upload/stringvalue', async (req, reply) => {
     expectType<number>(req.body.num.value);
     reply.send();
 
@@ -92,6 +92,7 @@ const runServer = async () => {
   app.post('/', async function (req, reply) {
     const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } };
     const data = await req.file(options)
+    if (!data) throw new Error('missing file')
     await pump(data.file, fs.createWriteStream(data.filename))
     reply.send()
   })
@@ -109,7 +110,7 @@ const runServer = async () => {
   app.post('/upload/raw/any', async function (req, reply) {
     const parts = req.parts()
     for await (const part of parts) {
-      if (part.file) {
+      if ('file' in part) {
         await pump(part.file, fs.createWriteStream(part.filename))
       } else {
         console.log(part)
@@ -121,6 +122,7 @@ const runServer = async () => {
   // accumulate whole file in memory
   app.post('/upload/raw/any', async function (req, reply) {
     const data = await req.file()
+    if (!data) throw new Error('missing file')
     const buffer = await data.toBuffer()
     // upload to S3
     reply.send()
