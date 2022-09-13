@@ -63,6 +63,19 @@ const runServer = async () => {
     expectType<string>(data.filename)
     expectType<string>(data.encoding)
     expectType<string>(data.mimetype)
+    
+    const field = data.fields.myField;
+    if (field === undefined) {
+      // field missing from the request
+    } else if (Array.isArray(field)) {
+      // multiple fields with the same name
+    } else if ('file' in field) {
+      // field containing a file
+      field.file.resume()
+    } else {
+      // field containing a value
+      field.fields.value;
+    }
 
     await pump(data.file, fs.createWriteStream(data.filename))
 
@@ -113,7 +126,7 @@ const runServer = async () => {
       if ('file' in part) {
         await pump(part.file, fs.createWriteStream(part.filename))
       } else {
-        console.log(part)
+        console.log(part.value)
       }
     }
     reply.send()

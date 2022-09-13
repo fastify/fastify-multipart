@@ -20,7 +20,7 @@ interface BodyEntry {
 }
 
 export interface MultipartFields {
-    [fieldname: string]: Multipart | Multipart[];
+    [fieldname: string]: Multipart | Multipart[] | undefined;
 }
 
 export type Multipart = MultipartFile | MultipartValue;
