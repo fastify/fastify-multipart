@@ -60,7 +60,7 @@ test('should not parse JSON fields forms if no content-type is set', function (t
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
       t.notOk(part.filename)
-      t.notOk(part.mimetype)
+      t.equal(part.mimetype, 'text/plain')
       t.type(part.value, 'string')
     }
 
@@ -88,6 +88,50 @@ test('should not parse JSON fields forms if no content-type is set', function (t
     })
 
     form.append('json', JSON.stringify({ a: 'b' }))
+
+    form.pipe(req)
+  })
+})
+
+test('should not parse JSON fields forms if non-json content-type is set', function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    for await (const part of req.parts()) {
+      t.notOk(part.filename)
+      t.equal(part.mimetype, 'text/css')
+      t.type(part.value, 'string')
+    }
+
+    reply.code(200).send()
+  })
+
+  fastify.listen({ port: 0 }, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, res => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('css', 'body { width: 100% }', { contentType: 'text/css' })
 
     form.pipe(req)
   })

@@ -45,7 +45,7 @@ export interface SavedMultipartFile extends MultipartFile {
 export interface MultipartValue<T = unknown> {
   value: T;
   fieldname: string;
-  mimetype?: string;
+  mimetype: string;
   encoding: string;
   fieldnameTruncated: boolean;
   valueTruncated: boolean;
