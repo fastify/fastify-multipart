@@ -388,6 +388,7 @@ function fastifyMultipart (fastify, options, done) {
 
         try {
           fieldValue = secureJSON.parse(fieldValue)
+          contentType = 'application/json'
         } catch (e) {
           onError(new InvalidJSONFieldError())
           return
