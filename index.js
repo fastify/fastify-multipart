@@ -372,8 +372,6 @@ function fastifyMultipart (fastify, options, done) {
     request.pipe(bb)
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
-      let mimetype
-
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
         onError(new PrototypeViolationError())
@@ -390,7 +388,7 @@ function fastifyMultipart (fastify, options, done) {
 
         try {
           fieldValue = secureJSON.parse(fieldValue)
-          mimetype = 'application/json'
+          contentType = 'application/json'
         } catch (e) {
           onError(new InvalidJSONFieldError())
           return
@@ -399,7 +397,7 @@ function fastifyMultipart (fastify, options, done) {
 
       const value = {
         fieldname: name,
-        mimetype,
+        mimetype: contentType,
         encoding,
         value: fieldValue,
         fieldnameTruncated,
