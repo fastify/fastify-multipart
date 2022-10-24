@@ -1,92 +1,111 @@
 import { Busboy, BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 import { FastifyPluginCallback } from "fastify";
-import { Readable } from 'stream';
+import { Readable } from "stream";
 import { FastifyErrorConstructor } from "@fastify/error";
 
+declare module "fastify" {
+  interface FastifyRequest {
+    isMultipart: () => boolean;
+
+    // promise api
+    parts: (
+      options?: Omit<BusboyConfig, "headers">
+    ) => AsyncIterableIterator<fastifyMultipart.Multipart>;
+
+    // legacy
+    multipart: (
+      handler: MultipartHandler,
+      next: (err: Error) => void,
+      options?: Omit<BusboyConfig, "headers">
+    ) => Busboy;
+
+    // Stream mode
+    file: (
+      options?: Omit<BusboyConfig, "headers">
+    ) => Promise<fastifyMultipart.MultipartFile | undefined>;
+    files: (
+      options?: Omit<BusboyConfig, "headers">
+    ) => AsyncIterableIterator<fastifyMultipart.MultipartFile>;
+
+    // Disk mode
+    saveRequestFiles: (
+      options?: Omit<BusboyConfig, "headers"> & { tmpdir?: string }
+    ) => Promise<Array<fastifyMultipart.SavedMultipartFile>>;
+    cleanRequestFiles: () => Promise<void>;
+    tmpUploads: Array<string> | null;
+  }
+
+  interface FastifyInstance {
+    multipartErrors: MultipartErrors;
+  }
+}
+
+type FastifyMultipartPlugin = FastifyPluginCallback<
+  | fastifyMultipart.FastifyMultipartBaseOptions
+  | fastifyMultipart.FastifyMultipartOptions
+  | fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
+>;
+
 type MultipartHandler = (
-    field: string,
-    file: BusboyFileStream,
-    filename: string,
-    encoding: string,
-    mimetype: string,
+  field: string,
+  file: BusboyFileStream,
+  filename: string,
+  encoding: string,
+  mimetype: string
 ) => void;
 
 interface BodyEntry {
-    data: Buffer,
-    filename: string,
-    encoding: string,
-    mimetype: string,
-    limit: false
-}
-
-export interface MultipartFields {
-    [fieldname: string]: Multipart | Multipart[] | undefined;
-}
-
-export type Multipart = MultipartFile | MultipartValue;
-
-export interface MultipartFile {
-  toBuffer: () => Promise<Buffer>,
-  file: BusboyFileStream,
-  fieldname: string,
-  filename: string,
-  encoding: string,
-  mimetype: string,
-  fields: MultipartFields
-}
-
-export interface SavedMultipartFile extends MultipartFile {
-  /**
-   * Path to the temporary file
-   */
-  filepath: string,
-}
-
-export interface MultipartValue<T = unknown> {
-  value: T;
-  fieldname: string;
-  mimetype: string;
+  data: Buffer;
+  filename: string;
   encoding: string;
-  fieldnameTruncated: boolean;
-  valueTruncated: boolean;
-  fields: MultipartFields;
+  mimetype: string;
+  limit: false;
 }
 
 interface MultipartErrors {
-    PartsLimitError: FastifyErrorConstructor,
-    FilesLimitError: FastifyErrorConstructor,
-    FieldsLimitError: FastifyErrorConstructor,
-    PrototypeViolationError: FastifyErrorConstructor,
-    InvalidMultipartContentTypeError: FastifyErrorConstructor,
-    RequestFileTooLargeError: FastifyErrorConstructor
+  PartsLimitError: FastifyErrorConstructor;
+  FilesLimitError: FastifyErrorConstructor;
+  FieldsLimitError: FastifyErrorConstructor;
+  PrototypeViolationError: FastifyErrorConstructor;
+  InvalidMultipartContentTypeError: FastifyErrorConstructor;
+  RequestFileTooLargeError: FastifyErrorConstructor;
 }
 
-declare module "fastify" {
-    interface FastifyRequest {
-        isMultipart: () => boolean;
+declare namespace fastifyMultipart {
+  export interface SavedMultipartFile extends MultipartFile {
+    /**
+     * Path to the temporary file
+     */
+    filepath: string;
+  }
 
-        // promise api
-        parts: (options?: Omit<BusboyConfig, 'headers'>) =>  AsyncIterableIterator<Multipart>
+  export type Multipart = MultipartFile | MultipartValue;
 
-        // legacy
-        multipart: (handler: MultipartHandler, next: (err: Error) => void, options?: Omit<BusboyConfig, 'headers'>) => Busboy;
+  export interface MultipartFile {
+    toBuffer: () => Promise<Buffer>;
+    file: BusboyFileStream;
+    fieldname: string;
+    filename: string;
+    encoding: string;
+    mimetype: string;
+    fields: MultipartFields;
+  }
 
-        // Stream mode
-        file: (options?: Omit<BusboyConfig, 'headers'>) => Promise<MultipartFile | undefined>
-        files: (options?: Omit<BusboyConfig, 'headers'>) => AsyncIterableIterator<MultipartFile>
+  export interface MultipartValue<T = unknown> {
+    value: T;
+    fieldname: string;
+    mimetype: string;
+    encoding: string;
+    fieldnameTruncated: boolean;
+    valueTruncated: boolean;
+    fields: MultipartFields;
+  }
 
-        // Disk mode
-        saveRequestFiles: (options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }) => Promise<Array<SavedMultipartFile>>
-        cleanRequestFiles: () => Promise<void>
-        tmpUploads: Array<string> | null
-    }
+  export interface MultipartFields {
+    [fieldname: string]: Multipart | Multipart[] | undefined;
+  }
 
-    interface FastifyInstance {
-        multipartErrors: MultipartErrors
-    }
-}
-
-export interface FastifyMultipartBaseOptions {
+  export interface FastifyMultipartBaseOptions {
     /**
      * Append the multipart parameters to the body object
      */
@@ -100,7 +119,7 @@ export interface FastifyMultipartBaseOptions {
     /**
      * Allow throwing error when file size limit reached.
      */
-    throwFileSizeLimit?: boolean
+    throwFileSizeLimit?: boolean;
 
     /**
      * Detect if a Part is a file.
@@ -111,64 +130,82 @@ export interface FastifyMultipartBaseOptions {
      *
      * Modify this to handle e.g. Blobs.
      */
-    isPartAFile?: (fieldName: string | undefined, contentType: string | undefined, fileName: string | undefined) => boolean;
+    isPartAFile?: (
+      fieldName: string | undefined,
+      contentType: string | undefined,
+      fileName: string | undefined
+    ) => boolean;
 
     limits?: {
-        /**
-         * Max field name size in bytes
-         */
-        fieldNameSize?: number;
+      /**
+       * Max field name size in bytes
+       */
+      fieldNameSize?: number;
 
-        /**
-         * Max field value size in bytes
-         */
-        fieldSize?: number;
+      /**
+       * Max field value size in bytes
+       */
+      fieldSize?: number;
 
-        /**
-         * Max number of non-file fields
-         */
-        fields?: number;
+      /**
+       * Max number of non-file fields
+       */
+      fields?: number;
 
-        /**
-         * For multipart forms, the max file size
-         */
-        fileSize?: number;
+      /**
+       * For multipart forms, the max file size
+       */
+      fileSize?: number;
 
-        /**
-         * Max number of file fields
-         */
-        files?: number;
+      /**
+       * Max number of file fields
+       */
+      files?: number;
 
-        /**
-         * Max number of header key=>value pairs
-         */
-        headerPairs?: number;
-    }
-}
+      /**
+       * Max number of header key=>value pairs
+       */
+      headerPairs?: number;
+    };
+  }
 
-export interface FastifyMultipartOptions extends FastifyMultipartBaseOptions {
+  export interface FastifyMultipartOptions extends FastifyMultipartBaseOptions {
     /**
      * Only valid in the promise api. Append the multipart parameters to the body object.
      */
-    attachFieldsToBody?: false
+    attachFieldsToBody?: false;
 
     /**
      * Manage the file stream like you need
      */
-     onFile?: (fieldName: string, stream: Readable, filename: string, encoding: string, mimetype: string, body: Record<string, BodyEntry>) => void | Promise<void>;
-}
+    onFile?: (
+      fieldName: string,
+      stream: Readable,
+      filename: string,
+      encoding: string,
+      mimetype: string,
+      body: Record<string, BodyEntry>
+    ) => void | Promise<void>;
+  }
 
-export interface FastifyMultipartAttactFieldsToBodyOptions extends FastifyMultipartBaseOptions {
+  export interface FastifyMultipartAttachFieldsToBodyOptions
+    extends FastifyMultipartBaseOptions {
     /**
      * Only valid in the promise api. Append the multipart parameters to the body object.
      */
-    attachFieldsToBody: true | 'keyValues';
+    attachFieldsToBody: true | "keyValues";
 
     /**
      * Manage the file stream like you need
      */
     onFile?: (part: MultipartFile) => void | Promise<void>;
-}
+  }
 
-declare const fastifyMultipart: FastifyPluginCallback<FastifyMultipartOptions | FastifyMultipartAttactFieldsToBodyOptions>;
-export default fastifyMultipart;
+  export const fastifyMultipart: FastifyMultipartPlugin;
+  export { fastifyMultipart as default };
+}
+declare function fastifyMultipart(
+  ...params: Parameters<FastifyMultipartPlugin>
+): ReturnType<FastifyMultipartPlugin>;
+
+export = fastifyMultipart;
