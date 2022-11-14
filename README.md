@@ -145,7 +145,7 @@ fastify.post('/', async function (req, reply) {
 fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = req.parts()
   for await (const part of parts) {
-    if (part.file) {
+    if ('file' in part) {
       await pump(part.file, fs.createWriteStream(part.filename))
     } else {
       console.log(part)
