@@ -169,10 +169,9 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  let throwFileSizeLimit = true
-  if (typeof options.throwFileSizeLimit === 'boolean') {
-    throwFileSizeLimit = options.throwFileSizeLimit
-  }
+  const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+    ? options.throwFileSizeLimit
+    : true
 
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -425,9 +424,9 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      if (typeof opts.throwFileSizeLimit === 'boolean') {
-        throwFileSizeLimit = opts.throwFileSizeLimit
-      }
+      const throwFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+        ? options.throwFileSizeLimit
+        : defaultThrowFileSizeLimit
 
       const value = {
         fieldname: name,
