@@ -169,7 +169,9 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  const defaultThrowFileSizeLimit = options.throwFileSizeLimit !== false
+  const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+    ? options.throwFileSizeLimit
+    : true
 
   const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
   const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -422,8 +424,8 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      const throwFileSizeLimit = opts.throwFileSizeLimit === false
-        ? false
+      const throwFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+        ? options.throwFileSizeLimit
         : defaultThrowFileSizeLimit
 
       const value = {
