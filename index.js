@@ -190,7 +190,7 @@ function fastifyMultipart (fastify, options, done) {
     RequestFileTooLargeError
   })
 
-  fastify.addContentTypeParser('multipart', setMultipart)
+  fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
 
   fastify.decorateRequest('parts', getMultipartIterator)
