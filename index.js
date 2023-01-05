@@ -574,15 +574,13 @@ function fastifyMultipart (fastify, options, done) {
   done()
 }
 
-const _fastifyMultipart = fp(fastifyMultipart, {
-  fastify: '4.x',
-  name: '@fastify/multipart'
-})
-
 /**
  * These export configurations enable JS and TS developers
  * to consumer fastify in whatever way best suits their needs.
  */
-module.exports = _fastifyMultipart
-module.exports.fastifyMultipart = _fastifyMultipart
-module.exports.default = _fastifyMultipart
+module.exports = fp(fastifyMultipart, {
+  fastify: '4.x',
+  name: '@fastify/multipart'
+})
+module.exports.default = fastifyMultipart
+module.exports.fastifyMultipart = fastifyMultipart
