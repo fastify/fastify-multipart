@@ -12,7 +12,7 @@ const util = require('util')
 const createError = require('@fastify/error')
 const sendToWormhole = require('stream-wormhole')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
-const { PassThrough, pipeline } = require('stream')
+const { PassThrough, pipeline, Readable } = require('stream')
 const pump = util.promisify(pipeline)
 const secureJSON = require('secure-json-parse')
 
@@ -101,6 +101,7 @@ function busboy (options) {
 }
 
 function fastifyMultipart (fastify, options, done) {
+  const attachFieldsToBody = options.attachFieldsToBody
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
@@ -139,6 +140,7 @@ function fastifyMultipart (fastify, options, done) {
       }
       for await (const part of req.parts()) {
         req.body = part.fields
+
         if (part.file) {
           if (options.onFile) {
             await options.onFile(part)
@@ -507,11 +509,32 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   async function saveRequestFiles (options) {
+    let files
+    if (attachFieldsToBody === true) {
+      async function * filesFromBody () {
+        for (const field of Object.values(this.body)) {
+          if (field.file) {
+            field.file = Readable.from(field._buf)
+            yield field
+          } else if (Array.isArray(field)) {
+            for (const subField of field) {
+              if (subField.file) {
+                subField.file = Readable.from(subField._buf)
+                yield subField
+              }
+            }
+          }
+        }
+      }
+      files = filesFromBody.call(this)
+    } else {
+      files = await this.files(options)
+    }
     const requestFiles = []
     const tmpdir = (options && options.tmpdir) || os.tmpdir()
 
-    const files = await this.files(options)
     this.tmpUploads = []
+
     for await (const file of files) {
       const filepath = path.join(tmpdir, toID() + path.extname(file.filename))
       const target = createWriteStream(filepath)
