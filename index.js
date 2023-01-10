@@ -34,41 +34,31 @@ function attachToBody (options, req, reply, next) {
 
   const consumerStream = options.onFile || defaultConsumer
   const body = {}
-  const mp = req.multipart(
-    (field, file, filename, encoding, mimetype) => {
-      body[field] = body[field] || []
-      body[field].push({
-        data: [],
-        filename,
-        encoding,
-        mimetype,
-        limit: false
-      })
+  const mp = req.multipart((field, file, filename, encoding, mimetype) => {
+    body[field] = body[field] || []
+    body[field].push({
+      data: [],
+      filename,
+      encoding,
+      mimetype,
+      limit: false
+    })
 
-      const result = consumerStream(
-        field,
-        file,
-        filename,
-        encoding,
-        mimetype,
-        body
-      )
-      if (result && typeof result.then === 'function') {
-        result.catch((err) => {
-          // continue with the workflow
-          err.statusCode = 500
-          file.destroy(err)
-        })
-      }
-    },
-    function (err) {
-      if (!err) {
-        req.body = body
-      }
-      next(err)
-    },
-    options
-  )
+    const result = consumerStream(field, file, filename, encoding, mimetype, body)
+    if (result && typeof result.then === 'function') {
+      result.catch((err) => {
+        // continue with the workflow
+        err.statusCode = 500
+        file.destroy(err)
+      })
+    }
+  },
+  function (err) {
+    if (!err) {
+      req.body = body
+    }
+    next(err)
+  }, options)
 
   mp.on('field', (key, value) => {
     if (key === '__proto__' || key === 'constructor') {
@@ -88,14 +78,8 @@ function attachToBody (options, req, reply, next) {
 function defaultConsumer (field, file, filename, encoding, mimetype, body) {
   const fileData = []
   const lastFile = body[field][body[field].length - 1]
-  file.on('data', (data) => {
-    if (!lastFile.limit) {
-      fileData.push(data)
-    }
-  })
-  file.on('limit', () => {
-    lastFile.limit = true
-  })
+  file.on('data', (data) => { if (!lastFile.limit) { fileData.push(data) } })
+  file.on('limit', () => { lastFile.limit = true })
   file.on('end', () => {
     if (!lastFile.limit) {
       lastFile.data = Buffer.concat(fileData)
@@ -138,10 +122,7 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  if (
-    options.attachFieldsToBody === true ||
-    options.attachFieldsToBody === 'keyValues'
-  ) {
+  if (options.attachFieldsToBody === true || options.attachFieldsToBody === 'keyValues') {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
         $id: options.sharedSchemaId,
@@ -160,7 +141,6 @@ function fastifyMultipart (fastify, options, done) {
       }
       for await (const part of req.parts()) {
         req.body = part.fields
-
         if (part.file) {
           if (options.onFile) {
             await options.onFile(part)
@@ -176,7 +156,7 @@ function fastifyMultipart (fastify, options, done) {
           if (field.value !== undefined) {
             body[key] = field.value
           } else if (Array.isArray(field)) {
-            body[key] = field.map((item) => {
+            body[key] = field.map(item => {
               if (item._buf !== undefined) {
                 return item._buf.toString()
               }
@@ -191,51 +171,18 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  const defaultThrowFileSizeLimit =
-    typeof options.throwFileSizeLimit === 'boolean'
-      ? options.throwFileSizeLimit
-      : true
+  const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+    ? options.throwFileSizeLimit
+    : true
 
-  const PartsLimitError = createError(
-    'FST_PARTS_LIMIT',
-    'reach parts limit',
-    413
-  )
-  const FilesLimitError = createError(
-    'FST_FILES_LIMIT',
-    'reach files limit',
-    413
-  )
-  const FieldsLimitError = createError(
-    'FST_FIELDS_LIMIT',
-    'reach fields limit',
-    413
-  )
-  const RequestFileTooLargeError = createError(
-    'FST_REQ_FILE_TOO_LARGE',
-    'request file too large, please check multipart config',
-    413
-  )
-  const PrototypeViolationError = createError(
-    'FST_PROTO_VIOLATION',
-    'prototype property is not allowed as field name',
-    400
-  )
-  const InvalidMultipartContentTypeError = createError(
-    'FST_INVALID_MULTIPART_CONTENT_TYPE',
-    'the request is not multipart',
-    406
-  )
-  const InvalidJSONFieldError = createError(
-    'FST_INVALID_JSON_FIELD_ERROR',
-    'a request field is not a valid JSON as declared by its Content-Type',
-    406
-  )
-  const FileBufferNotFoundError = createError(
-    'FST_FILE_BUFFER_NOT_FOUND',
-    'the file buffer was not found',
-    500
-  )
+  const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
+  const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
+  const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
+  const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request file too large, please check multipart config', 413)
+  const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
+  const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
+  const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
+  const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
   fastify.decorate('multipartErrors', {
     PartsLimitError,
@@ -295,18 +242,12 @@ function fastifyMultipart (fastify, options, done) {
 
     const log = this.log
 
-    log.warn(
-      'the multipart callback-based api is deprecated in favour of the new promise api'
-    )
+    log.warn('the multipart callback-based api is deprecated in favour of the new promise api')
     log.debug('starting multipart parsing')
 
     const req = this.raw
 
-    const busboyOptions = deepmergeAll(
-      { headers: req.headers },
-      options || {},
-      opts || {}
-    )
+    const busboyOptions = deepmergeAll({ headers: req.headers }, options || {}, opts || {})
     const stream = busboy(busboyOptions)
     let completed = false
     let files = 0
@@ -329,9 +270,10 @@ function fastifyMultipart (fastify, options, done) {
 
     stream.on('file', wrap)
 
-    req.pipe(stream).on('error', function (error) {
-      req.emit('error', error)
-    })
+    req.pipe(stream)
+      .on('error', function (error) {
+        req.emit('error', error)
+      })
 
     function wrap (field, file, filename, encoding, mimetype) {
       log.debug({ field, filename, encoding, mimetype }, 'parsing part')
@@ -410,7 +352,8 @@ function fastifyMultipart (fastify, options, done) {
     request.on('close', cleanup)
     request.on('error', cleanup)
 
-    bb.on('field', onField)
+    bb
+      .on('field', onField)
       .on('file', onFile)
       .on('close', cleanup)
       .on('error', onEnd)
@@ -431,14 +374,7 @@ function fastifyMultipart (fastify, options, done) {
 
     request.pipe(bb)
 
-    function onField (
-      name,
-      fieldValue,
-      fieldnameTruncated,
-      valueTruncated,
-      encoding,
-      contentType
-    ) {
+    function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
       if (getDescriptor(Object.prototype, name)) {
         onError(new PrototypeViolationError())
@@ -492,10 +428,9 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      const throwFileSizeLimit =
-        typeof options.throwFileSizeLimit === 'boolean'
-          ? options.throwFileSizeLimit
-          : defaultThrowFileSizeLimit
+      const throwFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
+        ? options.throwFileSizeLimit
+        : defaultThrowFileSizeLimit
 
       const value = {
         fieldname: name,
@@ -584,9 +519,7 @@ function fastifyMultipart (fastify, options, done) {
     }
     const requestFiles = []
     const tmpdir = (options && options.tmpdir) || os.tmpdir()
-
     this.tmpUploads = []
-
     for await (const file of files) {
       const filepath = path.join(tmpdir, toID() + path.extname(file.filename))
       const target = createWriteStream(filepath)
