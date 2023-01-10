@@ -20,6 +20,15 @@ const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
 const getDescriptor = Object.getOwnPropertyDescriptor
 
+const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
+const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
+const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
+const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request file too large, please check multipart config', 413)
+const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
+const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
+const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
+const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
+
 function setMultipart (req, payload, done) {
   // nothing to do, it will be done by the Request.multipart object
   req.raw[kMultipart] = true
@@ -173,15 +182,6 @@ function fastifyMultipart (fastify, options, done) {
   const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
     ? options.throwFileSizeLimit
     : true
-
-  const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
-  const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
-  const FieldsLimitError = createError('FST_FIELDS_LIMIT', 'reach fields limit', 413)
-  const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request file too large, please check multipart config', 413)
-  const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
-  const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
-  const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
-  const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
   fastify.decorate('multipartErrors', {
     PartsLimitError,
@@ -604,15 +604,13 @@ function fastifyMultipart (fastify, options, done) {
   done()
 }
 
-const _fastifyMultipart = fp(fastifyMultipart, {
-  fastify: '4.x',
-  name: '@fastify/multipart'
-})
-
 /**
  * These export configurations enable JS and TS developers
  * to consumer fastify in whatever way best suits their needs.
  */
-module.exports = _fastifyMultipart
-module.exports.fastifyMultipart = _fastifyMultipart
-module.exports.default = _fastifyMultipart
+module.exports = fp(fastifyMultipart, {
+  fastify: '4.x',
+  name: '@fastify/multipart'
+})
+module.exports.default = fastifyMultipart
+module.exports.fastifyMultipart = fastifyMultipart
