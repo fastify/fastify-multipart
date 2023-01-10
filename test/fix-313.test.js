@@ -13,7 +13,7 @@ const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should store file on disk, remove on response', async function (t) {
+test('should store file on disk, remove on response when attach fields to body is true', async function (t) {
   t.plan(22)
 
   const fastify = Fastify()
@@ -90,4 +90,54 @@ test('should store file on disk, remove on response', async function (t) {
   res.resume()
   await once(res, 'end')
   await once(ee, 'response')
+})
+
+test('should throw on saving request files when attach fields to body is true but buffer is not stored', async function (t) {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, {
+    attachFieldsToBody: true,
+    onFile: async (part) => {
+      for await (const chunk of part.file) {
+        chunk.toString()
+      }
+    }
+  })
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.saveRequestFiles()
+      reply.code(200).send()
+    } catch (error) {
+      t.ok(error instanceof fastify.multipartErrors.FileBufferNotFoundError)
+      reply.code(500).send()
+    }
+  })
+
+  await fastify.listen({ port: 0 })
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 500)
+  res.resume()
+  await once(res, 'end')
 })
