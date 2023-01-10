@@ -535,11 +535,11 @@ function fastifyMultipart (fastify, options, done) {
     return requestFiles
   }
 
-  async function * filesFromFields (container) {
+  function * filesFromFields (container) {
     try {
       for (const field of Object.values(container)) {
         if (Array.isArray(field)) {
-          for await (const subField of filesFromFields.call(this, field)) {
+          for (const subField of filesFromFields.call(this, field)) {
             yield subField
           }
         }
