@@ -12,7 +12,7 @@ const util = require('util')
 const createError = require('@fastify/error')
 const sendToWormhole = require('stream-wormhole')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
-const { PassThrough, pipeline } = require('stream')
+const { PassThrough, pipeline, Readable } = require('stream')
 const pump = util.promisify(pipeline)
 const secureJSON = require('secure-json-parse')
 
@@ -27,6 +27,7 @@ const RequestFileTooLargeError = createError('FST_REQ_FILE_TOO_LARGE', 'request 
 const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype property is not allowed as field name', 400)
 const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
+const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
 function setMultipart (req, payload, done) {
   // nothing to do, it will be done by the Request.multipart object
@@ -109,6 +110,7 @@ function busboy (options) {
 }
 
 function fastifyMultipart (fastify, options, done) {
+  const attachFieldsToBody = options.attachFieldsToBody
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
@@ -187,7 +189,8 @@ function fastifyMultipart (fastify, options, done) {
     FieldsLimitError,
     PrototypeViolationError,
     InvalidMultipartContentTypeError,
-    RequestFileTooLargeError
+    RequestFileTooLargeError,
+    FileBufferNotFoundError
   })
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
@@ -507,10 +510,14 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   async function saveRequestFiles (options) {
+    let files
+    if (attachFieldsToBody === true) {
+      files = filesFromFields.call(this, this.body)
+    } else {
+      files = await this.files(options)
+    }
     const requestFiles = []
     const tmpdir = (options && options.tmpdir) || os.tmpdir()
-
-    const files = await this.files(options)
     this.tmpUploads = []
     for await (const file of files) {
       const filepath = path.join(tmpdir, toID() + path.extname(file.filename))
@@ -526,6 +533,29 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     return requestFiles
+  }
+
+  function * filesFromFields (container) {
+    try {
+      for (const field of Object.values(container)) {
+        if (Array.isArray(field)) {
+          for (const subField of filesFromFields.call(this, field)) {
+            yield subField
+          }
+        }
+        if (!field.file) {
+          continue
+        }
+        if (!field._buf) {
+          throw new FileBufferNotFoundError()
+        }
+        field.file = Readable.from(field._buf)
+        yield field
+      }
+    } catch (err) {
+      this.log.error({ err }, 'save request file failed')
+      throw err
+    }
   }
 
   async function cleanRequestFiles () {
