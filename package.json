@@ -22,7 +22,7 @@
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
     "eslint": "^8.20.0",
-    "eslint-config-standard-with-typescript": "^26.0.0",
+    "eslint-config-standard-with-typescript": "^27.0.1",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^15.2.4",
     "eslint-plugin-promise": "^6.0.0",
