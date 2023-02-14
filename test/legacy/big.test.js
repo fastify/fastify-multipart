@@ -22,7 +22,12 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  fastify.register(multipart, {
+    limits: {
+      fileSize: Infinity,
+      parts: Infinity
+    }
+  })
 
   fastify.post('/', function (req, reply) {
     t.ok(req.isMultipart())

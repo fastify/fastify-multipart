@@ -110,6 +110,12 @@ function busboy (options) {
 }
 
 function fastifyMultipart (fastify, options, done) {
+  options.limits = {
+    ...options.limits,
+    parts: options.limits?.parts || 1000,
+    fileSize: options.limits?.fileSize || fastify.initialConfig.bodyLimit
+  }
+
   const attachFieldsToBody = options.attachFieldsToBody
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
@@ -360,15 +366,21 @@ function fastifyMultipart (fastify, options, done) {
       .on('finish', onEnd)
 
     bb.on('partsLimit', function () {
-      onError(new PartsLimitError())
+      const err = new PartsLimitError()
+      onError(err)
+      process.nextTick(() => onEnd(err))
     })
 
     bb.on('filesLimit', function () {
-      onError(new FilesLimitError())
+      const err = new FilesLimitError()
+      onError(err)
+      process.nextTick(() => onEnd(err))
     })
 
     bb.on('fieldsLimit', function () {
-      onError(new FieldsLimitError())
+      const err = new FieldsLimitError()
+      onError(err)
+      process.nextTick(() => onEnd(err))
     })
 
     request.pipe(bb)
