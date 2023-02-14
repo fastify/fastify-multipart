@@ -301,6 +301,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
     form.pipe(req)
+    req.on('error', () => {})
   })
 })
 
