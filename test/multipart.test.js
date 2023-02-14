@@ -289,10 +289,15 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       method: 'POST'
     }
 
+    let ended = false
     const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500, 'status code')
       res.resume()
       res.on('end', () => {
+        if (ended) {
+          return
+        }
+        ended = true
         t.pass('res ended successfully')
         t.end()
       })
@@ -301,6 +306,10 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     form.append('upload2', fs.createReadStream(filePath))
     form.pipe(req)
     req.on('error', (err) => {
+      if (ended) {
+        return
+      }
+      ended = true
       t.equal(err.code, 'ECONNRESET')
       t.end()
     })
