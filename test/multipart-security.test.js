@@ -156,7 +156,7 @@ test('should use default for fileSize', async function (t) {
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error)
+    t.equal(error.code, 'ECONNRESET')
   }
 })
 
