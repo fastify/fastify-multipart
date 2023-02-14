@@ -339,10 +339,15 @@ test('should be able to configure limits globally with plugin register options',
       method: 'POST'
     }
 
+    let ended = false
     const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
+        if (ended) {
+          return
+        }
+        ended = true
         t.pass('res ended successfully')
         t.end()
       })
@@ -350,6 +355,10 @@ test('should be able to configure limits globally with plugin register options',
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
     req.on('error', (err) => {
+      if (ended) {
+        return
+      }
+      ended = true
       t.equal(err.code, 'ECONNRESET')
       t.end()
     })
