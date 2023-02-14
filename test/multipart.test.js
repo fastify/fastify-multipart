@@ -336,7 +336,7 @@ test('should be able to configure limits globally with plugin register options',
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -372,11 +372,7 @@ test('should be able to configure limits globally with plugin register options',
       t.end()
     })
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    pump(form, req).catch(() => {})
   })
 })
 
@@ -400,7 +396,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
