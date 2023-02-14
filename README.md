@@ -86,9 +86,12 @@ fastify.register(require('fastify-multipart'), {
     fileSize: 1000000,  // For multipart forms, the max file size in bytes
     files: 1,           // Max number of file fields
     headerPairs: 2000   // Max number of header key=>value pairs
+    parts: 1000         // For multipart forms, the max number of parts (fields + files)
   }
 });
 ```
+
+For security reasons, `@fastify/multipart` sets the limit for `parts` and `fileSize` being _1000_ and _1048576_ respectively.
 
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
