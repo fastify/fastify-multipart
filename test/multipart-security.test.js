@@ -141,7 +141,7 @@ test('should use default for fileSize', async function (t) {
     method: 'POST'
   }
 
-  const randomFileBuffer = Buffer.alloc(15_000_000)
+  const randomFileBuffer = Buffer.alloc(15000000)
   crypto.randomFillSync(randomFileBuffer)
 
   const req = http.request(opts)
