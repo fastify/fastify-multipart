@@ -115,18 +115,20 @@ test('should use default for fileSize', async function (t) {
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.ok(req.isMultipart(), 'is multipart')
 
     const part = await req.file()
     t.pass('the file is not consumed yet')
 
     try {
       await part.toBuffer()
+      reply.send('not ok')
       t.fail('it should throw')
     } catch (error) {
       t.ok(error)
       reply.send(error)
     }
+    return reply
   })
 
   await fastify.listen({ port: 0 })
@@ -151,7 +153,7 @@ test('should use default for fileSize', async function (t) {
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.equal(res.statusCode, 413, 'status code equal')
     res.resume()
     await once(res, 'end')
   } catch (error) {
