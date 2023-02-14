@@ -274,8 +274,6 @@ test('should error if boundary is empty', function (t) {
 })
 
 test('should throw error due to filesLimit (The max number of file fields (Default: Infinity))', function (t) {
-  t.plan(4)
-
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
 
@@ -285,12 +283,12 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     try {
       const parts = req.files({ limits: { files: 1 } })
       for await (const part of parts) {
-        t.ok(part.file)
+        t.ok(part.file, 'part received')
         await sendToWormhole(part.file)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.FilesLimitError)
+      t.ok(error instanceof fastify.multipartErrors.FilesLimitError, 'error')
       reply.code(500).send()
     }
   })
@@ -307,27 +305,34 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       method: 'POST'
     }
 
+    let ended = false
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.equal(res.statusCode, 500, 'status code')
       res.resume()
       res.on('end', () => {
+        if (ended) {
+          return
+        }
+        ended = true
         t.pass('res ended successfully')
+        t.end()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
-
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
+    req.on('error', (err) => {
+      if (ended) {
+        return
+      }
+      ended = true
+      t.equal(err.code, 'ECONNRESET')
+      t.end()
+    })
   })
 })
 
 test('should be able to configure limits globally with plugin register options', function (t) {
-  t.plan(4)
-
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
 
@@ -347,7 +352,7 @@ test('should be able to configure limits globally with plugin register options',
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen(0, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -359,21 +364,31 @@ test('should be able to configure limits globally with plugin register options',
       method: 'POST'
     }
 
+    let ended = false
     const req = http.request(opts, (res) => {
       t.equal(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
+        if (ended) {
+          return
+        }
+        ended = true
         t.pass('res ended successfully')
+        t.end()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('upload2', fs.createReadStream(filePath))
+    req.on('error', (err) => {
+      if (ended) {
+        return
+      }
+      ended = true
+      t.equal(err.code, 'ECONNRESET')
+      t.end()
+    })
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    pump(form, req).catch(() => {})
   })
 })
 
@@ -397,7 +412,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     }
   })
 
-  fastify.listen(0, async function () {
+  fastify.listen(0, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -419,11 +434,7 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     form.append('hello', 'world')
     form.append('willbe', 'dropped')
 
-    try {
-      await pump(form, req)
-    } catch (error) {
-      t.error(error, 'formData request pump: no err')
-    }
+    form.pipe(req)
   })
 })
 
