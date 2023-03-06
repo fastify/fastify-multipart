@@ -524,6 +524,10 @@ function fastifyMultipart (fastify, options, done) {
   async function saveRequestFiles (options) {
     let files
     if (attachFieldsToBody === true) {
+      // Skip the whole process if the body is empty
+      if (!this.body) {
+        return []
+      }
       files = filesFromFields.call(this, this.body)
     } else {
       files = await this.files(options)
