@@ -17,7 +17,7 @@ const sendToWormhole = require('stream-wormhole')
 const filePath = path.join(__dirname, '../README.md')
 
 test('should parse forms', function (t) {
-  t.plan(8)
+  t.plan(9)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -27,6 +27,7 @@ test('should parse forms', function (t) {
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
       if (part.file) {
+        t.equal(part.type, 'file')
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'README.md')
         t.equal(part.encoding, '7bit')
@@ -76,7 +77,7 @@ test('should parse forms', function (t) {
 })
 
 test('should respond when all files are processed', function (t) {
-  t.plan(4)
+  t.plan(6)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -87,6 +88,7 @@ test('should respond when all files are processed', function (t) {
     const parts = req.files()
     for await (const part of parts) {
       t.ok(part.file)
+      t.equal(part.type, 'file')
       await sendToWormhole(part.file)
     }
     reply.code(200).send()
@@ -327,6 +329,7 @@ test('should be able to configure limits globally with plugin register options',
       const parts = req.files()
       for await (const part of parts) {
         t.ok(part.file)
+        t.equal(part.type, 'file')
         await sendToWormhole(part.file)
       }
       reply.code(200).send()
@@ -469,7 +472,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
 })
 
 test('should throw error due to file size limit exceed (Default: true)', function (t) {
-  t.plan(4)
+  t.plan(6)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -481,6 +484,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
       const parts = req.files()
       for await (const part of parts) {
         t.ok(part.file)
+        t.equal(part.type, 'file')
         await sendToWormhole(part.file)
       }
       reply.code(200).send()
@@ -516,7 +520,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
 })
 
 test('should not throw error due to file size limit exceed - files setting (Default: true)', function (t) {
-  t.plan(3)
+  t.plan(5)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -527,6 +531,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     const parts = req.files({ limits: { fileSize: 1 } })
     for await (const part of parts) {
       t.ok(part.file)
+      t.equal(part.type, 'file')
       await sendToWormhole(part.file)
     }
     reply.code(200).send()
@@ -557,7 +562,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
 })
 
 test('should not miss fields if part handler takes much time than formdata parsing', async function (t) {
-  t.plan(11)
+  t.plan(12)
 
   const original = fs.readFileSync(filePath, 'utf8')
   const immediate = util.promisify(setImmediate)
@@ -576,6 +581,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
 
     for await (const part of req.parts()) {
       if (part.file) {
+        t.equal(part.type, 'file')
         t.equal(part.fieldname, 'upload')
         t.equal(part.filename, 'README.md')
         t.equal(part.encoding, '7bit')

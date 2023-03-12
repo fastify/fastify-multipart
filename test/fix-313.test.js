@@ -14,7 +14,7 @@ const { once } = EventEmitter
 const filePath = path.join(__dirname, '../README.md')
 
 test('should store file on disk, remove on response when attach fields to body is true', async function (t) {
-  t.plan(22)
+  t.plan(25)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -29,18 +29,21 @@ test('should store file on disk, remove on response when attach fields to body i
     const files = await req.saveRequestFiles()
 
     t.ok(files[0].filepath)
+    t.equal(files[0].type, 'file')
     t.equal(files[0].fieldname, 'upload')
     t.equal(files[0].filename, 'README.md')
     t.equal(files[0].encoding, '7bit')
     t.equal(files[0].mimetype, 'text/markdown')
     t.ok(files[0].fields.upload)
     t.ok(files[1].filepath)
+    t.equal(files[1].type, 'file')
     t.equal(files[1].fieldname, 'upload')
     t.equal(files[1].filename, 'README.md')
     t.equal(files[1].encoding, '7bit')
     t.equal(files[1].mimetype, 'text/markdown')
     t.ok(files[1].fields.upload)
     t.ok(files[2].filepath)
+    t.equal(files[2].type, 'file')
     t.equal(files[2].fieldname, 'other')
     t.equal(files[2].filename, 'README.md')
     t.equal(files[2].encoding, '7bit')

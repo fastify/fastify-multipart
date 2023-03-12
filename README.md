@@ -147,9 +147,10 @@ fastify.post('/', async function (req, reply) {
 fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = req.parts()
   for await (const part of parts) {
-    if (part.file) {
+    if (part.type === 'file') {
       await pump(part.file, fs.createWriteStream(part.filename))
     } else {
+      // part.type === 'field
       console.log(part)
     }
   }
@@ -177,6 +178,7 @@ This will store all files in the operating system default directory for temporar
 fastify.post('/upload/files', async function (req, reply) {
   // stores files to tmp dir and return files
   const files = await req.saveRequestFiles()
+  files[0].type // "file"
   files[0].filepath
   files[0].fieldname
   files[0].filename

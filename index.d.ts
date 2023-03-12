@@ -82,6 +82,7 @@ declare namespace fastifyMultipart {
   export type Multipart = MultipartFile | MultipartValue;
 
   export interface MultipartFile {
+    type: 'file';
     toBuffer: () => Promise<Buffer>;
     file: BusboyFileStream;
     fieldname: string;
@@ -92,6 +93,7 @@ declare namespace fastifyMultipart {
   }
 
   export interface MultipartValue<T = unknown> {
+    type: 'field';
     value: T;
     fieldname: string;
     mimetype: string;

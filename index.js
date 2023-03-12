@@ -410,6 +410,7 @@ function fastifyMultipart (fastify, options, done) {
       }
 
       const value = {
+        type: 'field',
         fieldname: name,
         mimetype: contentType,
         encoding,
@@ -444,6 +445,7 @@ function fastifyMultipart (fastify, options, done) {
         : defaultThrowFileSizeLimit
 
       const value = {
+        type: 'file',
         fieldname: name,
         filename,
         encoding,
