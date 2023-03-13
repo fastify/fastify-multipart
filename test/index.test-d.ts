@@ -3,7 +3,7 @@ import fastifyMultipart, {MultipartValue, MultipartFields, MultipartFile } from 
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
-import { expectError, expectType, expectAssignable } from 'tsd'
+import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from "@fastify/error"
 import { BusboyConfig, BusboyFileStream } from "@fastify/busboy";
 
