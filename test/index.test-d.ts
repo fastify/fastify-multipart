@@ -86,6 +86,7 @@ const runServer = async () => {
   // Multiple fields including scalar values
   app.post<{Body: {file: MultipartFile, foo: MultipartValue<string>}}>('/upload/stringvalue', async (req, reply) => {
     expectError(req.body.foo.file);
+    expectType<'field'>(req.body.foo.type)
     expectType<string>(req.body.foo.value);
 
     expectType<BusboyFileStream>(req.body.file.file)
