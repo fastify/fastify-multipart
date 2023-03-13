@@ -90,7 +90,7 @@ const runServer = async () => {
     expectType<string>(req.body.foo.value);
 
     expectType<BusboyFileStream>(req.body.file.file)
-    expectAssignable<string>(req.body.file.type);
+    expectType<'file'>(req.body.file.type);
     reply.send();
   })
 
