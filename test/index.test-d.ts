@@ -55,7 +55,8 @@ const runServer = async () => {
   app.post('/', async (req, reply) => {
     const data = await req.file()
     if (data == null) throw new Error('missing file')
-
+    
+    expectType<'file'>(data.type)
     expectType<BusboyFileStream>(data.file)
     expectType<boolean>(data.file.truncated)
     expectType<MultipartFields>(data.fields)
@@ -69,7 +70,7 @@ const runServer = async () => {
       // field missing from the request
     } else if (Array.isArray(field)) {
       // multiple fields with the same name
-    } else if ('file' in field) {
+    } else if (field.type === 'file') {
       // field containing a file
       field.file.resume()
     } else {
@@ -85,10 +86,11 @@ const runServer = async () => {
   // Multiple fields including scalar values
   app.post<{Body: {file: MultipartFile, foo: MultipartValue<string>}}>('/upload/stringvalue', async (req, reply) => {
     expectError(req.body.foo.file);
+    expectType<'field'>(req.body.foo.type)
     expectType<string>(req.body.foo.value);
 
     expectType<BusboyFileStream>(req.body.file.file)
-    expectError(req.body.file.value);
+    expectType<'file'>(req.body.file.type);
     reply.send();
   })
 
@@ -123,7 +125,7 @@ const runServer = async () => {
   app.post('/upload/raw/any', async function (req, reply) {
     const parts = req.parts()
     for await (const part of parts) {
-      if ('file' in part) {
+      if (part.type === 'file') {
         await pump(part.file, fs.createWriteStream(part.filename))
       } else {
         console.log(part.value)
@@ -145,6 +147,7 @@ const runServer = async () => {
   app.post('/upload/files', async function (req, reply) {
     // stores files to tmp dir and return files
     const files = await req.saveRequestFiles()
+    files[0].type // "file"
     files[0].filepath
     files[0].fieldname
     files[0].filename

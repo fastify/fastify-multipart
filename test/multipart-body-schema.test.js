@@ -11,7 +11,7 @@ const fs = require('fs')
 const filePath = path.join(__dirname, '../README.md')
 
 test('should be able to use JSON schema to validate request', function (t) {
-  t.plan(6)
+  t.plan(7)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -39,6 +39,7 @@ test('should be able to use JSON schema to validate request', function (t) {
     const content = await req.body.upload.toBuffer()
 
     t.equal(content.toString(), original)
+    t.equal(req.body.hello.type, 'field')
     t.equal(req.body.hello.value, 'world')
 
     reply.code(200).send()
