@@ -56,7 +56,7 @@ const runServer = async () => {
     const data = await req.file()
     if (data == null) throw new Error('missing file')
     
-    expectAssignable<string>(data.type)
+    expectType<'file'>(data.type)
     expectType<BusboyFileStream>(data.file)
     expectType<boolean>(data.file.truncated)
     expectType<MultipartFields>(data.fields)
