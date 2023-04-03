@@ -255,6 +255,8 @@ You can also define an `onFile` handler to avoid accumulating all files in memor
 
 ```js
 async function onFile(part) {
+  // you have access to original request via `this`
+  console.log(this.id)
   await pump(part.file, fs.createWriteStream(part.filename))
 }
 
