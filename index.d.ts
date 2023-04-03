@@ -200,7 +200,7 @@ declare namespace fastifyMultipart {
     /**
      * Manage the file stream like you need
      */
-    onFile?: (this: boolean, part: MultipartFile) => void | Promise<void>;
+    onFile?: (this: FastifyRequest, part: MultipartFile) => void | Promise<void>;
   }
 
   export const fastifyMultipart: FastifyMultipartPlugin;
