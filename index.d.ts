@@ -1,5 +1,5 @@
 import { Busboy, BusboyConfig, BusboyFileStream } from "@fastify/busboy";
-import { FastifyPluginCallback } from "fastify";
+import { FastifyPluginCallback, FastifyRequest } from "fastify";
 import { Readable } from "stream";
 import { FastifyErrorConstructor } from "@fastify/error";
 
@@ -200,7 +200,7 @@ declare namespace fastifyMultipart {
     /**
      * Manage the file stream like you need
      */
-    onFile?: (part: MultipartFile) => void | Promise<void>;
+    onFile?: (this: FastifyRequest, part: MultipartFile) => void | Promise<void>;
   }
 
   export const fastifyMultipart: FastifyMultipartPlugin;
