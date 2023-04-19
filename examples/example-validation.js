@@ -8,20 +8,25 @@ const opts = {
 }
 fastify.register(require('..'), opts)
 
-fastify.post('/upload/files', {
-  schema: {
-    body: {
-      type: 'object',
-      required: ['myField'],
-      properties: {
-        myField: { $ref: '#mySharedSchema' }
+fastify.post(
+  '/upload/files',
+  {
+    schema: {
+      consumes: ['multipart/form-data'],
+      body: {
+        type: 'object',
+        required: ['myField'],
+        properties: {
+          myField: { $ref: '#mySharedSchema' }
+        }
       }
     }
+  },
+  function (req, reply) {
+    console.log({ body: req.body })
+    reply.send('done')
   }
-}, function (req, reply) {
-  console.log({ body: req.body })
-  reply.send('done')
-})
+)
 
 fastify.listen({ port: 3000 }, err => {
   if (err) throw err

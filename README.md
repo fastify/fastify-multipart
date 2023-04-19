@@ -297,6 +297,7 @@ fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ["multipart/form-data"],
     body: {
       type: 'object',
       required: ['myFile'],
@@ -331,6 +332,7 @@ fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ["multipart/form-data"],
     body: {
       type: 'object',
       required: ['myField'],
@@ -433,6 +435,7 @@ fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ["multipart/form-data"],
     body: {
       type: 'object',
       required: ['field'],

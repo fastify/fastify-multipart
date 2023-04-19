@@ -20,30 +20,35 @@ test('should be able to use JSON schema to validate request', function (t) {
 
   const original = fs.readFileSync(filePath, 'utf8')
 
-  fastify.post('/', {
-    schema: {
-      body: {
-        type: 'object',
-        required: ['hello', 'upload'],
-        properties: {
-          hello: { $ref: '#mySharedSchema' },
-          upload: { $ref: '#mySharedSchema' }
+  fastify.post(
+    '/',
+    {
+      schema: {
+        consumes: ['multipart/form-data'],
+        body: {
+          type: 'object',
+          required: ['hello', 'upload'],
+          properties: {
+            hello: { $ref: '#mySharedSchema' },
+            upload: { $ref: '#mySharedSchema' }
+          }
         }
       }
+    },
+    async function (req, reply) {
+      t.ok(req.isMultipart())
+
+      t.same(Object.keys(req.body), ['upload', 'hello'])
+
+      const content = await req.body.upload.toBuffer()
+
+      t.equal(content.toString(), original)
+      t.equal(req.body.hello.type, 'field')
+      t.equal(req.body.hello.value, 'world')
+
+      reply.code(200).send()
     }
-  }, async function (req, reply) {
-    t.ok(req.isMultipart())
-
-    t.same(Object.keys(req.body), ['upload', 'hello'])
-
-    const content = await req.body.upload.toBuffer()
-
-    t.equal(content.toString(), original)
-    t.equal(req.body.hello.type, 'field')
-    t.equal(req.body.hello.value, 'world')
-
-    reply.code(200).send()
-  })
+  )
 
   fastify.listen({ port: 0 }, async function () {
     // request
