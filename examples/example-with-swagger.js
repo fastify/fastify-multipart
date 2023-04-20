@@ -1,39 +1,26 @@
 'use strict'
-
-const fastify = require('fastify')({ logger: true })
-const Ajv = require('ajv')
-
-const ajv = new Ajv({
-  /**
-   * default values of Fastify
-   * Docs: https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler
-   *   */
-
-  coerceTypes: 'array', // change data type of data to match type keyword
-  useDefaults: true, // replace missing properties and items with the values from corresponding default keyword
-  removeAdditional: true, // remove additional properties
-  uriResolver: require('fast-uri'),
-  addUsedSchema: false,
-  // Explicitly set allErrors to `false`.
-  // When set to `true`, a DoS attack is possible.
-  allErrors: false
-})
-ajv.addKeyword({
-  keyword: 'isFile',
-  compile: (_schema, parent, _it) => {
-    parent.type = 'file'
-    delete parent.isFile
-    return () => true
+const ajvFilePlugin = (ajv, options = {}) => {
+  return ajv.addKeyword({
+    keyword: 'isFile',
+    compile: (_schema, parent, _it) => {
+      parent.type = 'file'
+      delete parent.isFile
+      return () => true
+    }
+  })
+}
+const fastify = require('fastify')({
+  logger: true,
+  ajv: {
+    plugins: [ajvFilePlugin]
   }
 })
-fastify.setValidatorCompiler(({ schema, method, url, httpPart }) => {
-  return ajv.compile(schema)
-})
-const opts = {
-  attachFieldsToBody: true
-}
-fastify.register(require('..'), opts)
 
+fastify.register(require('..'), {
+  attachFieldsToBody: true
+})
+fastify.register(require('fastify-swagger'))
+fastify.register(require('@fastify/swagger-ui'))
 fastify.post(
   '/upload/files',
   {

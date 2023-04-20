@@ -379,34 +379,24 @@ The shared schema, that is added, will look like this:
 If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFiled` and use custom instance of validator compiler [Docs](https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
-const Ajv = require("ajv");
 
-const ajv = new Ajv({
-  /**
-   * default values of Fastify
-   * Docs: https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler
-   *   */
-
-  coerceTypes: "array", // change data type of data to match type keyword
-  useDefaults: true, // replace missing properties and items with the values from corresponding default keyword
-  removeAdditional: true, // remove additional properties
-  uriResolver: require("fast-uri"),
-  addUsedSchema: false,
-  // Explicitly set allErrors to `false`.
-  // When set to `true`, a DoS attack is possible.
-  allErrors: false,
-});
-ajv.addKeyword({
+const ajvFilePlugin = (ajv, options = {}) => {
+ return ajv.addKeyword({
   keyword: "isFile",
   compile: (_schema, parent, _it) => {
-    parent.type = "file";
-    delete parent.isFile;
-    return () => true;
+   parent.type = "file";
+   delete parent.isFile;
+   return () => true;
   },
-});
-fastify.setValidatorCompiler(({ schema, method, url, httpPart }) => {
-  return ajv.compile(schema);
-});
+ });
+};
+const fastify = require('fastify')({
+ // ...
+  ajv: {
+    // add the new ajv plugin
+    plugins: [/*...*/ ajvFilePlugin]
+  }
+})
 const opts = {
   attachFieldsToBody: true,
 };
