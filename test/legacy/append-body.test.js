@@ -63,17 +63,73 @@ test('addToBody option', { skip: process.platform === 'win32' }, t => {
   })
 })
 
-test('addToBody with limit exceeded', { skip: process.platform === 'win32' }, t => {
-  t.plan(5)
+test('addToBody with throwFileSizeLimit false', { skip: process.platform === 'win32' }, t => {
+  t.plan(4)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.register(multipart, { addToBody: true, limits: { fileSize: 1 } })
+  fastify.register(
+    multipart,
+    { addToBody: true, limits: { fileSize: 1 }, throwFileSizeLimit: false }
+  )
 
   fastify.post('/', function (req, reply) {
-    t.equal(req.body.myFile[0].limit, true)
-    t.equal(req.body.myFile[0].data, undefined)
+    t.match(req.body.myFile, [{
+      data: undefined,
+      encoding: '7bit',
+      filename: 'README.md',
+      limit: true,
+      mimetype: 'text/markdown'
+    }])
+
+    reply.send('ok')
+  })
+
+  fastify.listen({ port: 0 }, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    const rs = fs.createReadStream(filePath)
+    form.append('myFile', rs)
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+test('addToBody with fileSize not exceeded', { skip: process.platform === 'win32' }, t => {
+  t.plan(6)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(
+    multipart,
+    { addToBody: true, limits: { fileSize: 10000000 }, throwFileSizeLimit: true }
+  )
+
+  fastify.post('/', function (req, reply) {
+    const { filename, encoding, mimetype } = req.body.myFile[0]
+    t.equal(filename, 'README.md')
+    t.equal(encoding, '7bit')
+    t.equal(mimetype, 'text/markdown')
 
     reply.send('ok')
   })

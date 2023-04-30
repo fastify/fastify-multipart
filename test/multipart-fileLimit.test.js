@@ -68,6 +68,49 @@ test('should throw fileSize limitation error when consuming the stream', async f
   }
 })
 
+test('should throw fileSize with addToBody', async function (t) {
+  t.plan(1)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, {
+    addToBody: true,
+    limits: {
+      fileSize: 1
+    }
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    hostname: '127.0.0.1',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const randomFileBuffer = Buffer.alloc(600_000)
+  crypto.randomFillSync(randomFileBuffer)
+
+  const req = http.request(opts)
+  form.append('upload', randomFileBuffer)
+
+  form.pipe(req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 413)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
 test('should throw fileSize limitation error when consuming the stream MBs', async function (t) {
   t.plan(4)
 
