@@ -297,6 +297,7 @@ fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ['multipart/form-data'],
     body: {
       type: 'object',
       required: ['myFile'],
@@ -331,6 +332,7 @@ fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ['multipart/form-data'],
     body: {
       type: 'object',
       required: ['myField'],
@@ -371,6 +373,57 @@ The shared schema, that is added, will look like this:
   }
 }
 ```
+
+### JSON Schema with Swagger
+
+If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
+
+```js
+
+const ajvFilePlugin = (ajv, options = {}) => {
+ return ajv.addKeyword({
+  keyword: "isFile",
+  compile: (_schema, parent, _it) => {
+   parent.type = "file";
+   delete parent.isFile;
+   return () => true;
+  },
+ });
+};
+const fastify = require('fastify')({
+ // ...
+  ajv: {
+    // add the new ajv plugin
+    plugins: [/*...*/ ajvFilePlugin]
+  }
+})
+const opts = {
+  attachFieldsToBody: true,
+};
+fastify.register(require(".."), opts);
+
+fastify.post(
+  "/upload/files",
+  {
+    schema: {
+      consumes: ["multipart/form-data"],
+      body: {
+        type: "object",
+        required: ["myField"],
+        properties: {
+          myField: { isFile: true },
+        },
+      },
+    },
+  },
+  function (req, reply) {
+    console.log({ body: req.body });
+    reply.send("done");
+  }
+);
+
+```
+
 
 ### JSON Schema non-file field
 When sending fields with the body (`attachFieldsToBody` set to true), the field might look like this in the `request.body`:
@@ -433,6 +486,7 @@ fastify.register(require('@fastify/multipart'), opts)
 
 fastify.post('/upload/files', {
   schema: {
+    consumes: ['multipart/form-data'],
     body: {
       type: 'object',
       required: ['field'],
