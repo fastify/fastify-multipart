@@ -831,3 +831,170 @@ test('addToBody with constructor field', t => {
     })
   })
 })
+
+test('addToBody with serialized object', t => {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  const opts = {
+    addToBody: true
+  }
+  fastify.register(multipart, opts)
+
+  fastify.post('/', function (req, reply) {
+    t.strictSame(req.body, {
+      propA: {
+        propAA: '11',
+        propAB: '22',
+        propAC: ['111', '222', '333']
+      },
+      propB: [
+        {
+          propBA: {
+            propBAA: 'foo',
+            propBAB: 'zoo',
+            propBAC: ['777', '888', '999']
+          },
+          propBB: 'zaz'
+        },
+        {
+          propBA: {
+            propBAA: 'bar'
+          }
+        }
+      ],
+      propC: ['1', '2', '3'],
+      propD: 'baz',
+      propE: ['4', '5', '6'],
+      propF: { foo: [{ bar: [111, 222, 333] }] },
+      propG: [
+        {
+          propGA: [
+            { zaz: [{ zoo: 'baz' }] }
+          ]
+        },
+        [
+          11,
+          22,
+          {
+            foo: 'bar'
+          }
+        ]
+      ]
+    })
+
+    reply.send('ok')
+  })
+
+  fastify.listen({ port: 0 }, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+
+    form.append('propA[propAA]', '11')
+    form.append('propA[propAB]', '22')
+    form.append('propA[propAC][]', '111')
+    form.append('propA[propAC][]', '222')
+    form.append('propA[propAC][]', '333')
+    form.append('propB[0][propBA][propBAA]', 'foo')
+    form.append('propB[0][propBA][propBAB]', 'zoo')
+    form.append('propB[0][propBA][propBAC][0]', '777')
+    form.append('propB[0][propBA][propBAC][1]', '888')
+    form.append('propB[0][propBA][propBAC][2]', '999')
+    form.append('propB[0][propBB]', 'zaz')
+    form.append('propB[1][propBA][propBAA]', 'bar')
+    form.append('propC[]', '1')
+    form.append('propC[]', '2')
+    form.append('propC[]', '3')
+    form.append('propD', 'baz')
+    form.append('propE', '4')
+    form.append('propE', '5')
+    form.append('propE', '6')
+    form.append('propF{}', '{"foo":[{"bar":[111,222,333]}]}')
+    form.append('propG[0][propGA][]{}', '{"zaz":[{"zoo":"baz"}]}')
+    form.append('propG[1]{}', '[11,22,{"foo":"bar"}]')
+
+    pump(form, req, function (err) {
+      t.error(err, 'client pump: no err')
+    })
+  })
+})
+
+const deserializationErrorTestCases = [
+  { description: 'a key starting with "["', sampleKeys: ['[foo][bar][]', '[]', '[]{}', '[foo'], expectedError: 'invalid serialized key' },
+  { description: 'a key starting with "]"', sampleKeys: [']foo[]', ']bar', ']{}'], expectedError: 'invalid serialized key' },
+  { description: 'a key starting with "{}"', sampleKeys: ['{}', '{}foo', '{}[foo]'], expectedError: 'invalid serialized key' },
+  { description: 'a key with multiple "{}"', sampleKeys: ['foo{}[bar]{}', 'foo{}{}'], expectedError: 'invalid serialized key' },
+  { description: 'a key with "{}" in the middle', sampleKeys: ['foo{}[bar]'], expectedError: 'invalid serialized key' },
+  { description: 'a key with an invalid closing bracket', sampleKeys: ['foo[][bar]][baz]', 'bar]', 'baz[]]'], expectedError: 'invalid serialized key' },
+  { description: 'a key with an invalid opening bracket', sampleKeys: ['foo[[bar]', 'foo[][bar][[baz]', 'foo[[]', 'bar[[]]'], expectedError: 'invalid serialized key' },
+  { description: 'a key with "{}" within brackets', sampleKeys: ['bar[foo][{}]', 'foo[{}'], expectedError: 'invalid serialized key' },
+  { description: 'a key with an orphan opening bracket', sampleKeys: ['foo[][', 'foo[][bar][baz'], expectedError: 'invalid serialized key' },
+  { description: 'a key with an invalid token after a closing bracket', sampleKeys: ['foo[]bar', 'foo[bar]baz', 'foo[]0', 'foo[].'], expectedError: 'invalid serialized key' },
+  { description: 'a key with the "{}" special ending whose value is an invalid JSON', sampleKeys: ['foo{}'], sampleValue: '{%@/aa', expectedError: 'the {} special ending was used, but value is not a valid JSON' }
+]
+
+deserializationErrorTestCases.forEach((testCase) => {
+  testCase.sampleKeys.forEach((sampleKey) => {
+    test(`addToBody with serialized object: ${testCase.description} throws "${testCase.expectedError}" error`, t => {
+      t.plan(4)
+
+      const fastify = Fastify()
+      t.teardown(fastify.close.bind(fastify))
+
+      const opts = {
+        addToBody: true
+      }
+      fastify.register(multipart, opts)
+
+      fastify.post('/', function (req, reply) { })
+
+      fastify.listen({ port: 0 }, function () {
+        // request
+        const form = new FormData()
+        const opts = {
+          protocol: 'http:',
+          hostname: 'localhost',
+          port: fastify.server.address().port,
+          path: '/',
+          headers: form.getHeaders(),
+          method: 'POST'
+        }
+
+        const req = http.request(opts, (res) => {
+          let body = ''
+          t.equal(res.statusCode, 500)
+          res.on('data', (chunk) => { body += chunk })
+          res.on('end', function () {
+            body = JSON.parse(body)
+            t.equal(body.message, testCase.expectedError)
+            t.pass('res ended successfully')
+          })
+        })
+
+        form.append(sampleKey, testCase.sampleValue ?? 'foo')
+
+        pump(form, req, function (err) {
+          t.error(err, 'client pump: no err')
+        })
+      })
+    })
+  })
+})

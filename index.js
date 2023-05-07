@@ -73,7 +73,17 @@ function attachToBody (options, req, reply, next) {
       mp.destroy(new Error(`${key} is not allowed as field name`))
       return
     }
-    if (body[key] === undefined) {
+
+    if (/(\[|]|{})/.test(key)) {
+      const tokens = key.split(/(\[|]|{})/).filter(Boolean)
+      const error = validateSerializedKey(tokens, value)
+      if (error) {
+        mp.destroy(new Error(error))
+        return
+      }
+      const segments = getSerializedKeySegments(body, tokens, value)
+      setSerializedKey(segments)
+    } else if (body[key] === undefined) {
       body[key] = value
     } else if (Array.isArray(body[key])) {
       body[key].push(value)
@@ -81,6 +91,97 @@ function attachToBody (options, req, reply, next) {
       body[key] = [body[key], value]
     }
   })
+}
+
+function validateSerializedKey (tokens, value) {
+  let isValid = true
+
+  // first token can't be '[', ']', or '{}'
+  if (['[', ']', '{}'].includes(tokens[0])) isValid = false
+  // only a single {} special ending is allowed
+  else if (tokens.filter(t => t === '{}').length > 1) isValid = false
+  // {}, if present, must be the last token
+  else if (tokens.find(t => t === '{}') && tokens[tokens.length - 1] !== '{}') isValid = false
+
+  let hasOpenBracket = false
+  for (let i = 1; i < tokens.length; i++) {
+    const token = tokens[i]
+    const nextToken = tokens[i + 1]
+    // invalid closing bracket
+    if (!hasOpenBracket && token === ']') {
+      isValid = false
+      break
+    }
+    // invalid opening bracket
+    if (hasOpenBracket && token === '[') {
+      isValid = false
+      break
+    }
+    hasOpenBracket = token === '[' || (hasOpenBracket && token !== ']')
+    // orphan opening bracket
+    if (hasOpenBracket && nextToken === undefined) isValid = false
+    // {} is not allowed within brackets
+    if (hasOpenBracket && token === '{}') isValid = false
+    // after a closing bracket, only an opening bracket or {} are allowed
+    if (token === ']' && nextToken && !['[', '{}'].includes(nextToken)) {
+      isValid = false
+      break
+    }
+  }
+
+  // when the {} special ending is supplied, the value must be valid JSON
+  if (isValid && tokens[tokens.length - 1] === '{}') {
+    try {
+      secureJSON.parse(value)
+    } catch (e) {
+      return 'the {} special ending was used, but value is not a valid JSON'
+    }
+  }
+
+  return isValid ? null : 'invalid serialized key'
+}
+
+function getSerializedKeySegments (body, tokens, value) {
+  const segments = [{ parentRef: body, key: tokens[0] }]
+
+  for (let i = 1; i < tokens.length; i++) {
+    const lastSegment = segments[segments.length - 1]
+    const token = tokens[i]
+    const prevToken = tokens[i - 1]
+    let parentRef
+    let key
+
+    if (token === ']' && prevToken === '[') {
+      parentRef = lastSegment.parentRef[lastSegment.key] ?? []
+      key = parentRef.length
+    } else if (token === ']' && /^\d+$/.test(prevToken)) {
+      parentRef = lastSegment.parentRef[lastSegment.key] ?? []
+      key = +prevToken
+    } else if (token === ']') {
+      parentRef = lastSegment.parentRef[lastSegment.key] ?? {}
+      key = prevToken
+    } else if (token === '{}') {
+      value = secureJSON.parse(value)
+    }
+
+    if (parentRef) segments.push({ parentRef, key })
+  }
+
+  segments[segments.length - 1].value = value
+
+  return segments
+}
+
+function setSerializedKey (segments) {
+  segments.reverse()
+  let value = segments[0].value
+
+  for (let i = 0; i < segments.length; i++) {
+    const segment = segments[i]
+    const prevSegment = segments[i - 1]
+    value = prevSegment ? prevSegment.parentRef : value
+    segment.parentRef[segment.key] = value
+  }
 }
 
 function defaultConsumer (field, file, filename, encoding, mimetype, body) {
