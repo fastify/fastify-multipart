@@ -169,7 +169,7 @@ function getSerializedKeySegments (options, body, tokens, value) {
     if (token === ']' && prevToken === '[') {
       parentRef = lastSegment.parentRef[lastSegment.key] ?? (parseArrays ? [] : {})
       key = parseArrays ? parentRef.length : Object.keys(parentRef).length
-    } else if (parseArrays && token === ']' && /^\d+$/.test(prevToken)) {
+    } else if (parseArrays && token === ']' && isValidIndex(prevToken)) {
       parentRef = lastSegment.parentRef[lastSegment.key] ?? (parseArrays ? [] : {})
       key = +prevToken
     } else if (token === ']') {
@@ -185,6 +185,11 @@ function getSerializedKeySegments (options, body, tokens, value) {
   segments[segments.length - 1].value = value
 
   return segments
+}
+
+function isValidIndex (str) {
+  if (str.length > 1 && str[0] === '0') return false
+  return /^\d+$/.test(str)
 }
 
 function setSerializedKey (segments) {
