@@ -74,8 +74,9 @@ function attachToBody (options, req, reply, next) {
       return
     }
 
-    if ([true, 'objectsOnly'].includes(options.enableSpecialNotationKeys) && /(\[|]|{})/.test(key)) {
-      const tokens = key.split(/(\[|]|{})/).filter(Boolean)
+    const tokens = [true, 'objectsOnly'].includes(options.enableSpecialNotationKeys) ? getSerializedKeyTokens(key) : []
+
+    if (tokens.length > 0) {
       const error = validateSerializedKey(tokens, value)
       if (error) {
         mp.destroy(new Error(error))
@@ -91,6 +92,11 @@ function attachToBody (options, req, reply, next) {
       body[key] = [body[key], value]
     }
   })
+}
+
+function getSerializedKeyTokens (key) {
+  const tokens = key.split(/(\[|]|{})/).filter(Boolean)
+  return tokens.some(token => ['[', ']', '{}'].includes(token)) ? tokens : []
 }
 
 function validateSerializedKey (tokens, value) {
