@@ -74,14 +74,14 @@ function attachToBody (options, req, reply, next) {
       return
     }
 
-    if (/(\[|]|{})/.test(key)) {
+    if ([true, 'objectsOnly'].includes(options.enableSpecialNotationKeys) && /(\[|]|{})/.test(key)) {
       const tokens = key.split(/(\[|]|{})/).filter(Boolean)
       const error = validateSerializedKey(tokens, value)
       if (error) {
         mp.destroy(new Error(error))
         return
       }
-      const segments = getSerializedKeySegments(body, tokens, value)
+      const segments = getSerializedKeySegments(options, body, tokens, value)
       setSerializedKey(segments)
     } else if (body[key] === undefined) {
       body[key] = value
@@ -138,11 +138,20 @@ function validateSerializedKey (tokens, value) {
     }
   }
 
+  if (tokens.includes('__proto__')) {
+    return '__proto__ is not allowed as a key name'
+  }
+
+  if (tokens.includes('constructor')) {
+    return 'constructor is not allowed as a key name'
+  }
+
   return isValid ? null : 'invalid serialized key'
 }
 
-function getSerializedKeySegments (body, tokens, value) {
+function getSerializedKeySegments (options, body, tokens, value) {
   const segments = [{ parentRef: body, key: tokens[0] }]
+  const parseArrays = options.enableSpecialNotationKeys !== 'objectsOnly'
 
   for (let i = 1; i < tokens.length; i++) {
     const lastSegment = segments[segments.length - 1]
@@ -152,10 +161,10 @@ function getSerializedKeySegments (body, tokens, value) {
     let key
 
     if (token === ']' && prevToken === '[') {
-      parentRef = lastSegment.parentRef[lastSegment.key] ?? []
-      key = parentRef.length
-    } else if (token === ']' && /^\d+$/.test(prevToken)) {
-      parentRef = lastSegment.parentRef[lastSegment.key] ?? []
+      parentRef = lastSegment.parentRef[lastSegment.key] ?? (parseArrays ? [] : {})
+      key = parseArrays ? parentRef.length : Object.keys(parentRef).length
+    } else if (parseArrays && token === ']' && /^\d+$/.test(prevToken)) {
+      parentRef = lastSegment.parentRef[lastSegment.key] ?? (parseArrays ? [] : {})
       key = +prevToken
     } else if (token === ']') {
       parentRef = lastSegment.parentRef[lastSegment.key] ?? {}
