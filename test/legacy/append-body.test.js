@@ -938,7 +938,7 @@ test('addToBody with serialized object', t => {
   })
 })
 
-test('addToBody with serialized object and parseArrays=false', t => {
+test('addToBody with serialized object and enableSpecialNotationKeys="objectsOnly"', t => {
   t.plan(4)
 
   const fastify = Fastify()
