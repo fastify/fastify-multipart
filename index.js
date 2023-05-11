@@ -74,7 +74,12 @@ function attachToBody (options, req, reply, next) {
       return
     }
 
-    const tokens = [true, 'objectsOnly'].includes(options.enableSpecialNotationKeys) ? getSerializedKeyTokens(key) : []
+    const tokens = (
+      options.enableSpecialNotationKeys === true ||
+      options.enableSpecialNotationKeys === 'objectsOnly'
+    )
+      ? getSerializedKeyTokens(key)
+      : []
 
     if (tokens.length > 0) {
       const error = validateSerializedKey(tokens, value)
@@ -94,25 +99,43 @@ function attachToBody (options, req, reply, next) {
   })
 }
 
+const allowedTokens = ['[', ']', '{}']
+
 function getSerializedKeyTokens (key) {
   const tokens = key.split(/(\[|]|{})/).filter(Boolean)
-  return tokens.some(token => ['[', ']', '{}'].includes(token)) ? tokens : []
+  return tokens.some(token => allowedTokens.includes(token)) ? tokens : []
 }
 
 function validateSerializedKey (tokens, value) {
   let isValid = true
+  let token = tokens[0]
 
   // first token can't be '[', ']', or '{}'
-  if (['[', ']', '{}'].includes(tokens[0])) isValid = false
-  // only a single {} special ending is allowed
-  else if (tokens.filter(t => t === '{}').length > 1) isValid = false
-  // {}, if present, must be the last token
-  else if (tokens.find(t => t === '{}') && tokens[tokens.length - 1] !== '{}') isValid = false
+  if (allowedTokens.includes(token)) isValid = false
+  else if (token === '__proto__' || token === 'constructor') {
+    return `${token} is not allowed as a key name`
+  } else {
+    const bracesEndingCount = tokens.filter(t => t === '{}').length
 
+    // only a single {} special ending is allowed
+    if (bracesEndingCount > 1) isValid = false
+    // {}, if present, must be the last token
+    else if (bracesEndingCount > 0 && tokens[tokens.length - 1] !== '{}') isValid = false
+  }
+
+  const tokensLen = tokens.length
+  let nextToken = tokens[1]
+  let i = 1
   let hasOpenBracket = false
-  for (let i = 1; i < tokens.length; i++) {
-    const token = tokens[i]
-    const nextToken = tokens[i + 1]
+
+  while (i < tokensLen) {
+    token = nextToken
+    nextToken = tokens[++i]
+
+    if (token === '__proto__' || token === 'constructor') {
+      return `${token} is not allowed as a key name`
+    }
+
     // invalid closing bracket
     if (!hasOpenBracket && token === ']') {
       isValid = false
@@ -123,6 +146,7 @@ function validateSerializedKey (tokens, value) {
       isValid = false
       break
     }
+
     hasOpenBracket = token === '[' || (hasOpenBracket && token !== ']')
     // orphan opening bracket
     if (hasOpenBracket && nextToken === undefined) isValid = false
@@ -144,14 +168,6 @@ function validateSerializedKey (tokens, value) {
     }
   }
 
-  if (tokens.includes('__proto__')) {
-    return '__proto__ is not allowed as a key name'
-  }
-
-  if (tokens.includes('constructor')) {
-    return 'constructor is not allowed as a key name'
-  }
-
   return isValid ? null : 'invalid serialized key'
 }
 
@@ -159,12 +175,17 @@ function getSerializedKeySegments (options, body, tokens, value) {
   const segments = [{ parentRef: body, key: tokens[0] }]
   const parseArrays = options.enableSpecialNotationKeys !== 'objectsOnly'
 
-  for (let i = 1; i < tokens.length; i++) {
+  const tokensLen = tokens.length
+  let token = tokens[1]
+  let prevToken = tokens[0]
+  let i = 1
+
+  while (i < tokensLen) {
     const lastSegment = segments[segments.length - 1]
-    const token = tokens[i]
-    const prevToken = tokens[i - 1]
     let parentRef
     let key
+    token = tokens[i]
+    prevToken = tokens[i - 1]
 
     if (token === ']' && prevToken === '[') {
       parentRef = lastSegment.parentRef[lastSegment.key] ?? (parseArrays ? [] : {})
@@ -180,6 +201,8 @@ function getSerializedKeySegments (options, body, tokens, value) {
     }
 
     if (parentRef) segments.push({ parentRef, key })
+
+    i++
   }
 
   segments[segments.length - 1].value = value
@@ -193,12 +216,11 @@ function isValidIndex (str) {
 }
 
 function setSerializedKey (segments) {
-  segments.reverse()
-  let value = segments[0].value
+  let value = segments[segments.length - 1].value
 
-  for (let i = 0; i < segments.length; i++) {
+  for (let i = segments.length - 1; i >= 0; i--) {
     const segment = segments[i]
-    const prevSegment = segments[i - 1]
+    const prevSegment = segments[i + 1]
     value = prevSegment ? prevSegment.parentRef : value
     segment.parentRef[segment.key] = value
   }
