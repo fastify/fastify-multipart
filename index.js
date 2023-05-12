@@ -224,7 +224,9 @@ function getSerializedKeySegments (options, body, tokens, value) {
       value = secureJSON.parse(value)
     }
 
-    if (parentRef) segments.push({ parentRef, key })
+    if (parentRef) {
+      segments.push({ parentRef, key })
+    }
 
     i++
   }
@@ -235,7 +237,9 @@ function getSerializedKeySegments (options, body, tokens, value) {
 }
 
 function isValidIndex (str) {
-  if (str.length > 1 && str[0] === '0') return false
+  if (str.length > 1 && str[0] === '0') {
+    return false
+  }
   return /^\d+$/.test(str)
 }
 
