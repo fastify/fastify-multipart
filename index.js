@@ -99,28 +99,48 @@ function attachToBody (options, req, reply, next) {
   })
 }
 
-const allowedTokens = ['[', ']', '{}']
-
 function getSerializedKeyTokens (key) {
   const tokens = key.split(/(\[|]|{})/).filter(Boolean)
-  return tokens.some(token => allowedTokens.includes(token)) ? tokens : []
+  let i = tokens.length - 1
+  let token = tokens[i]
+
+  while (i >= 0) {
+    if (token === '[' || token === ']' || token === '{}') {
+      return tokens
+    }
+    token = tokens[--i]
+  }
+
+  return []
 }
 
 function validateSerializedKey (tokens, value) {
-  let isValid = true
   let token = tokens[0]
+  const defaultErrorMessage = 'invalid serialized key'
 
   // first token can't be '[', ']', or '{}'
-  if (allowedTokens.includes(token)) isValid = false
-  else if (token === '__proto__' || token === 'constructor') {
+  if (token === '[' || token === ']' || token === '{}') {
+    return defaultErrorMessage
+  } else if (token === '__proto__' || token === 'constructor') {
     return `${token} is not allowed as a key name`
   } else {
-    const bracesEndingCount = tokens.filter(t => t === '{}').length
+    let i = tokens.length - 1
+    let token = tokens[i]
+    let bracesEndingCount = 0
+
+    while (i >= 0) {
+      if (token === '{}') {
+        bracesEndingCount++
+      }
+      token = tokens[--i]
+    }
 
     // only a single {} special ending is allowed
-    if (bracesEndingCount > 1) isValid = false
-    // {}, if present, must be the last token
-    else if (bracesEndingCount > 0 && tokens[tokens.length - 1] !== '{}') isValid = false
+    if (bracesEndingCount > 1) {
+      return defaultErrorMessage
+    } else if (bracesEndingCount > 0 && tokens[tokens.length - 1] !== '{}') { // {}, if present, must be the last token
+      return defaultErrorMessage
+    }
   }
 
   const tokensLen = tokens.length
@@ -138,37 +158,41 @@ function validateSerializedKey (tokens, value) {
 
     // invalid closing bracket
     if (!hasOpenBracket && token === ']') {
-      isValid = false
-      break
+      return defaultErrorMessage
     }
     // invalid opening bracket
     if (hasOpenBracket && token === '[') {
-      isValid = false
-      break
+      return defaultErrorMessage
     }
 
     hasOpenBracket = token === '[' || (hasOpenBracket && token !== ']')
     // orphan opening bracket
-    if (hasOpenBracket && nextToken === undefined) isValid = false
+    if (hasOpenBracket && nextToken === undefined) {
+      return defaultErrorMessage
+    }
     // {} is not allowed within brackets
-    if (hasOpenBracket && token === '{}') isValid = false
+    if (hasOpenBracket && token === '{}') {
+      return defaultErrorMessage
+    }
     // after a closing bracket, only an opening bracket or {} are allowed
-    if (token === ']' && nextToken && !['[', '{}'].includes(nextToken)) {
-      isValid = false
-      break
+    if (token === ']' && nextToken && nextToken !== '[' && nextToken !== '{}') {
+      return defaultErrorMessage
     }
   }
 
   // when the {} special ending is supplied, the value must be valid JSON
-  if (isValid && tokens[tokens.length - 1] === '{}') {
+  if (tokens[tokens.length - 1] === '{}') {
+    const invalidJsonError = 'the {} special ending was used, but value is not a valid JSON'
     try {
       secureJSON.parse(value)
+
+      if (value === null || value.trim() === 'null') {
+        return invalidJsonError
+      }
     } catch (e) {
-      return 'the {} special ending was used, but value is not a valid JSON'
+      return invalidJsonError
     }
   }
-
-  return isValid ? null : 'invalid serialized key'
 }
 
 function getSerializedKeySegments (options, body, tokens, value) {
