@@ -12,7 +12,6 @@
     "@fastify/swagger-ui": "^1.8.0",
     "end-of-stream": "^1.4.4",
     "fastify-plugin": "^4.0.0",
-    "hexoid": "^1.0.0",
     "secure-json-parse": "^2.4.0",
     "stream-wormhole": "^1.1.0"
   },
@@ -21,6 +20,7 @@
     "@types/node": "^20.1.0",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
+    "benchmark": "^2.1.4",
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
     "eslint": "^8.20.0",
