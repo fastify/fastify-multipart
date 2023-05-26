@@ -627,9 +627,15 @@ function ajvFilePlugin (ajv) {
   return ajv.addKeyword({
     keyword: 'isFile',
     compile: (_schema, parent) => {
-      parent.type = 'file'
+      // Updates the schema to match the file type
+      parent.type = 'string'
+      parent.format = 'binary'
       delete parent.isFile
-      return () => true
+
+      return (field /* MultipartFile */) => !!field.file
+    },
+    error: {
+      message: 'should be a file'
     }
   })
 }

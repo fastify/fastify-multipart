@@ -2,10 +2,17 @@
 
 const test = require('tap').test
 const Fastify = require('fastify')
+const FormData = require('form-data')
+const http = require('http')
 const multipart = require('..')
+const { once } = require('events')
+const fs = require('fs')
+const path = require('path')
+
+const filePath = path.join(__dirname, '../README.md')
 
 test('show modify the generated schema', async function (t) {
-  t.plan(1)
+  t.plan(4)
 
   const fastify = Fastify({
     ajv: {
@@ -15,7 +22,7 @@ test('show modify the generated schema', async function (t) {
 
   t.teardown(fastify.close.bind(fastify))
 
-  await fastify.register(multipart)
+  await fastify.register(multipart, { attachFieldsToBody: true })
   await fastify.register(require('@fastify/swagger'), {
     mode: 'dynamic',
 
@@ -39,7 +46,7 @@ test('show modify the generated schema', async function (t) {
       }
     },
     async function (req, reply) {
-      reply.send('hello')
+      reply.code(200).send()
     }
   )
 
@@ -55,7 +62,9 @@ test('show modify the generated schema', async function (t) {
               'multipart/form-data': {
                 schema: {
                   type: 'object',
-                  properties: { field: { type: 'file' } }
+                  properties: {
+                    field: { type: 'string', format: 'binary' }
+                  }
                 }
               }
             }
@@ -67,4 +76,49 @@ test('show modify the generated schema', async function (t) {
       }
     }
   })
+
+  await fastify.listen({ port: 0 })
+
+  // request without file
+  {
+    const form = new FormData()
+    const req = http.request({
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    })
+
+    form.append('field', JSON.stringify({}), { contentType: 'application/json' })
+    form.pipe(req)
+
+    const [res] = await once(req, 'response')
+    res.resume()
+    await once(res, 'end')
+    t.equal(res.statusCode, 400) // body/field should be a file
+  }
+
+  // request with file
+  {
+    const form = new FormData()
+    const req = http.request({
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    })
+
+    form.append('field', fs.createReadStream(filePath), { contentType: 'multipart/form-data' })
+    form.pipe(req)
+
+    const [res] = await once(req, 'response')
+    res.resume()
+    await once(res, 'end')
+    t.equal(res.statusCode, 200)
+  }
+  t.pass('res ended successfully')
 })
