@@ -522,6 +522,10 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   async function saveRequestFiles (options) {
+    // Checks if this has already been run
+    if (this.savedRequestFiles) {
+      return this.savedRequestFiles
+    }
     let files
     if (attachFieldsToBody === true) {
       // Skip the whole process if the body is empty
@@ -532,7 +536,7 @@ function fastifyMultipart (fastify, options, done) {
     } else {
       files = await this.files(options)
     }
-    const requestFiles = []
+    this.savedRequestFiles = []
     const tmpdir = (options && options.tmpdir) || os.tmpdir()
     this.tmpUploads = []
     for await (const file of files) {
@@ -540,7 +544,7 @@ function fastifyMultipart (fastify, options, done) {
       const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)
-        requestFiles.push({ ...file, filepath })
+        this.savedRequestFiles.push({ ...file, filepath })
         this.tmpUploads.push(filepath)
       } catch (err) {
         this.log.error({ err }, 'save request file')
@@ -548,7 +552,7 @@ function fastifyMultipart (fastify, options, done) {
       }
     }
 
-    return requestFiles
+    return this.savedRequestFiles
   }
 
   function * filesFromFields (container) {
