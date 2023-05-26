@@ -203,6 +203,11 @@ declare namespace fastifyMultipart {
     onFile?: (this: FastifyRequest, part: MultipartFile) => void | Promise<void>;
   }
 
+  /**
+   * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
+   */
+  export function ajvFilePlugin(ajv: any): void;
+
   export const fastifyMultipart: FastifyMultipartPlugin;
   export { fastifyMultipart as default };
 }

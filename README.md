@@ -379,28 +379,18 @@ The shared schema, that is added, will look like this:
 If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
-
-const ajvFilePlugin = (ajv, options = {}) => {
- return ajv.addKeyword({
-  keyword: "isFile",
-  compile: (_schema, parent, _it) => {
-   parent.type = "file";
-   delete parent.isFile;
-   return () => true;
-  },
- });
-};
+ 
 const fastify = require('fastify')({
  // ...
   ajv: {
-    // add the new ajv plugin
-    plugins: [/*...*/ ajvFilePlugin]
+    // Adds the file plugin to help @fastify/swagger schema generation
+    plugins: [import('@fastify/multipart').ajvFilePlugin]
   }
 })
-const opts = {
+
+fastify.register(require("@fastify/multipart"), {
   attachFieldsToBody: true,
-};
-fastify.register(require(".."), opts);
+});
 
 fastify.post(
   "/upload/files",
