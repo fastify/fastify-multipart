@@ -384,7 +384,7 @@ const fastify = require('fastify')({
  // ...
   ajv: {
     // Adds the file plugin to help @fastify/swagger schema generation
-    plugins: [import('@fastify/multipart').ajvFilePlugin]
+    plugins: [require('@fastify/multipart').ajvFilePlugin]
   }
 })
 

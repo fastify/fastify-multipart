@@ -5,7 +5,7 @@ const fastify = require('fastify')({
   logger: true,
   ajv: {
     // Adds the file plugin to help @fastify/swagger schema generation
-    plugins: [import('..').ajvFilePlugin]
+    plugins: [require('..').ajvFilePlugin]
   }
 })
 
