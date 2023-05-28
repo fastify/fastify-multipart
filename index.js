@@ -206,6 +206,7 @@ function fastifyMultipart (fastify, options, done) {
 
   fastify.decorateRequest('isMultipart', isMultipart)
   fastify.decorateRequest('tmpUploads', null)
+  fastify.decorateRequest('savedRequestFiles', null)
 
   // legacy
   fastify.decorateRequest('multipart', handleLegacyMultipartApi)
