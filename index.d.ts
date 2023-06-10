@@ -33,6 +33,8 @@ declare module "fastify" {
     ) => Promise<Array<fastifyMultipart.SavedMultipartFile>>;
     cleanRequestFiles: () => Promise<void>;
     tmpUploads: Array<string> | null;
+    /** This will get populated as soon as a call to `saveRequestFiles` gets resolved. Avoiding any future duplicate work */
+    savedRequestFiles: Array<fastifyMultipart.SavedMultipartFile> | null;
   }
 
   interface FastifyInstance {
