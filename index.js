@@ -626,6 +626,26 @@ function fastifyMultipart (fastify, options, done) {
 }
 
 /**
+ * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
+ */
+function ajvFilePlugin (ajv) {
+  return ajv.addKeyword({
+    keyword: 'isFile',
+    compile: (_schema, parent) => {
+      // Updates the schema to match the file type
+      parent.type = 'string'
+      parent.format = 'binary'
+      delete parent.isFile
+
+      return (field /* MultipartFile */) => !!field.file
+    },
+    error: {
+      message: 'should be a file'
+    }
+  })
+}
+
+/**
  * These export configurations enable JS and TS developers
  * to consumer fastify in whatever way best suits their needs.
  */
@@ -635,3 +655,4 @@ module.exports = fp(fastifyMultipart, {
 })
 module.exports.default = fastifyMultipart
 module.exports.fastifyMultipart = fastifyMultipart
+module.exports.ajvFilePlugin = ajvFilePlugin
