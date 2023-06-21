@@ -167,6 +167,12 @@ declare namespace fastifyMultipart {
       files?: number;
 
       /**
+       * For multipart forms, the max number of parts (fields + files)
+       * @default 1000
+       */
+      parts?: number;
+
+      /**
        * Max number of header key=>value pairs
        */
       headerPairs?: number;
