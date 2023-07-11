@@ -441,8 +441,8 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      const throwFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
-        ? options.throwFileSizeLimit
+      const throwFileSizeLimit = typeof opts.throwFileSizeLimit === 'boolean'
+        ? opts.throwFileSizeLimit
         : defaultThrowFileSizeLimit
 
       const value = {
