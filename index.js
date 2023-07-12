@@ -172,12 +172,12 @@ function fastifyMultipart (fastify, options, done) {
           } else if (Array.isArray(field)) {
             body[key] = field.map(item => {
               if (item._buf !== undefined) {
-                return item._buf.toString()
+                return item._buf
               }
               return item.value
             })
           } else if (field._buf !== undefined) {
-            body[key] = field._buf.toString()
+            body[key] = field._buf
           }
         }
         req.body = body
