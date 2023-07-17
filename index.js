@@ -165,19 +165,21 @@ function fastifyMultipart (fastify, options, done) {
       }
       if (options.attachFieldsToBody === 'keyValues') {
         const body = {}
-        for (const key of Object.keys(req.body)) {
-          const field = req.body[key]
-          if (field.value !== undefined) {
-            body[key] = field.value
-          } else if (Array.isArray(field)) {
-            body[key] = field.map(item => {
-              if (item._buf !== undefined) {
-                return item._buf.toString()
-              }
-              return item.value
-            })
-          } else if (field._buf !== undefined) {
-            body[key] = field._buf.toString()
+        if (req.body) {
+          for (const key of Object.keys(req.body)) {
+            const field = req.body[key]
+            if (field.value !== undefined) {
+              body[key] = field.value
+            } else if (Array.isArray(field)) {
+              body[key] = field.map(item => {
+                if (item._buf !== undefined) {
+                  return item._buf.toString()
+                }
+                return item.value
+              })
+            } else if (field._buf !== undefined) {
+              body[key] = field._buf.toString()
+            }
           }
         }
         req.body = body
