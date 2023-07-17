@@ -26,7 +26,7 @@
     "eslint": "^8.20.0",
     "eslint-config-standard-with-typescript": "^36.0.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-n": "^15.2.4",
+    "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
     "fastify": "^4.0.0",
     "form-data": "^4.0.0",
