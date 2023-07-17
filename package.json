@@ -18,7 +18,7 @@
   "devDependencies": {
     "@fastify/pre-commit": "^2.0.2",
     "@types/node": "^20.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^5.30.7",
     "benchmark": "^2.1.4",
     "climem": "^1.0.3",
