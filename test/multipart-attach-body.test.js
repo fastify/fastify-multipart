@@ -9,6 +9,8 @@ const path = require('path')
 const fs = require('fs')
 const { once } = require('events')
 const { Readable } = require('stream')
+const pump = require('pump')
+const { writableNoopStream } = require('noop-stream')
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -353,6 +355,51 @@ test('should be able to attach all parsed field values and files with custom "on
     const buff = await part.toBuffer()
     const decoded = Buffer.from(buff.toString(), 'base64').toString()
     part.value = decoded
+  }
+
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues', onFile })
+
+  const original = 'test upload content'
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', Readable.from(Buffer.from(original).toString('base64')))
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
+})
+
+test('should handle file stream consumption when internal buffer is not yet loaded', async function (t) {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  async function onFile (part) {
+    pump(part.file, writableNoopStream()).once('end', () => {
+      t.pass('stream consumed successfully')
+    })
   }
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues', onFile })
