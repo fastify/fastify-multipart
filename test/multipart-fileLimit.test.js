@@ -190,3 +190,129 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
     t.error(error, 'request')
   }
 })
+
+// testing per-request override by using above tests as reference
+test('should throw fileSize limitation error when throwFileSizeLimit is globally set to false but is set to true in request opts', async function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, {
+    throwFileSizeLimit: false,
+    limits: {
+      fileSize: 1_000_000
+    }
+  })
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    const part = await req.file({
+      throwFileSizeLimit: true,
+      limits: {
+        fileSize: 524288
+      }
+    })
+    t.pass('the file is not consumed yet')
+
+    try {
+      await part.toBuffer()
+      t.fail('it should throw')
+    } catch (error) {
+      t.ok(error)
+      reply.send(error)
+    }
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    hostname: '127.0.0.1',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const randomFileBuffer = Buffer.alloc(600_000)
+  crypto.randomFillSync(randomFileBuffer)
+
+  const req = http.request(opts)
+  form.append('upload', randomFileBuffer)
+
+  form.pipe(req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 413)
+    res.resume()
+    await once(res, 'end')
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
+
+test('should NOT throw fileSize limitation error when throwFileSizeLimit is globally set to true but is set to false in request opts', async function (t) {
+  t.plan(5)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, {
+    throwFileSizeLimit: true,
+    limits: {
+      fileSize: 524288
+    }
+  })
+  const fileInputLength = 600_000
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    const part = await req.file({
+      throwFileSizeLimit: false
+    })
+    t.pass('the file is not consumed yet')
+
+    try {
+      const buffer = await part.toBuffer()
+      t.ok(part.file.truncated)
+      t.notSame(buffer.length, fileInputLength)
+      reply.send(new fastify.multipartErrors.FilesLimitError())
+    } catch (error) {
+      t.fail('it should not throw')
+    }
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const randomFileBuffer = Buffer.alloc(fileInputLength)
+  crypto.randomFillSync(randomFileBuffer)
+
+  const req = http.request(opts)
+  form.append('upload', randomFileBuffer)
+
+  form.pipe(req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.equal(res.statusCode, 413)
+    res.resume()
+  } catch (error) {
+    t.error(error, 'request')
+  }
+})
