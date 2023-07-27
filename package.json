@@ -40,7 +40,7 @@
     "tsd": "^0.28.0"
   },
   "scripts": {
-    "coverage": "tap \"test/**/*.test.js\" --coverage-report=html",
+    "coverage": "npm run test:unit -- --coverage-report=html",
     "climem": "climem 8999 localhost",
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
