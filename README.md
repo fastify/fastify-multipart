@@ -240,7 +240,7 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
-Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values will be attached directly to the body object. By default, all files are converted to a string using `buffer.toString()` used as the value attached to the body.
+Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values including file buffers will be attached to the body object.
 
 ```js
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
