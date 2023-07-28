@@ -117,6 +117,7 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   const attachFieldsToBody = options.attachFieldsToBody
+
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
@@ -136,7 +137,7 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  if (options.attachFieldsToBody === true || options.attachFieldsToBody === 'keyValues') {
+  if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
         $id: options.sharedSchemaId,
@@ -167,7 +168,7 @@ function fastifyMultipart (fastify, options, done) {
         }
       }
 
-      if (options.attachFieldsToBody === 'keyValues') {
+      if (attachFieldsToBody === 'keyValues') {
         const body = {}
 
         if (req.body) {
