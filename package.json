@@ -47,7 +47,7 @@
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap \"test/**/*.test.js\" -t 90"
+    "test:unit": "tap -t 90"
   },
   "repository": {
     "type": "git",
