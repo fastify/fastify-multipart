@@ -246,7 +246,7 @@ Request body key-value pairs can be assigned directly using `attachFieldsToBody:
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const uploadValue = req.body.upload // access file as string
+  const uploadValue = req.body.upload // access file as buffer
   const fooValue = req.body.foo       // other fields
 })
 ```
