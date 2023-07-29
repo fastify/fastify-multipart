@@ -172,7 +172,11 @@ function fastifyMultipart (fastify, options, done) {
         const body = {}
 
         if (req.body) {
-          for (const [key, field] of Object.entries(req.body)) {
+          const reqBodyEntries = Object.entries(req.body)
+
+          for (let i = 0; i < reqBodyEntries.length; ++i) {
+            const [key, field] = reqBodyEntries[i]
+
             if (field.value !== undefined) {
               body[key] = field.value
             } else if (field._buf) {
@@ -180,7 +184,9 @@ function fastifyMultipart (fastify, options, done) {
             } else if (Array.isArray(field)) {
               const items = []
 
-              for (const item of field) {
+              for (let i = 0; i < field.length; ++i) {
+                const item = field[i]
+
                 if (item.value !== undefined) {
                   items.push(item.value)
                 } else if (item._buf) {
