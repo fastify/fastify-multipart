@@ -180,9 +180,7 @@ function fastifyMultipart (fastify, options, done) {
             } else if (Array.isArray(field)) {
               const items = []
 
-              for (let i = 0; i < field.length; ++i) {
-                const item = field[i]
-
+              for (const item of field) {
                 if (item.value !== undefined) {
                   items.push(item.value)
                 } else if (item._buf) {
