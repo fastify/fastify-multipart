@@ -117,6 +117,7 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   const attachFieldsToBody = options.attachFieldsToBody
+
   if (options.addToBody === true) {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
@@ -136,7 +137,7 @@ function fastifyMultipart (fastify, options, done) {
     })
   }
 
-  if (options.attachFieldsToBody === true || options.attachFieldsToBody === 'keyValues') {
+  if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
     if (typeof options.sharedSchemaId === 'string') {
       fastify.addSchema({
         $id: options.sharedSchemaId,
@@ -149,12 +150,15 @@ function fastifyMultipart (fastify, options, done) {
         }
       })
     }
+
     fastify.addHook('preValidation', async function (req, reply) {
       if (!req.isMultipart()) {
         return
       }
+
       for await (const part of req.parts()) {
         req.body = part.fields
+
         if (part.file) {
           if (options.onFile) {
             await options.onFile.call(req, part)
@@ -163,25 +167,41 @@ function fastifyMultipart (fastify, options, done) {
           }
         }
       }
-      if (options.attachFieldsToBody === 'keyValues') {
+
+      if (attachFieldsToBody === 'keyValues') {
         const body = {}
+
         if (req.body) {
-          for (const key of Object.keys(req.body)) {
+          const reqBodyKeys = Object.keys(req.body)
+
+          for (let i = 0; i < reqBodyKeys.length; ++i) {
+            const key = reqBodyKeys[i]
             const field = req.body[key]
+
             if (field.value !== undefined) {
               body[key] = field.value
-            } else if (Array.isArray(field)) {
-              body[key] = field.map(item => {
-                if (item._buf) {
-                  return item._buf.toString()
-                }
-                return item.value
-              })
             } else if (field._buf) {
-              body[key] = field._buf.toString()
+              body[key] = field._buf
+            } else if (Array.isArray(field)) {
+              const items = []
+
+              for (let i = 0; i < field.length; ++i) {
+                const item = field[i]
+
+                if (item.value !== undefined) {
+                  items.push(item.value)
+                } else if (item._buf) {
+                  items.push(item._buf)
+                }
+              }
+
+              if (items.length) {
+                body[key] = items
+              }
             }
           }
         }
+
         req.body = body
       }
     })
