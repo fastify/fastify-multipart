@@ -20,3 +20,4 @@ jobs:
     uses: fastify/workflows/.github/workflows/plugins-ci.yml@v3
     with:
       license-check: true
+      lint: true

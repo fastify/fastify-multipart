@@ -1,6 +1,6 @@
 {
   "name": "@fastify/multipart",
-  "version": "7.7.2",
+  "version": "7.7.3",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "types": "index.d.ts",
@@ -23,7 +23,7 @@
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
     "eslint": "^8.20.0",
-    "eslint-config-standard-with-typescript": "^36.0.0",
+    "eslint-config-standard-with-typescript": "^37.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
@@ -39,14 +39,14 @@
     "tsd": "^0.28.0"
   },
   "scripts": {
-    "coverage": "tap \"test/**/*.test.js\" --coverage-report=html",
+    "coverage": "npm run test:unit -- --coverage-report=html",
     "climem": "climem 8999 localhost",
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
     "start": "CLIMEM=8999 node -r climem ./examples/example",
-    "test": "npm run lint && npm run unit && npm run typescript",
-    "typescript": "tsd",
-    "unit": "tap \"test/**/*.test.js\" -t 90"
+    "test": "npm run test:unit && npm run test:typescript",
+    "test:typescript": "tsd",
+    "test:unit": "tap -t 90"
   },
   "repository": {
     "type": "git",
