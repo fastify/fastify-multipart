@@ -507,6 +507,125 @@ fastify.post('/upload/files', {
 })
 ```
 
+## Parsing keys with nested arrays and objects
+
+When the `addToBody` and `enableSpecialNotationKeys` options are set to `true`, `@fastify/multipart` is capable of parsing keys that use a special notation to represent nested arrays and objects. For example, consider the following key/value pair: `foo[bar][baz]=zoo`. After parsing this key, the `request.body` would look like this:
+```js
+{ 
+  foo: { 
+    bar: { 
+      baz: 'zoo' 
+    } 
+  } 
+}
+```
+
+You can also declare arrays using this notation. For example, `foo[]=123` would be parsed as:
+
+```js
+{
+  foo: [123]
+}
+```
+
+Complex structures can also be represented, for instance, if you submit the following `FormData`:
+```js
+const form = new FormData()
+form.append('propA[0][propAA][propAAA]', 'foo')
+form.append('propA[0][propAA][propAAB]', 'bar')
+form.append('propA[0][propAA][propAAC][0]', '777')
+form.append('propA[0][propAA][propAAC][1]', '888')
+form.append('propA[0][propAA][propAAC][2]', '999')
+```
+
+Once your backend receives this request and `@fastify/multipart` parses it, your `request.body` will look like this:
+
+```js
+{
+  propA: [
+    {
+      propAA: {
+        propAAA: 'foo',
+        propAAB: 'bar',
+        propAAC: ['777', '888', '999']
+      }
+    }
+  ]
+}
+```
+
+By default, `enableSpecialNotationKeys` is set to false, so `foo[bar][0]` would be treated like a regular key name and `foo[bar][0]=foo` would result in the following `request.body`:
+```js
+{
+  'foo[bar][0]': 'foo'
+}
+```
+
+### Disabling array parsing
+
+When `enableSpecialNotationKeys` is set to `true`, numeric keys are treated as array indexes. For instance, `foo[0][bar]=baz` would translate to:
+```js
+{
+  foo: [
+    { 
+      bar: 'baz'
+    }
+  ]
+}
+```
+However, you might prefer to disable this behavior and have numeric keys treated as object keys instead. In order to accomplish that, you can set `enableSpecialNotationKeys` to `"objectsOnly"`. By doing so, `foo[0][bar]=baz` would be parsed as:
+```js
+{
+  foo: {
+    0: {
+      bar: 'baz'
+    } 
+  }
+}
+```
+
+### The {} special ending
+`@fastify/multipart` also supports JSON values by using the `{}` special ending. For instance, if you submit the following `FormData`:
+
+```js
+const form = new FormData()
+form.append('foo{}', '{"bar":[1,2,3]}')
+```
+
+It would be parse by `@fastify/multipart` as:
+```js
+{
+  foo: {
+    bar: [1, 2, 3]
+  }
+}
+```
+
+This ending can also be used in complex keys, like:
+```js
+const form = new FormData()
+form.append('foo[0][bar][][baz]{}', '{"zoo":{"numbers":[1,2,3]}}')
+```
+
+Would result in the following `request.body`:
+```js
+{
+  foo: [
+    {
+      bar: [
+        {
+          baz: {
+            zoo: {
+              numbers: [1, 2, 3]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [@fastify/error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
