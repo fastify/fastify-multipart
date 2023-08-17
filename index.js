@@ -550,7 +550,7 @@ function fastifyMultipart (fastify, options, done) {
       return this.savedRequestFiles
     }
     let files
-    if (attachFieldsToBody === true) {
+    if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
       // Skip the whole process if the body is empty
       if (!this.body) {
         return []
