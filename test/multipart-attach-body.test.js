@@ -121,11 +121,9 @@ test('should be able to attach all parsed field values and files and make it acc
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    req.body.upload = req.body.upload.toString('utf8')
-
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    t.equal(req.body.upload, original)
+    t.equal((await req.body.upload.toBuffer()).toString('utf8'), original)
     t.equal(req.body.hello, 'world')
 
     reply.code(200).send()
@@ -309,8 +307,8 @@ test('should manage array fields', async function (t) {
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
-    req.body.upload[0] = req.body.upload[0].toString('utf8')
-    req.body.upload[1] = req.body.upload[1].toString('utf8')
+    // req.body.upload[0] is already a field since it has content type JSON
+    req.body.upload[1] = (await req.body.upload[1].toBuffer()).toString('utf8')
 
     t.same(req.body, {
       upload: [original, original],
@@ -441,7 +439,7 @@ test('should handle file stream consumption when internal buffer is not yet load
 })
 
 test('should pass the buffer instead of convering to string', async function (t) {
-  t.plan(7)
+  t.plan(8)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
@@ -455,8 +453,9 @@ test('should pass the buffer instead of convering to string', async function (t)
 
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    t.ok(req.body.upload instanceof Buffer)
-    t.ok(Buffer.compare(req.body.upload, original) === 0)
+    t.ok(await req.body.upload.toBuffer() instanceof Buffer)
+    t.ok(Buffer.compare(await req.body.upload.toBuffer(), original) === 0)
+    t.equal(req.body.upload.filename, 'README.md')
     t.equal(req.body.hello, 'world')
 
     reply.code(200).send()
