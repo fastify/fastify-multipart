@@ -146,9 +146,7 @@ function fastifyMultipart (fastify, options, done) {
           fieldname: { type: 'string' },
           filename: { type: 'string' },
           encoding: { type: 'string' },
-          mimetype: { type: 'string' },
-          file: { type: 'object' },
-          _buf: { type: 'object' }
+          mimetype: { type: 'string' }
         }
       })
     }
