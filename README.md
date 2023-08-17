@@ -247,7 +247,7 @@ fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = await req.body.upload.toBuffer() // access file as buffer
-  const fooValue = req.body.foo                        // other fields
+  const fooValue = req.body.foo                        // other field values
 })
 ```
 
