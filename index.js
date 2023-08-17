@@ -144,9 +144,11 @@ function fastifyMultipart (fastify, options, done) {
         type: 'object',
         properties: {
           fieldname: { type: 'string' },
-          encoding: { type: 'string' },
           filename: { type: 'string' },
-          mimetype: { type: 'string' }
+          encoding: { type: 'string' },
+          mimetype: { type: 'string' },
+          file: { type: 'object' },
+          _buf: { type: 'object' }
         }
       })
     }
@@ -181,7 +183,7 @@ function fastifyMultipart (fastify, options, done) {
             if (field.value !== undefined) {
               body[key] = field.value
             } else if (field._buf) {
-              body[key] = field._buf
+              body[key] = field
             } else if (Array.isArray(field)) {
               const items = []
 
@@ -191,7 +193,7 @@ function fastifyMultipart (fastify, options, done) {
                 if (item.value !== undefined) {
                   items.push(item.value)
                 } else if (item._buf) {
-                  items.push(item._buf)
+                  items.push(item)
                 }
               }
 
@@ -580,7 +582,9 @@ function fastifyMultipart (fastify, options, done) {
 
   function * filesFromFields (container) {
     try {
-      for (const field of Object.values(container)) {
+      const containerValues = Object.values(container)
+      for (let i = 0; i < containerValues.length; ++i) {
+        const field = containerValues[i]
         if (Array.isArray(field)) {
           for (const subField of filesFromFields.call(this, field)) {
             yield subField
@@ -605,7 +609,8 @@ function fastifyMultipart (fastify, options, done) {
     if (!this.tmpUploads) {
       return
     }
-    for (const filepath of this.tmpUploads) {
+    for (let i = 0; i < this.tmpUploads.length; ++i) {
+      const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
       } catch (error) {
