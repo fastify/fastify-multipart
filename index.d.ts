@@ -111,11 +111,6 @@ declare namespace fastifyMultipart {
 
   export interface FastifyMultipartBaseOptions {
     /**
-     * Append the multipart parameters to the body object
-     */
-    addToBody?: boolean;
-
-    /**
      * Add a shared schema to validate the input fields
      */
     sharedSchemaId?: string;
