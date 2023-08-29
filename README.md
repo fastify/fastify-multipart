@@ -22,8 +22,6 @@ npm i @fastify/multipart
 
 ## Usage
 
-If you are looking for the documentation for the legacy callback-api please see [here](./callback.md).
-
 ```js
 const fastify = require('fastify')()
 const fs = require('fs')

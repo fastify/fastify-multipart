@@ -19,19 +19,6 @@ const runServer = async () => {
     }
   })
 
-  app.get('/path', (request) => {
-    const isMultiPart = request.isMultipart()
-    request.multipart((field, file, filename, encoding, mimetype) => {
-      console.log(field, file, filename, encoding, mimetype, isMultiPart)
-    }, (err) => {
-      throw err
-    }, {
-      limits: {
-        fileSize: 10000
-      }
-    })
-  })
-
   // usage
   app.post('/', async (req, reply) => {
     const data = await req.file()
