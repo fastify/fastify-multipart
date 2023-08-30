@@ -29,7 +29,6 @@ const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a req
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
 function setMultipart (req, payload, done) {
-  // nothing to do, it will be done by the Request.multipart object
   req.raw[kMultipart] = true
   done()
 }
@@ -161,7 +160,7 @@ function fastifyMultipart (fastify, options, done) {
   })
 
   function isMultipart () {
-    return this.raw[kMultipart] || false
+    return this.raw[kMultipart]
   }
 
   function handleMultipart (opts = {}) {
