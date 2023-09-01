@@ -55,7 +55,7 @@ function fastifyMultipart (fastify, options, done) {
   const attachFieldsToBody = options.attachFieldsToBody
 
   if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
-    if (typeof options.sharedSchemaId === 'string') {
+    if (typeof options.sharedSchemaId === 'string' && attachFieldsToBody === true) {
       fastify.addSchema({
         $id: options.sharedSchemaId,
         type: 'object',
