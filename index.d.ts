@@ -12,13 +12,6 @@ declare module "fastify" {
       options?: Omit<BusboyConfig, "headers">
     ) => AsyncIterableIterator<fastifyMultipart.Multipart>;
 
-    // legacy
-    multipart: (
-      handler: MultipartHandler,
-      next: (err: Error) => void,
-      options?: Omit<BusboyConfig, "headers">
-    ) => Busboy;
-
     // Stream mode
     file: (
       options?: Omit<BusboyConfig, "headers">
@@ -110,11 +103,6 @@ declare namespace fastifyMultipart {
   }
 
   export interface FastifyMultipartBaseOptions {
-    /**
-     * Append the multipart parameters to the body object
-     */
-    addToBody?: boolean;
-
     /**
      * Add a shared schema to validate the input fields
      */
