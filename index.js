@@ -421,9 +421,9 @@ function fastifyMultipart (fastify, options, done) {
 
   function * filesFromFields (container) {
     try {
-      const containerValues = Object.values(container)
-      for (let i = 0; i < containerValues.length; ++i) {
-        const field = containerValues[i]
+      const fields = Array.isArray(container) ? container : Object.values(container)
+      for (let i = 0; i < fields.length; ++i) {
+        const field = fields[i]
         if (Array.isArray(field)) {
           for (const subField of filesFromFields.call(this, field)) {
             yield subField
