@@ -421,7 +421,9 @@ function fastifyMultipart (fastify, options, done) {
 
   function * filesFromFields (container) {
     try {
-      for (const field of Object.values(container)) {
+      const containerValues = Object.values(container)
+      for (let i = 0; i < containerValues.length; ++i) {
+        const field = containerValues[i]
         if (Array.isArray(field)) {
           for (const subField of filesFromFields.call(this, field)) {
             yield subField
@@ -446,7 +448,8 @@ function fastifyMultipart (fastify, options, done) {
     if (!this.tmpUploads) {
       return
     }
-    for (const filepath of this.tmpUploads) {
+    for (let i = 0; i < this.tmpUploads.length; ++i) {
+      const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
       } catch (error) {
