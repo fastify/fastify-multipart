@@ -4,7 +4,7 @@ const Busboy = require('@fastify/busboy')
 const os = require('os')
 const fp = require('fastify-plugin')
 const { createWriteStream } = require('fs')
-const { unlink } = require('fs').promises
+const { unlink } = require('fs/promises')
 const path = require('path')
 const { generateId } = require('./lib/generateId')
 const util = require('util')
@@ -55,7 +55,7 @@ function fastifyMultipart (fastify, options, done) {
   const attachFieldsToBody = options.attachFieldsToBody
 
   if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
-    if (typeof options.sharedSchemaId === 'string') {
+    if (typeof options.sharedSchemaId === 'string' && attachFieldsToBody === true) {
       fastify.addSchema({
         $id: options.sharedSchemaId,
         type: 'object',
@@ -421,7 +421,9 @@ function fastifyMultipart (fastify, options, done) {
 
   function * filesFromFields (container) {
     try {
-      for (const field of Object.values(container)) {
+      const fields = Array.isArray(container) ? container : Object.values(container)
+      for (let i = 0; i < fields.length; ++i) {
+        const field = fields[i]
         if (Array.isArray(field)) {
           for (const subField of filesFromFields.call(this, field)) {
             yield subField
@@ -446,7 +448,8 @@ function fastifyMultipart (fastify, options, done) {
     if (!this.tmpUploads) {
       return
     }
-    for (const filepath of this.tmpUploads) {
+    for (let i = 0; i < this.tmpUploads.length; ++i) {
+      const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
       } catch (error) {
