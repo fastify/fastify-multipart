@@ -1,7 +1,7 @@
 'use strict'
 
-const http = require('http')
-const Readable = require('stream').Readable
+const http = require('node:http')
+const Readable = require('node:stream').Readable
 const FormData = require('form-data')
 const pump = require('pump')
 const knownLength = 1024 * 1024 * 1024

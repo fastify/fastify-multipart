@@ -1,11 +1,11 @@
 import fastify from 'fastify'
-import fastifyMultipart, {MultipartValue, MultipartFields, MultipartFile } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
 import { expectError, expectType } from 'tsd'
-import { FastifyErrorConstructor } from "@fastify/error"
-import { BusboyConfig, BusboyFileStream } from "@fastify/busboy";
+import { FastifyErrorConstructor } from '@fastify/error'
+import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 
 const pump = util.promisify(pipeline)
 
@@ -23,7 +23,7 @@ const runServer = async () => {
   app.post('/', async (req, reply) => {
     const data = await req.file()
     if (data == null) throw new Error('missing file')
-    
+
     expectType<'file'>(data.type)
     expectType<BusboyFileStream>(data.file)
     expectType<boolean>(data.file.truncated)
@@ -32,8 +32,8 @@ const runServer = async () => {
     expectType<string>(data.filename)
     expectType<string>(data.encoding)
     expectType<string>(data.mimetype)
-    
-    const field = data.fields.myField;
+
+    const field = data.fields.myField
     if (field === undefined) {
       // field missing from the request
     } else if (Array.isArray(field)) {
@@ -43,7 +43,7 @@ const runServer = async () => {
       field.file.resume()
     } else {
       // field containing a value
-      field.fields.value;
+      field.fields.value
     }
 
     await pump(data.file, fs.createWriteStream(data.filename))
@@ -53,27 +53,27 @@ const runServer = async () => {
 
   // Multiple fields including scalar values
   app.post<{Body: {file: MultipartFile, foo: MultipartValue<string>}}>('/upload/stringvalue', async (req, reply) => {
-    expectError(req.body.foo.file);
+    expectError(req.body.foo.file)
     expectType<'field'>(req.body.foo.type)
-    expectType<string>(req.body.foo.value);
+    expectType<string>(req.body.foo.value)
 
     expectType<BusboyFileStream>(req.body.file.file)
-    expectType<'file'>(req.body.file.type);
-    reply.send();
+    expectType<'file'>(req.body.file.type)
+    reply.send()
   })
 
   app.post<{Body: {file: MultipartFile, num: MultipartValue<number>}}>('/upload/stringvalue', async (req, reply) => {
-    expectType<number>(req.body.num.value);
-    reply.send();
+    expectType<number>(req.body.num.value)
+    reply.send()
 
     // file is a file
     expectType<BusboyFileStream>(req.body.file.file)
-    expectError(req.body.file.value);
+    expectError(req.body.file.value)
   })
 
   // busboy
   app.post('/', async function (req, reply) {
-    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } };
+    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } }
     const data = await req.file(options)
     if (!data) throw new Error('missing file')
     await pump(data.file, fs.createWriteStream(data.filename))
@@ -128,7 +128,7 @@ const runServer = async () => {
 
   // upload files to disk with busboy options
   app.post('/upload/files', async function (req, reply) {
-    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } };
+    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } }
     await req.saveRequestFiles(options)
 
     reply.send()
@@ -138,20 +138,20 @@ const runServer = async () => {
   app.post('/upload/files', async function (req, reply) {
     const { FilesLimitError } = app.multipartErrors
 
-    expectType<FastifyErrorConstructor>(app.multipartErrors.FieldsLimitError);
-    expectType<FastifyErrorConstructor>(app.multipartErrors.FilesLimitError);
-    expectType<FastifyErrorConstructor>(app.multipartErrors.InvalidMultipartContentTypeError);
-    expectType<FastifyErrorConstructor>(app.multipartErrors.PartsLimitError);
-    expectType<FastifyErrorConstructor>(app.multipartErrors.PrototypeViolationError);
-    expectType<FastifyErrorConstructor>(app.multipartErrors.RequestFileTooLargeError);
+    expectType<FastifyErrorConstructor>(app.multipartErrors.FieldsLimitError)
+    expectType<FastifyErrorConstructor>(app.multipartErrors.FilesLimitError)
+    expectType<FastifyErrorConstructor>(app.multipartErrors.InvalidMultipartContentTypeError)
+    expectType<FastifyErrorConstructor>(app.multipartErrors.PartsLimitError)
+    expectType<FastifyErrorConstructor>(app.multipartErrors.PrototypeViolationError)
+    expectType<FastifyErrorConstructor>(app.multipartErrors.RequestFileTooLargeError)
 
     // test instanceof Error
-    const a = new FilesLimitError();
+    const a = new FilesLimitError()
     if (a instanceof FilesLimitError) {
-      console.log("FilesLimitError occurred.");
+      console.log('FilesLimitError occurred.')
     }
 
-    reply.send();
+    reply.send()
   })
 
   await app.ready()

@@ -1,17 +1,17 @@
 'use strict'
 
 const Busboy = require('@fastify/busboy')
-const os = require('os')
+const os = require('node:os')
 const fp = require('fastify-plugin')
-const { createWriteStream } = require('fs')
-const { unlink } = require('fs/promises')
-const path = require('path')
+const { createWriteStream } = require('node:fs')
+const { unlink } = require('node:fs/promises')
+const path = require('node:path')
 const { generateId } = require('./lib/generateId')
-const util = require('util')
+const util = require('node:util')
 const createError = require('@fastify/error')
 const sendToWormhole = require('stream-wormhole')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
-const { PassThrough, pipeline, Readable } = require('stream')
+const { PassThrough, pipeline, Readable } = require('node:stream')
 const pump = util.promisify(pipeline)
 const secureJSON = require('secure-json-parse')
 

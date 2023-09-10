@@ -4,8 +4,8 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
-const { once } = require('events')
+const http = require('node:http')
+const { once } = require('node:events')
 
 test('should not break with a empty request body when attachFieldsToBody is true', async function (t) {
   t.plan(5)
