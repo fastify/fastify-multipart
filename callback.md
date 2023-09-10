@@ -11,7 +11,7 @@
 ```js
 const fastify = require('fastify')()
 const concat = require('concat-stream')
-const fs = require('fs')
+const fs = require('node:fs')
 const pump = require('pump')
 
 fastify.register(require('@fastify/multipart'))

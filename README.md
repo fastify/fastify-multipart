@@ -26,9 +26,9 @@ If you are looking for the documentation for the legacy callback-api please see 
 
 ```js
 const fastify = require('fastify')()
-const fs = require('fs')
-const util = require('util')
-const { pipeline } = require('stream')
+const fs = require('node:fs')
+const util = require('node:util')
+const { pipeline } = require('node:stream')
 const pump = util.promisify(pipeline)
 
 fastify.register(require('@fastify/multipart'))
