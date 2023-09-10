@@ -1,4 +1,4 @@
-import { Busboy, BusboyConfig, BusboyFileStream } from '@fastify/busboy'
+import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Readable } from 'stream'
 import { FastifyErrorConstructor } from '@fastify/error'
