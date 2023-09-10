@@ -4,11 +4,11 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
+const http = require('node:http')
 const stream = require('readable-stream')
 const Readable = stream.Readable
 const pump = stream.pipeline
-const crypto = require('crypto')
+const crypto = require('node:crypto')
 const sendToWormhole = require('stream-wormhole')
 
 // skipping on Github Actions because it takes too long

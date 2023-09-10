@@ -1,13 +1,13 @@
 'use strict'
 
-const fs = require('fs')
-const crypto = require('crypto')
+const fs = require('node:fs')
+const crypto = require('node:crypto')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
-const EventEmitter = require('events')
+const http = require('node:http')
+const EventEmitter = require('node:events')
 const { once } = EventEmitter
 
 test('should throw fileSize limitation error when consuming the stream', async function (t) {

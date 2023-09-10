@@ -1,12 +1,12 @@
 'use strict'
-const os = require('os')
+const os = require('node:os')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('./../..')
-const http = require('http')
-const path = require('path')
-const fs = require('fs')
+const http = require('node:http')
+const path = require('node:path')
+const fs = require('node:fs')
 const concat = require('concat-stream')
 const stream = require('readable-stream')
 const pump = stream.pipeline

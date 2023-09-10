@@ -4,7 +4,7 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
+const http = require('node:http')
 
 test('should parse JSON fields forms if content-type is set', function (t) {
   t.plan(5)

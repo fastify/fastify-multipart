@@ -1,14 +1,14 @@
 'use strict'
 
-const util = require('util')
+const util = require('node:util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
+const http = require('node:http')
 const sleep = util.promisify(setTimeout)
 const { writableNoopStream } = require('noop-stream')
-const stream = require('stream')
+const stream = require('node:stream')
 const pipeline = util.promisify(stream.pipeline)
 
 test('should finish with error on partial upload', async function (t) {
