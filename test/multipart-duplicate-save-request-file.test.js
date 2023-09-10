@@ -4,10 +4,10 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
-const path = require('path')
-const fs = require('fs')
-const EventEmitter = require('events')
+const http = require('node:http')
+const path = require('node:path')
+const fs = require('node:fs')
+const EventEmitter = require('node:events')
 const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')

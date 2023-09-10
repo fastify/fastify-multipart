@@ -4,13 +4,13 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('./../..')
-const http = require('http')
+const http = require('node:http')
 const stream = require('readable-stream')
 const Readable = stream.Readable
 const Writable = stream.Writable
 const pump = stream.pipeline
 const eos = stream.finished
-const crypto = require('crypto')
+const crypto = require('node:crypto')
 
 // skipping on Github Actions because it takes too long
 test('should upload a big file in constant memory', { skip: process.env.CI }, function (t) {

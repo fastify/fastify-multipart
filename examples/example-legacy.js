@@ -1,8 +1,8 @@
 'use strict'
 
 const fastify = require('fastify')()
-const fs = require('fs')
-const path = require('path')
+const fs = require('node:fs')
+const path = require('node:path')
 const pump = require('pump')
 const form = path.join(__dirname, '..', 'form.html')
 
