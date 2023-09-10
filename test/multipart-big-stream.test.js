@@ -4,11 +4,11 @@ const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
-const crypto = require('crypto')
+const http = require('node:http')
+const crypto = require('node:crypto')
 const { Readable } = require('readable-stream')
 const sendToWormhole = require('stream-wormhole')
-const EventEmitter = require('events')
+const EventEmitter = require('node:events')
 const { once } = EventEmitter
 
 test('should emit fileSize limitation error during streaming', async function (t) {

@@ -1,28 +1,28 @@
-import { Busboy, BusboyConfig, BusboyFileStream } from "@fastify/busboy";
-import { FastifyPluginCallback, FastifyRequest } from "fastify";
-import { Readable } from "stream";
-import { FastifyErrorConstructor } from "@fastify/error";
+import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
+import { FastifyPluginCallback, FastifyRequest } from 'fastify'
+import { Readable } from 'stream'
+import { FastifyErrorConstructor } from '@fastify/error'
 
-declare module "fastify" {
+declare module 'fastify' {
   interface FastifyRequest {
     isMultipart: () => boolean;
 
     // promise api
     parts: (
-      options?: Omit<BusboyConfig, "headers">
+      options?: Omit<BusboyConfig, 'headers'>
     ) => AsyncIterableIterator<fastifyMultipart.Multipart>;
 
     // Stream mode
     file: (
-      options?: Omit<BusboyConfig, "headers">
+      options?: Omit<BusboyConfig, 'headers'>
     ) => Promise<fastifyMultipart.MultipartFile | undefined>;
     files: (
-      options?: Omit<BusboyConfig, "headers">
+      options?: Omit<BusboyConfig, 'headers'>
     ) => AsyncIterableIterator<fastifyMultipart.MultipartFile>;
 
     // Disk mode
     saveRequestFiles: (
-      options?: Omit<BusboyConfig, "headers"> & { tmpdir?: string }
+      options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }
     ) => Promise<Array<fastifyMultipart.SavedMultipartFile>>;
     cleanRequestFiles: () => Promise<void>;
     tmpUploads: Array<string> | null;
@@ -36,9 +36,9 @@ declare module "fastify" {
 }
 
 type FastifyMultipartPlugin = FastifyPluginCallback<
-  | fastifyMultipart.FastifyMultipartBaseOptions
-  | fastifyMultipart.FastifyMultipartOptions
-  | fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
+| fastifyMultipart.FastifyMultipartBaseOptions
+| fastifyMultipart.FastifyMultipartOptions
+| fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
 >;
 
 type MultipartHandler = (
@@ -185,7 +185,7 @@ declare namespace fastifyMultipart {
     /**
      * Only valid in the promise api. Append the multipart parameters to the body object.
      */
-    attachFieldsToBody: true | "keyValues";
+    attachFieldsToBody: true | 'keyValues';
 
     /**
      * Manage the file stream like you need
@@ -198,8 +198,8 @@ declare namespace fastifyMultipart {
    */
   export function ajvFilePlugin(ajv: any): void;
 
-  export const fastifyMultipart: FastifyMultipartPlugin;
-  export { fastifyMultipart as default };
+  export const fastifyMultipart: FastifyMultipartPlugin
+  export { fastifyMultipart as default }
 }
 declare function fastifyMultipart(
   ...params: Parameters<FastifyMultipartPlugin>

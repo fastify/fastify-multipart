@@ -3,7 +3,7 @@
   "version": "7.7.3",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "types/index.d.ts",
   "dependencies": {
     "@fastify/busboy": "^1.0.0",
     "@fastify/deepmerge": "^1.0.0",
@@ -17,13 +17,12 @@
   "devDependencies": {
     "@fastify/pre-commit": "^2.0.2",
     "@types/node": "^20.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.30.7",
-    "@typescript-eslint/parser": "^5.30.7",
+    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/parser": "^6.3.0",
     "benchmark": "^2.1.4",
     "climem": "^1.0.3",
     "concat-stream": "^2.0.0",
     "eslint": "^8.20.0",
-    "eslint-config-standard-with-typescript": "^37.0.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-n": "^16.0.1",
     "eslint-plugin-promise": "^6.0.0",
@@ -36,13 +35,15 @@
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.0.0",
-    "tsd": "^0.28.0"
+    "tsd": "^0.29.0"
   },
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",
     "climem": "climem 8999 localhost",
-    "lint": "standard | snazzy",
-    "lint:fix": "standard --fix",
+    "lint": "npm run lint:javascript && npm run lint:typescript",
+    "lint:javascript": "standard | snazzy",
+    "lint:fix": "standard --fix && npm run lint:typescript -- --fix",
+    "lint:typescript": "eslint -c .eslintrc.json types/**/*.d.ts types/**/*.test-d.ts",
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",

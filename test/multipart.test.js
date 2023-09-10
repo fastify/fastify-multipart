@@ -1,16 +1,16 @@
 'use strict'
 
-const util = require('util')
+const util = require('node:util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
-const http = require('http')
-const path = require('path')
-const fs = require('fs')
+const http = require('node:http')
+const path = require('node:path')
+const fs = require('node:fs')
 const concat = require('concat-stream')
-const stream = require('stream')
-const { once } = require('events')
+const stream = require('node:stream')
+const { once } = require('node:events')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
 
