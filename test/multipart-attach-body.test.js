@@ -440,7 +440,7 @@ test('should handle file stream consumption when internal buffer is not yet load
   t.pass('res ended successfully')
 })
 
-test('should pass the buffer instead of convering to string', async function (t) {
+test('should pass the buffer instead of converting to string', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
