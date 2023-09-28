@@ -1,4 +1,4 @@
-import { Busboy, BusboyConfig, BusboyFileStream } from '@fastify/busboy'
+import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Readable } from 'stream'
 import { FastifyErrorConstructor } from '@fastify/error'
@@ -11,13 +11,6 @@ declare module 'fastify' {
     parts: (
       options?: Omit<BusboyConfig, 'headers'>
     ) => AsyncIterableIterator<fastifyMultipart.Multipart>;
-
-    // legacy
-    multipart: (
-      handler: MultipartHandler,
-      next: (err: Error) => void,
-      options?: Omit<BusboyConfig, 'headers'>
-    ) => Busboy;
 
     // Stream mode
     file: (
@@ -110,11 +103,6 @@ declare namespace fastifyMultipart {
   }
 
   export interface FastifyMultipartBaseOptions {
-    /**
-     * Append the multipart parameters to the body object
-     */
-    addToBody?: boolean;
-
     /**
      * Add a shared schema to validate the input fields
      */

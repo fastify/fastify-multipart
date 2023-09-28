@@ -10,7 +10,6 @@
     "@fastify/error": "^3.0.0",
     "@fastify/swagger": "^8.3.1",
     "@fastify/swagger-ui": "^1.8.0",
-    "end-of-stream": "^1.4.4",
     "fastify-plugin": "^4.0.0",
     "secure-json-parse": "^2.4.0",
     "stream-wormhole": "^1.1.0"
@@ -48,7 +47,7 @@
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap \"test/**/*.test.js\" -t 90"
+    "test:unit": "tap -t 90"
   },
   "repository": {
     "type": "git",

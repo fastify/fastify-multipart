@@ -121,6 +121,8 @@ test('should be able to attach all parsed field values and files and make it acc
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
+    req.body.upload = req.body.upload.toString('utf8')
+
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
     t.equal(req.body.upload, original)
@@ -307,6 +309,9 @@ test('should manage array fields', async function (t) {
   fastify.post('/', async function (req, reply) {
     t.ok(req.isMultipart())
 
+    req.body.upload[0] = req.body.upload[0].toString('utf8')
+    req.body.upload[1] = req.body.upload[1].toString('utf8')
+
     t.same(req.body, {
       upload: [original, original],
       hello: ['hello', 'world']
@@ -426,6 +431,53 @@ test('should handle file stream consumption when internal buffer is not yet load
 
   const req = http.request(opts)
   form.append('upload', Readable.from(Buffer.from(original).toString('base64')))
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
+})
+
+test('should pass the buffer instead of converting to string', async function (t) {
+  t.plan(7)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
+
+  const original = fs.readFileSync(filePath)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    t.same(Object.keys(req.body), ['upload', 'hello'])
+
+    t.ok(req.body.upload instanceof Buffer)
+    t.ok(Buffer.compare(req.body.upload, original) === 0)
+    t.equal(req.body.hello, 'world')
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('hello', 'world')
   form.pipe(req)
 
   const [res] = await once(req, 'response')

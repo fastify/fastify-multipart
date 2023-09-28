@@ -22,8 +22,6 @@ npm i @fastify/multipart
 
 ## Usage
 
-If you are looking for the documentation for the legacy callback-api please see [here](./callback.md).
-
 ```js
 const fastify = require('fastify')()
 const fs = require('node:fs')
@@ -240,13 +238,13 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
-Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values will be attached directly to the body object. By default, all files are converted to a string using `buffer.toString()` used as the value attached to the body.
+Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values, including file buffers, will be attached to the body object.
 
 ```js
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
 
 fastify.post('/upload/files', async function (req, reply) {
-  const uploadValue = req.body.upload // access file as string
+  const uploadValue = req.body.upload // access file as buffer
   const fooValue = req.body.foo       // other fields
 })
 ```

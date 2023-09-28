@@ -3,9 +3,8 @@
 const Busboy = require('@fastify/busboy')
 const os = require('node:os')
 const fp = require('fastify-plugin')
-const eos = require('end-of-stream')
 const { createWriteStream } = require('node:fs')
-const { unlink } = require('node:fs').promises
+const { unlink } = require('node:fs/promises')
 const path = require('node:path')
 const { generateId } = require('./lib/generateId')
 const util = require('node:util')
@@ -30,71 +29,8 @@ const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a req
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
 function setMultipart (req, payload, done) {
-  // nothing to do, it will be done by the Request.multipart object
   req.raw[kMultipart] = true
   done()
-}
-
-function attachToBody (options, req, reply, next) {
-  if (req.raw[kMultipart] !== true) {
-    next()
-    return
-  }
-
-  const consumerStream = options.onFile || defaultConsumer
-  const body = {}
-  const mp = req.multipart((field, file, filename, encoding, mimetype) => {
-    body[field] = body[field] || []
-    body[field].push({
-      data: [],
-      filename,
-      encoding,
-      mimetype,
-      limit: false
-    })
-
-    const result = consumerStream(field, file, filename, encoding, mimetype, body)
-    if (result && typeof result.then === 'function') {
-      result.catch((err) => {
-        // continue with the workflow
-        err.statusCode = 500
-        file.destroy(err)
-      })
-    }
-  }, function (err) {
-    if (!err) {
-      req.body = body
-    }
-    next(err)
-  }, options)
-
-  mp.on('field', (key, value) => {
-    if (key === '__proto__' || key === 'constructor') {
-      mp.destroy(new Error(`${key} is not allowed as field name`))
-      return
-    }
-    if (body[key] === undefined) {
-      body[key] = value
-    } else if (Array.isArray(body[key])) {
-      body[key].push(value)
-    } else {
-      body[key] = [body[key], value]
-    }
-  })
-}
-
-function defaultConsumer (field, file, filename, encoding, mimetype, body) {
-  const fileData = []
-  const lastFile = body[field][body[field].length - 1]
-  file.on('data', data => { if (!lastFile.limit) { fileData.push(data) } })
-  file.on('limit', () => { lastFile.limit = true })
-  file.on('end', () => {
-    if (!lastFile.limit) {
-      lastFile.data = Buffer.concat(fileData)
-    } else {
-      lastFile.data = undefined
-    }
-  })
 }
 
 function busboy (options) {
@@ -117,27 +53,9 @@ function fastifyMultipart (fastify, options, done) {
   }
 
   const attachFieldsToBody = options.attachFieldsToBody
-  if (options.addToBody === true) {
-    if (typeof options.sharedSchemaId === 'string') {
-      fastify.addSchema({
-        $id: options.sharedSchemaId,
-        type: 'object',
-        properties: {
-          encoding: { type: 'string' },
-          filename: { type: 'string' },
-          limit: { type: 'boolean' },
-          mimetype: { type: 'string' }
-        }
-      })
-    }
 
-    fastify.addHook('preValidation', function (req, reply, next) {
-      attachToBody(options, req, reply, next)
-    })
-  }
-
-  if (options.attachFieldsToBody === true || options.attachFieldsToBody === 'keyValues') {
-    if (typeof options.sharedSchemaId === 'string') {
+  if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
+    if (typeof options.sharedSchemaId === 'string' && attachFieldsToBody === true) {
       fastify.addSchema({
         $id: options.sharedSchemaId,
         type: 'object',
@@ -149,12 +67,15 @@ function fastifyMultipart (fastify, options, done) {
         }
       })
     }
+
     fastify.addHook('preValidation', async function (req, reply) {
       if (!req.isMultipart()) {
         return
       }
+
       for await (const part of req.parts()) {
         req.body = part.fields
+
         if (part.file) {
           if (options.onFile) {
             await options.onFile.call(req, part)
@@ -163,25 +84,41 @@ function fastifyMultipart (fastify, options, done) {
           }
         }
       }
-      if (options.attachFieldsToBody === 'keyValues') {
+
+      if (attachFieldsToBody === 'keyValues') {
         const body = {}
+
         if (req.body) {
-          for (const key of Object.keys(req.body)) {
+          const reqBodyKeys = Object.keys(req.body)
+
+          for (let i = 0; i < reqBodyKeys.length; ++i) {
+            const key = reqBodyKeys[i]
             const field = req.body[key]
+
             if (field.value !== undefined) {
               body[key] = field.value
-            } else if (Array.isArray(field)) {
-              body[key] = field.map(item => {
-                if (item._buf) {
-                  return item._buf.toString()
-                }
-                return item.value
-              })
             } else if (field._buf) {
-              body[key] = field._buf.toString()
+              body[key] = field._buf
+            } else if (Array.isArray(field)) {
+              const items = []
+
+              for (let i = 0; i < field.length; ++i) {
+                const item = field[i]
+
+                if (item.value !== undefined) {
+                  items.push(item.value)
+                } else if (item._buf) {
+                  items.push(item._buf)
+                }
+              }
+
+              if (items.length) {
+                body[key] = items
+              }
             }
           }
         }
+
         req.body = body
       }
     })
@@ -210,9 +147,6 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest('tmpUploads', null)
   fastify.decorateRequest('savedRequestFiles', null)
 
-  // legacy
-  fastify.decorateRequest('multipart', handleLegacyMultipartApi)
-
   // Stream mode
   fastify.decorateRequest('file', getMultipartFile)
   fastify.decorateRequest('files', getMultipartFiles)
@@ -226,80 +160,7 @@ function fastifyMultipart (fastify, options, done) {
   })
 
   function isMultipart () {
-    return this.raw[kMultipart] || false
-  }
-
-  // handler definition is in multipart-readstream
-  // handler(field, file, filename, encoding, mimetype)
-  // opts is a per-request override for the options object
-  function handleLegacyMultipartApi (handler, done, opts) {
-    if (typeof handler !== 'function') {
-      throw new Error('handler must be a function')
-    }
-
-    if (typeof done !== 'function') {
-      throw new Error('the callback must be a function')
-    }
-
-    if (!this.isMultipart()) {
-      done(new Error('the request is not multipart'))
-      return
-    }
-
-    const log = this.log
-
-    log.warn('the multipart callback-based api is deprecated in favour of the new promise api')
-    log.debug('starting multipart parsing')
-
-    const req = this.raw
-
-    const busboyOptions = deepmergeAll({ headers: req.headers }, options || {}, opts || {})
-    const stream = busboy(busboyOptions)
-    let completed = false
-    let files = 0
-
-    req.on('error', function (err) {
-      stream.destroy()
-      if (!completed) {
-        completed = true
-        done(err)
-      }
-    })
-
-    stream.on('finish', function () {
-      log.debug('finished receiving stream, total %d files', files)
-      if (!completed) {
-        completed = true
-        setImmediate(done)
-      }
-    })
-
-    stream.on('file', wrap)
-
-    req.pipe(stream)
-      .on('error', function (error) {
-        req.emit('error', error)
-      })
-
-    function wrap (field, file, filename, encoding, mimetype) {
-      log.debug({ field, filename, encoding, mimetype }, 'parsing part')
-      files++
-      eos(file, waitForFiles)
-      if (field === '__proto__' || field === 'constructor') {
-        file.destroy(new Error(`${field} is not allowed as field name`))
-        return
-      }
-      handler(field, file, filename, encoding, mimetype)
-    }
-
-    function waitForFiles (err) {
-      if (err) {
-        completed = true
-        done(err)
-      }
-    }
-
-    return stream
+    return this.raw[kMultipart]
   }
 
   function handleMultipart (opts = {}) {
@@ -560,7 +421,9 @@ function fastifyMultipart (fastify, options, done) {
 
   function * filesFromFields (container) {
     try {
-      for (const field of Object.values(container)) {
+      const fields = Array.isArray(container) ? container : Object.values(container)
+      for (let i = 0; i < fields.length; ++i) {
+        const field = fields[i]
         if (Array.isArray(field)) {
           for (const subField of filesFromFields.call(this, field)) {
             yield subField
@@ -585,7 +448,8 @@ function fastifyMultipart (fastify, options, done) {
     if (!this.tmpUploads) {
       return
     }
-    for (const filepath of this.tmpUploads) {
+    for (let i = 0; i < this.tmpUploads.length; ++i) {
+      const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
       } catch (error) {
