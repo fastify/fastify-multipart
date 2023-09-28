@@ -8,14 +8,14 @@
     "@fastify/busboy": "^1.0.0",
     "@fastify/deepmerge": "^1.0.0",
     "@fastify/error": "^3.0.0",
-    "@fastify/swagger": "^8.3.1",
-    "@fastify/swagger-ui": "^1.8.0",
     "fastify-plugin": "^4.0.0",
     "secure-json-parse": "^2.4.0",
     "stream-wormhole": "^1.1.0"
   },
   "devDependencies": {
     "@fastify/pre-commit": "^2.0.2",
+    "@fastify/swagger": "^8.10.1",
+    "@fastify/swagger-ui": "^1.9.3",
     "@types/node": "^20.1.0",
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
