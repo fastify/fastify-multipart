@@ -104,6 +104,141 @@ test('should not allow __proto__ as field name', function (t) {
   })
 })
 
+test('should not allow toString as field name', function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.file()
+      reply.code(200).send()
+    } catch (error) {
+      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      reply.code(500).send()
+    }
+  })
+
+  fastify.listen({ port: 0 }, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    form.append('toString', 'world')
+
+    form.pipe(req)
+  })
+})
+
+test('should not allow hasOwnProperty as field name', function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.file()
+      reply.code(200).send()
+    } catch (error) {
+      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      reply.code(500).send()
+    }
+  })
+
+  fastify.listen({ port: 0 }, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    form.append('hasOwnProperty', 'world')
+
+    form.pipe(req)
+  })
+})
+
+test('should not allow propertyIsEnumerable as field name', function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    try {
+      await req.file()
+      reply.code(200).send()
+    } catch (error) {
+      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      reply.code(500).send()
+    }
+  })
+
+  fastify.listen({ port: 0 }, async function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.equal(res.statusCode, 500)
+      res.resume()
+      res.on('end', () => {
+        t.pass('res ended successfully')
+      })
+    })
+    form.append('propertyIsEnumerable', 'world')
+
+    form.pipe(req)
+  })
+})
+
 test('should use default for fileSize', async function (t) {
   t.plan(4)
 
