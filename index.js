@@ -28,7 +28,7 @@ const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a req
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 
 function setMultipart (req, payload, done) {
-  req.raw[kMultipart] = true
+  req[kMultipart] = true
   done()
 }
 
@@ -138,6 +138,7 @@ function fastifyMultipart (fastify, options, done) {
   })
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
+  fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
 
   fastify.decorateRequest('parts', getMultipartIterator)
@@ -159,7 +160,7 @@ function fastifyMultipart (fastify, options, done) {
   })
 
   function isMultipart () {
-    return this.raw[kMultipart]
+    return this[kMultipart]
   }
 
   function handleMultipart (opts = {}) {
