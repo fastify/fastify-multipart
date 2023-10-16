@@ -20,7 +20,7 @@
     "@typescript-eslint/eslint-plugin": "^6.3.0",
     "@typescript-eslint/parser": "^6.3.0",
     "benchmark": "^2.1.4",
-    "climem": "^1.0.3",
+    "climem": "^2.0.0",
     "concat-stream": "^2.0.0",
     "eslint": "^8.20.0",
     "eslint-plugin-import": "^2.26.0",
