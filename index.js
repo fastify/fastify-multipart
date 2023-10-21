@@ -454,6 +454,7 @@ function fastifyMultipart (fastify, options, done) {
       try {
         await unlink(filepath)
       } catch (error) {
+        /* istanbul ignore next */
         this.log.error(error, 'could not delete file')
       }
     }
