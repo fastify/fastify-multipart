@@ -14,6 +14,9 @@ const runServer = async () => {
 
   app.register(fastifyMultipart, {
     attachFieldsToBody: true,
+    limits: {
+      parts: 500
+    },
     onFile: (part: MultipartFile) => {
       console.log(part)
     }
@@ -73,7 +76,7 @@ const runServer = async () => {
 
   // busboy
   app.post('/', async function (req, reply) {
-    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000 } }
+    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000, parts: 500 } }
     const data = await req.file(options)
     if (!data) throw new Error('missing file')
     await pump(data.file, fs.createWriteStream(data.filename))
