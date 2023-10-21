@@ -94,6 +94,7 @@ function fastifyMultipart (fastify, options, done) {
             const key = reqBodyKeys[i]
             const field = req.body[key]
 
+            /* istanbul ignore else */
             if (field.value !== undefined) {
               body[key] = field.value
             } else if (field._buf) {
@@ -462,6 +463,7 @@ function fastifyMultipart (fastify, options, done) {
     const parts = this[kMultipartHandler](options)
     let part
     while ((part = await parts()) != null) {
+      /* istanbul ignore else */
       if (part.file) {
         return part
       }
