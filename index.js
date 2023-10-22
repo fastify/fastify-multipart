@@ -94,6 +94,7 @@ function fastifyMultipart (fastify, options, done) {
             const key = reqBodyKeys[i]
             const field = req.body[key]
 
+            /* Don't modify the body if a field doesn't have a value or an attached buffer */
             /* istanbul ignore else */
             if (field.value !== undefined) {
               body[key] = field.value
@@ -455,7 +456,7 @@ function fastifyMultipart (fastify, options, done) {
         await unlink(filepath)
       } catch (error) {
         /* istanbul ignore next */
-        this.log.error(error, 'could not delete file')
+        this.log.error(error, 'Could not delete file')
       }
     }
   }
@@ -464,6 +465,7 @@ function fastifyMultipart (fastify, options, done) {
     const parts = this[kMultipartHandler](options)
     let part
     while ((part = await parts()) != null) {
+      /* Only return a part if the file property exists */
       /* istanbul ignore else */
       if (part.file) {
         return part
