@@ -8,7 +8,7 @@ const http = require('node:http')
 const EventEmitter = require('node:events')
 const { once } = EventEmitter
 
-test('Should throw RequestFileTooLargeError when throwFileSizeLimit: false for file())', async function (t) {
+test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for file())', async function (t) {
   t.plan(3)
 
   const fastify = Fastify()
@@ -112,7 +112,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
   }
 })
 
-test('Should throw RequestFileTooLargeError when throwFileSizeLimit: false for files())', async function (t) {
+test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for files())', async function (t) {
   t.plan(3)
 
   const fastify = Fastify()
