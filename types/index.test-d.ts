@@ -76,7 +76,7 @@ const runServer = async () => {
 
   // busboy
   app.post('/', async function (req, reply) {
-    const options: Partial<BusboyConfig | FastifyMultipartBaseOptions> = {
+    const data = await req.file({
       limits: { fileSize: 1000, parts: 500 },
       throwFileSizeLimit: true,
       sharedSchemaId: 'schemaId',
@@ -86,8 +86,7 @@ const runServer = async () => {
         expectType<string | undefined>(fileName)
         return true
       }
-    }
-    const data = await req.file(options)
+    })
     if (!data) throw new Error('missing file')
     await pump(data.file, fs.createWriteStream(data.filename))
     reply.send()
@@ -95,7 +94,7 @@ const runServer = async () => {
 
   // handle multiple file streams
   app.post('/', async (req, reply) => {
-    const options: Partial<BusboyConfig | FastifyMultipartBaseOptions> = {
+    const parts = req.files({
       limits: { fileSize: 1000, parts: 500 },
       throwFileSizeLimit: true,
       sharedSchemaId: 'schemaId',
@@ -105,8 +104,7 @@ const runServer = async () => {
         expectType<string | undefined>(fileName)
         return true
       }
-    }
-    const parts = req.files(options)
+    })
     for await (const part of parts) {
       await pump(part.file, fs.createWriteStream(part.filename))
     }
