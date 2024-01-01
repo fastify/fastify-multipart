@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile, FastifyMultipartBaseOptions } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
@@ -76,8 +76,17 @@ const runServer = async () => {
 
   // busboy
   app.post('/', async function (req, reply) {
-    const options: Partial<BusboyConfig> = { limits: { fileSize: 1000, parts: 500 } }
-    const data = await req.file(options)
+    const data = await req.file({
+      limits: { fileSize: 1000, parts: 500 },
+      throwFileSizeLimit: true,
+      sharedSchemaId: 'schemaId',
+      isPartAFile: (fieldName, contentType, fileName) => {
+        expectType<string | undefined>(fieldName)
+        expectType<string | undefined>(contentType)
+        expectType<string | undefined>(fileName)
+        return true
+      }
+    })
     if (!data) throw new Error('missing file')
     await pump(data.file, fs.createWriteStream(data.filename))
     reply.send()
@@ -85,7 +94,17 @@ const runServer = async () => {
 
   // handle multiple file streams
   app.post('/', async (req, reply) => {
-    const parts = req.files()
+    const parts = req.files({
+      limits: { fileSize: 1000, parts: 500 },
+      throwFileSizeLimit: true,
+      sharedSchemaId: 'schemaId',
+      isPartAFile: (fieldName, contentType, fileName) => {
+        expectType<string | undefined>(fieldName)
+        expectType<string | undefined>(contentType)
+        expectType<string | undefined>(fileName)
+        return true
+      }
+    })
     for await (const part of parts) {
       await pump(part.file, fs.createWriteStream(part.filename))
     }

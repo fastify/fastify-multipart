@@ -14,10 +14,10 @@ declare module 'fastify' {
 
     // Stream mode
     file: (
-      options?: Omit<BusboyConfig, 'headers'>
+      options?: Omit<BusboyConfig, 'headers'> | fastifyMultipart.FastifyMultipartBaseOptions
     ) => Promise<fastifyMultipart.MultipartFile | undefined>;
     files: (
-      options?: Omit<BusboyConfig, 'headers'>
+      options?: Omit<BusboyConfig, 'headers'> | fastifyMultipart.FastifyMultipartBaseOptions
     ) => AsyncIterableIterator<fastifyMultipart.MultipartFile>;
 
     // Disk mode
