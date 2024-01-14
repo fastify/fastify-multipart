@@ -372,7 +372,7 @@ The shared schema, that is added, will look like this:
 
 ### JSON Schema with Swagger
 
-If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
+If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
  
