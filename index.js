@@ -452,9 +452,10 @@ function fastifyMultipart (fastify, options, done) {
       const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
-      } /* c8 ignore next */ catch (error) {
+      } /* c8 ignore start */ catch (error) {
         this.log.error(error, 'Could not delete file')
       }
+      /* c8 ignore stop */
     }
   }
 
