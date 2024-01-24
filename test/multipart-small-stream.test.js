@@ -8,7 +8,7 @@ const http = require('node:http')
 const path = require('node:path')
 const fs = require('node:fs')
 const EventEmitter = require('node:events')
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
