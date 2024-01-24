@@ -30,7 +30,7 @@
     "fastify": "^4.25.2",
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
-    "noop-stream": "^1.0.0",
+    "noop-stream": "^0.1.0",
     "pump": "^3.0.0",
     "readable-stream": "^4.5.2",
     "snazzy": "^9.0.0",
