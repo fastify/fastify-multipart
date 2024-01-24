@@ -94,7 +94,6 @@ function fastifyMultipart (fastify, options, done) {
             const field = req.body[key]
 
             /* Don't modify the body if a field doesn't have a value or an attached buffer */
-            /* istanbul ignore else */
             if (field.value !== undefined) {
               body[key] = field.value
             } else if (field._buf) {
@@ -453,8 +452,7 @@ function fastifyMultipart (fastify, options, done) {
       const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
-      } catch (error) {
-        /* istanbul ignore next */
+      } /* c8 ignore next */ catch (error) {
         this.log.error(error, 'Could not delete file')
       }
     }
@@ -465,7 +463,6 @@ function fastifyMultipart (fastify, options, done) {
     let part
     while ((part = await parts()) != null) {
       /* Only return a part if the file property exists */
-      /* istanbul ignore else */
       if (part.file) {
         return part
       }
