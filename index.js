@@ -7,12 +7,11 @@ const { createWriteStream } = require('node:fs')
 const { unlink } = require('node:fs/promises')
 const path = require('node:path')
 const { generateId } = require('./lib/generateId')
-const util = require('node:util')
 const createError = require('@fastify/error')
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
-const { PassThrough, pipeline, Readable } = require('node:stream')
-const pump = util.promisify(pipeline)
+const { PassThrough, Readable } = require('node:stream')
+const { pipeline: pump } = require('node:stream/promises')
 const secureJSON = require('secure-json-parse')
 
 const kMultipart = Symbol('multipart')
@@ -96,7 +95,6 @@ function fastifyMultipart (fastify, options, done) {
             const field = req.body[key]
 
             /* Don't modify the body if a field doesn't have a value or an attached buffer */
-            /* istanbul ignore else */
             if (field.value !== undefined) {
               body[key] = field.value
             } else if (field._buf) {
@@ -501,10 +499,10 @@ function fastifyMultipart (fastify, options, done) {
       const filepath = this.tmpUploads[i]
       try {
         await unlink(filepath)
-      } catch (error) {
-        /* istanbul ignore next */
+      } /* c8 ignore start */ catch (error) {
         this.log.error(error, 'Could not delete file')
       }
+      /* c8 ignore stop */
     }
   }
 
@@ -513,7 +511,6 @@ function fastifyMultipart (fastify, options, done) {
     let part
     while ((part = await parts()) != null) {
       /* Only return a part if the file property exists */
-      /* istanbul ignore else */
       if (part.file) {
         return part
       }

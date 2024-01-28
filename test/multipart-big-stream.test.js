@@ -7,7 +7,7 @@ const multipart = require('..')
 const http = require('node:http')
 const crypto = require('node:crypto')
 const { Readable } = require('readable-stream')
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 const EventEmitter = require('node:events')
 const { once } = EventEmitter
 
