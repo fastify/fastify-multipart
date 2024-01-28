@@ -12,7 +12,7 @@ const concat = require('concat-stream')
 const stream = require('node:stream')
 const { once } = require('node:events')
 const pump = util.promisify(stream.pipeline)
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 
 const filePath = path.join(__dirname, '../README.md')
 

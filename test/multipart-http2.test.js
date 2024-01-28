@@ -7,7 +7,7 @@ const multipart = require('..')
 const h2url = require('h2url')
 const path = require('node:path')
 const fs = require('node:fs')
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 
 const filePath = path.join(__dirname, '../README.md')
 
