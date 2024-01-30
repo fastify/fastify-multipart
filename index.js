@@ -379,9 +379,7 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     function onEnd (err) {
-      cleanup()
-
-      ch(err || lastError)
+      cleanup(err)
     }
 
     function cleanup (err) {
