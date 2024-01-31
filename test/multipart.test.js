@@ -678,7 +678,6 @@ test('should not freeze when error is thrown during processing', async function 
   console.log('running on port', port)
 
   const form = new FormData()
-  form.append('upload', fs.createReadStream('./foo.txt'))
   const opts = {
     hostname: '127.0.0.1',
     port,
@@ -688,7 +687,7 @@ test('should not freeze when error is thrown during processing', async function 
   }
   const req = http.request(opts)
 
-  form.append('upload', fs.createReadStream('./foo.txt'))
+  form.append('upload', fs.createReadStream('./test/files/foo.txt'))
   form.pipe(req)
 
   const [res] = await once(req, 'response')
