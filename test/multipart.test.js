@@ -10,6 +10,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const concat = require('concat-stream')
 const stream = require('node:stream')
+const streamPromises = require('node:stream/promises')
 const { once } = require('node:events')
 const pump = util.promisify(stream.pipeline)
 const sendToWormhole = require('stream-wormhole')
@@ -633,4 +634,51 @@ test('should not miss fields if part handler takes much time than formdata parsi
   res.resume()
   await once(res, 'end')
   t.pass('res ended successfully')
+})
+
+test('should not freeze when error is thrown during processing', async function (t) {
+  t.plan(3)
+
+  const app = Fastify()
+  t.teardown(app.close.bind(app))
+
+  app.register(multipart)
+  app.post('/', async (request, reply) => {
+    for await (const { file } of request.files()) {
+      try {
+        const storage = new stream.Writable({
+          write (chunk, encoding, callback) {
+            // trigger error:
+            callback(new Error('write error'))
+          }
+        })
+
+        await streamPromises.pipeline(file, storage)
+      } catch (error) {
+        t.ok(error instanceof Error)
+      }
+    }
+
+    return { message: 'done' }
+  })
+
+  await app.listen()
+
+  const form = new FormData()
+  form.append('upload', fs.createReadStream('./foo.txt'))
+
+  const res = await app.inject(
+    {
+      hostname: '127.0.0.1',
+      port: app.server.address().port,
+      path: '/',
+      headers: form.getHeaders(),
+      method: 'POST',
+      body: form
+    }
+  )
+
+  form.append('upload', fs.createReadStream('./foo.txt'))
+  t.equal(res.statusCode, 200)
+  t.equal(res.body, '{"message":"done"}')
 })
