@@ -669,7 +669,7 @@ test('should not freeze when error is thrown during processing', async function 
 
       console.log('done processing all files')
 
-      return {message: 'done'}
+      return { message: 'done' }
     })
 
   await app.listen()
