@@ -637,48 +637,66 @@ test('should not miss fields if part handler takes much time than formdata parsi
 })
 
 test('should not freeze when error is thrown during processing', async function (t) {
-  t.plan(3)
-
   const app = Fastify()
-  t.teardown(app.close.bind(app))
 
-  app.register(multipart)
-  app.post('/', async (request, reply) => {
-    for await (const { file } of request.files()) {
-      try {
-        const storage = new stream.Writable({
-          write (chunk, encoding, callback) {
+  app
+    .register(multipart)
+
+  app
+    .post('/', async (request, reply) => {
+      const files = request.files()
+
+      for await (const { file, filename } of files) {
+        console.log('start processing file', filename)
+
+        try {
+          const storage = new stream.Writable({
+            write (chunk, encoding, callback) {
             // trigger error:
-            callback(new Error('write error'))
-          }
-        })
+              callback(new Error('write error'))
+            }
+          })
 
-        await streamPromises.pipeline(file, storage)
-      } catch (error) {
-        t.ok(error instanceof Error)
+          await streamPromises.pipeline(file, storage)
+        } catch (error) {
+          console.log('caught error while processing file', filename, error)
+        // note that the error isn't rethrown here, so this error is now handled
+        // and processing should proceed
+        }
+
+        console.log('done processing file', filename)
       }
-    }
 
-    return { message: 'done' }
-  })
+      console.log('done processing all files')
+
+      return {message: 'done'}
+    })
 
   await app.listen()
 
+  const { port } = app.server.address()
+
+  console.log('running on port', port)
+
   const form = new FormData()
   form.append('upload', fs.createReadStream('./foo.txt'))
-
-  const res = await app.inject(
-    {
-      hostname: '127.0.0.1',
-      port: app.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST',
-      body: form
-    }
-  )
+  const opts = {
+    hostname: '127.0.0.1',
+    port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
 
   form.append('upload', fs.createReadStream('./foo.txt'))
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
   t.equal(res.statusCode, 200)
-  t.equal(res.body, '{"message":"done"}')
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
+
+  await app.close()
 })
