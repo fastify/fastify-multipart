@@ -227,15 +227,16 @@ function fastifyMultipart (fastify, options, done) {
     this.log.trace({ busboyOptions }, 'Providing options to busboy')
     const bb = busboy(busboyOptions)
 
-    request.on('close', cleanup)
     request.on('error', cleanup)
+    request.on('close', cleanup)
 
     bb
       .on('field', onField)
       .on('file', onFile)
-      .on('error', onEnd)
       .on('end', onEnd)
       .on('finish', onEnd)
+      .on('error', onEnd)
+      .on('close', cleanup)
 
     bb.on('partsLimit', function () {
       const err = new PartsLimitError()
