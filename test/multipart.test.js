@@ -687,7 +687,7 @@ test('should not freeze when error is thrown during processing', async function 
   }
   const req = http.request(opts)
 
-  form.append('upload', fs.createReadStream('./test/files/foo.txt'))
+  form.append('upload', fs.createReadStream(filePath))
   form.pipe(req)
 
   const [res] = await once(req, 'response')
