@@ -645,9 +645,7 @@ test('should not freeze when error is thrown during processing', async function 
     .post('/', async (request, reply) => {
       const files = request.files()
 
-      for await (const { file, filename } of files) {
-        console.log('start processing file', filename)
-
+      for await (const { file } of files) {
         try {
           const storage = new stream.Writable({
             write (chunk, encoding, callback) {
@@ -657,16 +655,8 @@ test('should not freeze when error is thrown during processing', async function 
           })
 
           await pump(file, storage)
-        } catch (error) {
-          console.log('caught error while processing file', filename, error)
-        // note that the error isn't rethrown here, so this error is now handled
-        // and processing should proceed
-        }
-
-        console.log('done processing file', filename)
+        } catch {}
       }
-
-      console.log('done processing all files')
 
       return { message: 'done' }
     })
@@ -674,8 +664,6 @@ test('should not freeze when error is thrown during processing', async function 
   await app.listen()
 
   const { port } = app.server.address()
-
-  console.log('running on port', port)
 
   const form = new FormData()
   const opts = {
