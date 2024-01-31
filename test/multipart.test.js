@@ -636,6 +636,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
 })
 
 test('should not freeze when error is thrown during processing', async function (t) {
+  t.plan(2)
   const app = Fastify()
 
   app
