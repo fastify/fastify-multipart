@@ -657,7 +657,7 @@ test('should not freeze when error is thrown during processing', async function 
             }
           })
 
-          await streamPromises.pipeline(file, storage)
+          await pump(file, storage)
         } catch (error) {
           console.log('caught error while processing file', filename, error)
         // note that the error isn't rethrown here, so this error is now handled
