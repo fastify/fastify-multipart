@@ -380,17 +380,19 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     function onEnd (err) {
-      cleanup()
+      cleanup(err)
 
-      ch(err || lastError)
+      ch(null)
     }
 
     function cleanup (err) {
       request.unpipe(bb)
-      // in node 10 it seems that error handler is not called but request.aborted is set
+
       if ((err || request.aborted) && currentFile) {
         currentFile.destroy()
       }
+
+      ch(err || lastError)
     }
 
     return parts
