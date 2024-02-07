@@ -387,7 +387,7 @@ function fastifyMultipart (fastify, options, done) {
     function cleanup (err) {
       request.unpipe(bb)
 
-      if ((err || lastError) && currentFile) {
+      if ((err || lastError || request.aborted) && currentFile) {
         currentFile.destroy()
       }
 
