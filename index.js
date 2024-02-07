@@ -187,14 +187,13 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     const handle = (handler) => {
-      if (values.length === 0) {
+      if (values.length > 0) {
+        const value = values[0]
+        values = values.slice(1)
+        handler(value)
+      } else {
         pendingHandler = handler
-        return
       }
-
-      const value = values[0]
-      values = values.slice(1)
-      handler(value)
     }
 
     const parts = () => {
