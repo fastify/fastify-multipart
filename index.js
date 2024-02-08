@@ -380,8 +380,6 @@ function fastifyMultipart (fastify, options, done) {
 
     function onEnd (err) {
       cleanup(err)
-
-      ch(null)
     }
 
     function cleanup (err) {
@@ -391,7 +389,7 @@ function fastifyMultipart (fastify, options, done) {
         currentFile.destroy()
       }
 
-      ch(err || lastError)
+      ch(err || lastError || null)
     }
 
     return parts
