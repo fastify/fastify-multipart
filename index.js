@@ -197,8 +197,16 @@ function fastifyMultipart (fastify, options, done) {
     const parts = () => {
       return new Promise((resolve, reject) => {
         handle((val) => {
-          if (val instanceof Error) return reject(val)
-          resolve(val)
+          if (val instanceof Error) {
+            if (val.message === 'Unexpected end of multipart data') {
+              // Stop parsing without throwing an error
+              resolve(null)
+            } else {
+              reject(val)
+            }
+          } else {
+            resolve(val)
+          }
         })
       })
     }

@@ -150,3 +150,6 @@ yarn.lock
 # editor files
 .vscode
 .idea
+
+#tap files
+.tap/
