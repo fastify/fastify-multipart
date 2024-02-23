@@ -685,7 +685,7 @@ test('should not freeze when error is thrown during processing', async function 
   t.equal(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.pass('res ended successfully!')
 
   await app.close()
 })
