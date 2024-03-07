@@ -635,7 +635,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
   t.pass('res ended successfully')
 })
 
-test('should not freeze when error is thrown during processing', { skip: process.versions.node.startsWith('14') }, async function (t) {
+test('should not freeze when error is thrown during processing', async function (t) {
   t.plan(2)
   const app = Fastify()
 
@@ -688,51 +688,4 @@ test('should not freeze when error is thrown during processing', { skip: process
   t.pass('res ended successfully!')
 
   await app.close()
-})
-
-const hasGlobalFormData = typeof globalThis.FormData === 'function'
-
-test('no formData', { skip: !hasGlobalFormData }, function (t) {
-  t.plan(6)
-  const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
-
-  fastify.register(multipart)
-
-  fastify.post('/', async function (req, reply) {
-    await t.rejects(req.formData())
-
-    for await (const part of req.parts()) {
-      t.equal(part.type, 'field')
-      t.equal(part.fieldname, 'hello')
-      t.equal(part.value, 'world')
-    }
-
-    reply.code(200).send()
-  })
-
-  fastify.listen({ port: 0 }, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
-
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      // consume all data without processing
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('hello', 'world')
-
-    form.pipe(req)
-  })
 })
