@@ -634,3 +634,58 @@ test('should not miss fields if part handler takes much time than formdata parsi
   await once(res, 'end')
   t.pass('res ended successfully')
 })
+
+test('should not freeze when error is thrown during processing', async function (t) {
+  t.plan(2)
+  const app = Fastify()
+
+  app
+    .register(multipart)
+
+  app
+    .post('/', async (request, reply) => {
+      const files = request.files()
+
+      for await (const { file } of files) {
+        try {
+          const storage = new stream.Writable({
+            write (chunk, encoding, callback) {
+            // trigger error:
+              callback(new Error('write error'))
+            }
+          })
+
+          await pump(file, storage)
+        } catch {}
+      }
+
+      return { message: 'done' }
+    })
+
+  await app.listen()
+
+  const { port } = app.server.address()
+
+  const form = new FormData()
+  const opts = {
+    hostname: '127.0.0.1',
+    port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+  const req = http.request(opts)
+
+  try {
+    form.append('upload', fs.createReadStream(filePath))
+    form.pipe(req)
+  } catch {}
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully!')
+
+  await app.close()
+})
