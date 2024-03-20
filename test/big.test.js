@@ -9,7 +9,7 @@ const stream = require('readable-stream')
 const Readable = stream.Readable
 const pump = stream.pipeline
 const crypto = require('node:crypto')
-const sendToWormhole = require('stream-wormhole')
+const { sendToWormhole } = require('stream-wormhole')
 
 // skipping on Github Actions because it takes too long
 test('should upload a big file in constant memory', { skip: process.env.CI }, function (t) {
