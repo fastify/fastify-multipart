@@ -232,27 +232,27 @@ function fastifyMultipart (fastify, options, done) {
     bb
       .on('field', onField)
       .on('file', onFile)
+      .on('end', cleanup)
+      .on('finish', cleanup)
       .on('close', cleanup)
-      .on('error', onEnd)
-      .on('end', onEnd)
-      .on('finish', onEnd)
+      .on('error', cleanup)
 
     bb.on('partsLimit', function () {
       const err = new PartsLimitError()
       onError(err)
-      process.nextTick(() => onEnd(err))
+      process.nextTick(() => cleanup(err))
     })
 
     bb.on('filesLimit', function () {
       const err = new FilesLimitError()
       onError(err)
-      process.nextTick(() => onEnd(err))
+      process.nextTick(() => cleanup(err))
     })
 
     bb.on('fieldsLimit', function () {
       const err = new FieldsLimitError()
       onError(err)
-      process.nextTick(() => onEnd(err))
+      process.nextTick(() => cleanup(err))
     })
 
     request.pipe(bb)
@@ -378,18 +378,15 @@ function fastifyMultipart (fastify, options, done) {
       currentFile = null
     }
 
-    function onEnd (err) {
-      cleanup()
-
-      ch(err || lastError)
-    }
-
     function cleanup (err) {
       request.unpipe(bb)
-      // in node 10 it seems that error handler is not called but request.aborted is set
+
       if ((err || request.aborted) && currentFile) {
         currentFile.destroy()
+        currentFile = null
       }
+
+      ch(err || lastError || null)
     }
 
     return parts
