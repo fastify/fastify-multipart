@@ -123,6 +123,40 @@ function fastifyMultipart (fastify, options, done) {
         req.body = body
       }
     })
+
+    // The following is not available on old Node.js versions
+    // so we must skip it in the test coverage
+    /* istanbul ignore next */
+    if (globalThis.FormData) {
+      fastify.decorateRequest('formdata', async function () {
+        const formData = new FormData()
+        for (const key in this.body) {
+          const value = this.body[key]
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              await append(key, item)
+            }
+          } else {
+            await append(key, value)
+          }
+        }
+
+        async function append (key, entry) {
+          if (entry.type === 'file') {
+            // TODO use File constructor with fs.openAsBlob()
+            // if attachFieldsToBody is not set
+            // https://nodejs.org/api/fs.html#fsopenasblobpath-options
+            formData.append(key, new Blob([await entry.toBuffer()], {
+              type: entry.mimetype
+            }), entry.filename)
+          } else {
+            formData.append(key, entry.value)
+          }
+        }
+
+        return formData
+      })
+    }
   }
 
   const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
