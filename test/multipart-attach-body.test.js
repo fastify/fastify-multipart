@@ -487,7 +487,6 @@ test('should pass the buffer instead of converting to string', async function (t
   t.pass('res ended successfully')
 })
 
-
 const hasGlobalFormData = typeof globalThis.FormData === 'function'
 
 test('should be able to attach all parsed fields and files and make it accessible through "req.formdata"', { skip: !hasGlobalFormData }, async function (t) {
