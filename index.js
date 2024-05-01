@@ -128,7 +128,7 @@ function fastifyMultipart (fastify, options, done) {
     // so we must skip it in the test coverage
     /* istanbul ignore next */
     if (globalThis.FormData) {
-      fastify.decorateRequest('formdata', async function () {
+      fastify.decorateRequest('formData', async function () {
         const formData = new FormData()
         for (const key in this.body) {
           const value = this.body[key]

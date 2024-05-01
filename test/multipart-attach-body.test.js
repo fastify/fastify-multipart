@@ -504,7 +504,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
 
     t.same(Object.keys(req.body), ['upload', 'hello'])
 
-    const formData = await req.formdata()
+    const formData = await req.formData()
 
     t.equal(formData instanceof globalThis.FormData, true)
     t.equal(formData.get('hello'), 'world')
