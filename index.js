@@ -26,6 +26,7 @@ const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype pr
 const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
+const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
 function setMultipart (req, payload, done) {
   req[kMultipart] = true
@@ -157,6 +158,12 @@ function fastifyMultipart (fastify, options, done) {
         return formData
       })
     }
+  } 
+
+  if (!fastify.hasRequestDecorator('formData')) {
+    fastify.decorateRequest('formData', async function () {
+      throw new NoFormData()
+    })
   }
 
   const defaultThrowFileSizeLimit = typeof options.throwFileSizeLimit === 'boolean'
