@@ -142,7 +142,7 @@ function fastifyMultipart (fastify, options, done) {
         }
 
         async function append (key, entry) {
-          if (entry.type === 'file') {
+          if (entry.type === 'file' || (attachFieldsToBody === 'keyValues' && Buffer.isBuffer(entry))) {
             // TODO use File constructor with fs.openAsBlob()
             // if attachFieldsToBody is not set
             // https://nodejs.org/api/fs.html#fsopenasblobpath-options
