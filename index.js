@@ -158,7 +158,7 @@ function fastifyMultipart (fastify, options, done) {
         return formData
       })
     }
-  } 
+  }
 
   /* istanbul ignore next */
   if (!fastify.hasRequestDecorator('formData')) {
