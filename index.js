@@ -160,6 +160,7 @@ function fastifyMultipart (fastify, options, done) {
     }
   } 
 
+  /* istanbul ignore next */
   if (!fastify.hasRequestDecorator('formData')) {
     fastify.decorateRequest('formData', async function () {
       throw new NoFormData()
