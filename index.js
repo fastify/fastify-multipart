@@ -128,7 +128,7 @@ function fastifyMultipart (fastify, options, done) {
     // The following is not available on old Node.js versions
     // so we must skip it in the test coverage
     /* istanbul ignore next */
-    if (globalThis.FormData) {
+    if (globalThis.FormData && !fastify.hasRequestDecorator('formData')) {
       fastify.decorateRequest('formData', async function () {
         const formData = new FormData()
         for (const key in this.body) {
