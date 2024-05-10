@@ -26,6 +26,7 @@ const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype pr
 const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
+const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
 function setMultipart (req, payload, done) {
   req[kMultipart] = true
@@ -122,6 +123,47 @@ function fastifyMultipart (fastify, options, done) {
 
         req.body = body
       }
+    })
+
+    // The following is not available on old Node.js versions
+    // so we must skip it in the test coverage
+    /* istanbul ignore next */
+    if (globalThis.FormData && !fastify.hasRequestDecorator('formData')) {
+      fastify.decorateRequest('formData', async function () {
+        const formData = new FormData()
+        for (const key in this.body) {
+          const value = this.body[key]
+          if (Array.isArray(value)) {
+            for (const item of value) {
+              await append(key, item)
+            }
+          } else {
+            await append(key, value)
+          }
+        }
+
+        async function append (key, entry) {
+          if (entry.type === 'file' || (attachFieldsToBody === 'keyValues' && Buffer.isBuffer(entry))) {
+            // TODO use File constructor with fs.openAsBlob()
+            // if attachFieldsToBody is not set
+            // https://nodejs.org/api/fs.html#fsopenasblobpath-options
+            formData.append(key, new Blob([await entry.toBuffer()], {
+              type: entry.mimetype
+            }), entry.filename)
+          } else {
+            formData.append(key, entry.value)
+          }
+        }
+
+        return formData
+      })
+    }
+  }
+
+  /* istanbul ignore next */
+  if (!fastify.hasRequestDecorator('formData')) {
+    fastify.decorateRequest('formData', async function () {
+      throw new NoFormData()
     })
   }
 

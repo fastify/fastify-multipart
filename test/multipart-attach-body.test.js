@@ -486,3 +486,58 @@ test('should pass the buffer instead of converting to string', async function (t
   await once(res, 'end')
   t.pass('res ended successfully')
 })
+
+const hasGlobalFormData = typeof globalThis.FormData === 'function'
+
+test('should be able to attach all parsed fields and files and make it accessible through "req.formdata"', { skip: !hasGlobalFormData }, async function (t) {
+  t.plan(10)
+
+  const fastify = Fastify()
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.register(multipart, { attachFieldsToBody: true })
+
+  const original = fs.readFileSync(filePath, 'utf8')
+
+  fastify.post('/', async function (req, reply) {
+    t.ok(req.isMultipart())
+
+    t.same(Object.keys(req.body), ['upload', 'hello'])
+
+    const formData = await req.formData()
+
+    t.equal(formData instanceof globalThis.FormData, true)
+    t.equal(formData.get('hello'), 'world')
+    t.same(formData.getAll('hello'), ['world', 'foo'])
+    t.equal(await formData.get('upload').text(), original)
+    t.equal(formData.get('upload').type, 'text/markdown')
+    t.equal(formData.get('upload').name, 'README.md')
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('hello', 'world')
+  form.append('hello', 'foo')
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.equal(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.pass('res ended successfully')
+})
