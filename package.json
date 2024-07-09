@@ -1,14 +1,14 @@
 {
   "name": "@fastify/multipart",
-  "version": "8.1.0",
+  "version": "8.3.0",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "type": "commonjs",
   "types": "types/index.d.ts",
   "dependencies": {
     "@fastify/busboy": "^2.1.0",
-    "@fastify/deepmerge": "^1.3.0",
-    "@fastify/error": "^3.4.1",
+    "@fastify/deepmerge": "^2.0.0",
+    "@fastify/error": "^4.0.0",
     "fastify-plugin": "^4.5.1",
     "secure-json-parse": "^2.7.0",
     "stream-wormhole": "^2.0.1"
@@ -36,7 +36,7 @@
     "snazzy": "^9.0.0",
     "standard": "^17.1.0",
     "tap": "^18.6.1",
-    "tsd": "^0.30.4"
+    "tsd": "^0.31.0"
   },
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",

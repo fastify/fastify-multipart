@@ -235,6 +235,10 @@ fastify.post('/upload/files', async function (req, reply) {
   const body = Object.fromEntries(
     Object.keys(req.body).map((key) => [key, req.body[key].value])
   ) // Request body in key-value pairs, like req.body in Express (Node 12+)
+
+  // On Node 18+
+  const formData = await req.formData()
+  console.log(formData)
 })
 ```
 
@@ -518,6 +522,7 @@ fastify.post('/upload/files', async function (req, reply) {
 This project is kindly sponsored by:
 - [nearForm](https://nearform.com)
 - [LetzDoIt](https://www.letzdoitapp.com/)
+- [platformatic](https://platformatic.dev)
 
 ## License
 

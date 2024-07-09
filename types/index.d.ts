@@ -7,6 +7,8 @@ declare module 'fastify' {
   interface FastifyRequest {
     isMultipart: () => boolean;
 
+    formData: () => Promise<FormData>;
+
     // promise api
     parts: (
       options?: Omit<BusboyConfig, 'headers'>

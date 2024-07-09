@@ -24,6 +24,7 @@ const runServer = async () => {
 
   // usage
   app.post('/', async (req, reply) => {
+    expectType<Promise<FormData>>(req.formData())
     const data = await req.file()
     if (data == null) throw new Error('missing file')
 
