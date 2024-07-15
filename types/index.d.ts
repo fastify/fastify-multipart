@@ -41,6 +41,7 @@ type FastifyMultipartPlugin = FastifyPluginCallback<
 | fastifyMultipart.FastifyMultipartBaseOptions
 | fastifyMultipart.FastifyMultipartOptions
 | fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
+| BusboyConfig
 >;
 
 type MultipartHandler = (
