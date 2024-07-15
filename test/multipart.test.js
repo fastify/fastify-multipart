@@ -12,7 +12,7 @@ const concat = require('concat-stream')
 const stream = require('node:stream')
 const { once } = require('node:events')
 const pump = util.promisify(stream.pipeline)
-const { sendToWormhole } = require('stream-wormhole')
+const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -89,7 +89,7 @@ test('should respond when all files are processed', function (t) {
     for await (const part of parts) {
       t.ok(part.file)
       t.equal(part.type, 'file')
-      await sendToWormhole(part.file)
+      await streamToNull(part.file)
     }
     reply.code(200).send()
   })
@@ -141,7 +141,7 @@ test('should group parts with the same name to an array', function (t) {
         t.pass('multiple files are grouped by array')
       }
       if (part.file) {
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
     }
     reply.code(200).send()
@@ -270,7 +270,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       const parts = req.files({ limits: { files: 1 } })
       for await (const part of parts) {
         t.ok(part.file, 'part received')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -330,7 +330,7 @@ test('should be able to configure limits globally with plugin register options',
       for await (const part of parts) {
         t.ok(part.file)
         t.equal(part.type, 'file')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -485,7 +485,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
       for await (const part of parts) {
         t.ok(part.file)
         t.equal(part.type, 'file')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -532,7 +532,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     for await (const part of parts) {
       t.ok(part.file)
       t.equal(part.type, 'file')
-      await sendToWormhole(part.file)
+      await streamToNull(part.file)
     }
     reply.code(200).send()
   })
