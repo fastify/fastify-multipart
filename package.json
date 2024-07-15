@@ -6,7 +6,7 @@
   "type": "commonjs",
   "types": "types/index.d.ts",
   "dependencies": {
-    "@fastify/busboy": "^2.1.0",
+    "@fastify/busboy": "^3.0.0",
     "@fastify/deepmerge": "^2.0.0",
     "@fastify/error": "^4.0.0",
     "fastify-plugin": "^4.0.0",
