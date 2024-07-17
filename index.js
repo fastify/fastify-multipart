@@ -349,7 +349,7 @@ function fastifyMultipart (fastify, options, done) {
       // don't overwrite prototypes
       if (name in Object.prototype) {
         // ensure that stream is consumed, any error is suppressed
-        streamToNull(file)
+        streamToNull(file).catch(() => {})
         onError(new PrototypeViolationError())
         return
       }
