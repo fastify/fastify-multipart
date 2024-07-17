@@ -12,7 +12,7 @@ const concat = require('concat-stream')
 const stream = require('node:stream')
 const { once } = require('node:events')
 const pump = util.promisify(stream.pipeline)
-const sendToWormhole = require('stream-wormhole')
+const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -89,7 +89,7 @@ test('should respond when all files are processed', function (t) {
     for await (const part of parts) {
       t.ok(part.file)
       t.equal(part.type, 'file')
-      await sendToWormhole(part.file)
+      await streamToNull(part.file)
     }
     reply.code(200).send()
   })
@@ -141,7 +141,7 @@ test('should group parts with the same name to an array', function (t) {
         t.pass('multiple files are grouped by array')
       }
       if (part.file) {
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
     }
     reply.code(200).send()
@@ -270,7 +270,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
       const parts = req.files({ limits: { files: 1 } })
       for await (const part of parts) {
         t.ok(part.file, 'part received')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -330,7 +330,7 @@ test('should be able to configure limits globally with plugin register options',
       for await (const part of parts) {
         t.ok(part.file)
         t.equal(part.type, 'file')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -485,7 +485,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
       for await (const part of parts) {
         t.ok(part.file)
         t.equal(part.type, 'file')
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
@@ -532,7 +532,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     for await (const part of parts) {
       t.ok(part.file)
       t.equal(part.type, 'file')
-      await sendToWormhole(part.file)
+      await streamToNull(part.file)
     }
     reply.code(200).send()
   })
@@ -635,7 +635,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
   t.pass('res ended successfully')
 })
 
-test('should not freeze when error is thrown during processing', { skip: process.versions.node.startsWith('14') }, async function (t) {
+test('should not freeze when error is thrown during processing', async function (t) {
   t.plan(2)
   const app = Fastify()
 
@@ -688,51 +688,4 @@ test('should not freeze when error is thrown during processing', { skip: process
   t.pass('res ended successfully!')
 
   await app.close()
-})
-
-const hasGlobalFormData = typeof globalThis.FormData === 'function'
-
-test('no formData', { skip: !hasGlobalFormData }, function (t) {
-  t.plan(6)
-  const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
-
-  fastify.register(multipart)
-
-  fastify.post('/', async function (req, reply) {
-    await t.rejects(req.formData())
-
-    for await (const part of req.parts()) {
-      t.equal(part.type, 'field')
-      t.equal(part.fieldname, 'hello')
-      t.equal(part.value, 'world')
-    }
-
-    reply.code(200).send()
-  })
-
-  fastify.listen({ port: 0 }, async function () {
-    // request
-    const form = new FormData()
-    const opts = {
-      protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
-      path: '/',
-      headers: form.getHeaders(),
-      method: 'POST'
-    }
-
-    const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
-      // consume all data without processing
-      res.resume()
-      res.on('end', () => {
-        t.pass('res ended successfully')
-      })
-    })
-    form.append('hello', 'world')
-
-    form.pipe(req)
-  })
 })

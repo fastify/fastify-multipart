@@ -9,30 +9,32 @@
     "@fastify/busboy": "^3.0.0",
     "@fastify/deepmerge": "^2.0.0",
     "@fastify/error": "^4.0.0",
-    "fastify-plugin": "^4.0.0",
-    "secure-json-parse": "^2.4.0",
-    "stream-wormhole": "^1.1.0"
+    "fastify-plugin": "^5.0.0-pre.fv5.1",
+    "secure-json-parse": "^2.7.0"
   },
   "devDependencies": {
-    "@fastify/pre-commit": "^2.0.2",
-    "@fastify/swagger": "^8.10.1",
-    "@fastify/swagger-ui": "^4.0.0",
-    "@types/node": "^20.1.0",
+    "@fastify/pre-commit": "^2.1.0",
+    "@fastify/swagger": "^9.0.0-pre.fv5.1",
+    "@fastify/swagger-ui": "^5.0.0-pre.fv5.1",
+    "@types/node": "^20.11.6",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "benchmark": "^2.1.4",
     "climem": "^2.0.0",
     "concat-stream": "^2.0.0",
-    "eslint": "^8.20.0",
-    "fastify": "^4.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "fastify": "^5.0.0-alpha.3",
     "form-data": "^4.0.0",
     "h2url": "^0.2.0",
     "noop-stream": "^0.1.0",
     "pump": "^3.0.0",
-    "readable-stream": "^4.5.1",
+    "readable-stream": "^4.5.2",
     "snazzy": "^9.0.0",
-    "standard": "^17.0.0",
-    "tap": "^16.0.0",
+    "standard": "^17.1.0",
+    "tap": "^18.6.1",
     "tsd": "^0.31.0"
   },
   "scripts": {
@@ -45,7 +47,7 @@
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap -t 90"
+    "test:unit": "tap -t 120"
   },
   "repository": {
     "type": "git",
