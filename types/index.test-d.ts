@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile, FastifyMultipartBaseOptions } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
@@ -13,6 +13,7 @@ const runServer = async () => {
   const app = fastify()
 
   app.register(fastifyMultipart, {
+    preservePath: true, // field inherited from `BusboyConfig` interface
     attachFieldsToBody: true,
     limits: {
       parts: 500
