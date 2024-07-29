@@ -104,7 +104,7 @@ declare namespace fastifyMultipart {
     [fieldname: string]: Multipart | Multipart[] | undefined;
   }
 
-  export interface FastifyMultipartBaseOptions {
+  export interface FastifyMultipartBaseOptions extends Partial<BusboyConfig> {
     /**
      * Add a shared schema to validate the input fields
      */

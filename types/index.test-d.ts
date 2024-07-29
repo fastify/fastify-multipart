@@ -14,6 +14,7 @@ const runServer = async () => {
   const app = fastify()
 
   app.register(fastifyMultipart, {
+    preservePath: true, // field inherited from `BusboyConfig` interface
     attachFieldsToBody: true,
     limits: {
       parts: 500
