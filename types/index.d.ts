@@ -41,7 +41,7 @@ type FastifyMultipartPlugin = FastifyPluginCallback<
 | fastifyMultipart.FastifyMultipartBaseOptions
 | fastifyMultipart.FastifyMultipartOptions
 | fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
->;
+>
 
 type MultipartHandler = (
   field: string,
@@ -49,7 +49,7 @@ type MultipartHandler = (
   filename: string,
   encoding: string,
   mimetype: string
-) => void;
+) => void
 
 interface BodyEntry {
   data: Buffer;
@@ -76,7 +76,7 @@ declare namespace fastifyMultipart {
     filepath: string;
   }
 
-  export type Multipart = MultipartFile | MultipartValue;
+  export type Multipart = MultipartFile | MultipartValue
 
   export interface MultipartFile {
     type: 'file';
@@ -204,13 +204,13 @@ declare namespace fastifyMultipart {
   /**
    * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
    */
-  export function ajvFilePlugin(ajv: any): void;
+  export function ajvFilePlugin (ajv: any): void
 
   export const fastifyMultipart: FastifyMultipartPlugin
   export { fastifyMultipart as default }
 }
-declare function fastifyMultipart(
+declare function fastifyMultipart (
   ...params: Parameters<FastifyMultipartPlugin>
-): ReturnType<FastifyMultipartPlugin>;
+): ReturnType<FastifyMultipartPlugin>
 
-export = fastifyMultipart;
+export = fastifyMultipart

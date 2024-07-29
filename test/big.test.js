@@ -9,7 +9,7 @@ const stream = require('readable-stream')
 const Readable = stream.Readable
 const pump = stream.pipeline
 const crypto = require('node:crypto')
-const sendToWormhole = require('stream-wormhole')
+const streamToNull = require('../lib/stream-consumer')
 
 // skipping on Github Actions because it takes too long
 test('should upload a big file in constant memory', { skip: process.env.CI }, function (t) {
@@ -38,7 +38,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
         t.equal(part.encoding, '7bit')
         t.equal(part.mimetype, 'binary/octet-stream')
 
-        await sendToWormhole(part.file)
+        await streamToNull(part.file)
       }
     }
 
@@ -78,10 +78,11 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
       knownLength
     })
 
+    const addresses = fastify.addresses()
     const opts = {
       protocol: 'http:',
-      hostname: 'localhost',
-      port: fastify.server.address().port,
+      hostname: addresses[0].address,
+      port: addresses[0].port,
       path: '/',
       headers: form.getHeaders(),
       method: 'POST'

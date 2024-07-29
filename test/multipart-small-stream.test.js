@@ -8,7 +8,7 @@ const http = require('node:http')
 const path = require('node:path')
 const fs = require('node:fs')
 const EventEmitter = require('node:events')
-const sendToWormhole = require('stream-wormhole')
+const streamToNull = require('../lib/stream-consumer')
 const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
@@ -26,7 +26,7 @@ test('should throw fileSize limitation error on small payload', { skip: true }, 
     t.ok(req.isMultipart())
 
     const part = await req.file({ limits: { fileSize: 2 } })
-    await sendToWormhole(part.file)
+    await streamToNull(part.file)
 
     reply.code(200).send()
   })
@@ -71,7 +71,7 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
     t.ok(req.isMultipart())
 
     const part = await req.file({ limits: { fileSize: 2 }, throwFileSizeLimit: false })
-    await sendToWormhole(part.file)
+    await streamToNull(part.file)
 
     reply.code(200).send()
   })

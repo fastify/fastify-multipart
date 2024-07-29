@@ -7,7 +7,7 @@ const multipart = require('..')
 const h2url = require('h2url')
 const path = require('node:path')
 const fs = require('node:fs')
-const sendToWormhole = require('stream-wormhole')
+const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -21,7 +21,7 @@ test('should respond when all files are processed', function (t) {
     const parts = req.files()
     for await (const part of parts) {
       t.ok(part.file)
-      await sendToWormhole(part.file)
+      await streamToNull(part.file)
     }
     reply.code(200).send()
   })
