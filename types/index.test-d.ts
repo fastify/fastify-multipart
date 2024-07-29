@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 import fastify from 'fastify'
-import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile, FastifyMultipartBaseOptions } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
 import * as util from 'util'
 import { pipeline } from 'stream'
 import * as fs from 'fs'
@@ -56,7 +57,7 @@ const runServer = async () => {
   })
 
   // Multiple fields including scalar values
-  app.post<{Body: {file: MultipartFile, foo: MultipartValue<string>}}>('/upload/stringvalue', async (req, reply) => {
+  app.post<{ Body: { file: MultipartFile, foo: MultipartValue<string> } }>('/upload/stringvalue', async (req, reply) => {
     expectError(req.body.foo.file)
     expectType<'field'>(req.body.foo.type)
     expectType<string>(req.body.foo.value)
@@ -66,7 +67,7 @@ const runServer = async () => {
     reply.send()
   })
 
-  app.post<{Body: {file: MultipartFile, num: MultipartValue<number>}}>('/upload/stringvalue', async (req, reply) => {
+  app.post<{ Body: { file: MultipartFile, num: MultipartValue<number> } }>('/upload/stringvalue', async (req, reply) => {
     expectType<number>(req.body.num.value)
     reply.send()
 
@@ -129,7 +130,7 @@ const runServer = async () => {
   app.post('/upload/raw/any', async function (req, reply) {
     const data = await req.file()
     if (!data) throw new Error('missing file')
-    const buffer = await data.toBuffer()
+    expectType<Buffer>(await data.toBuffer())
     // upload to S3
     reply.send()
   })
