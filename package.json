@@ -16,7 +16,7 @@
     "@fastify/pre-commit": "^2.1.0",
     "@fastify/swagger": "^9.0.0-pre.fv5.1",
     "@fastify/swagger-ui": "^5.0.0-pre.fv5.1",
-    "@types/node": "^20.11.6",
+    "@types/node": "^22.0.0",
     "benchmark": "^2.1.4",
     "climem": "^2.0.0",
     "concat-stream": "^2.0.0",
