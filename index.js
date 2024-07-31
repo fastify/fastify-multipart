@@ -567,7 +567,7 @@ function ajvFilePlugin (ajv) {
  * to consumer fastify in whatever way best suits their needs.
  */
 module.exports = fp(fastifyMultipart, {
-  fastify: '4.x',
+  fastify: '5.x',
   name: '@fastify/multipart'
 })
 module.exports.default = fastifyMultipart
