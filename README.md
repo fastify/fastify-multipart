@@ -25,9 +25,7 @@ npm i @fastify/multipart
 ```js
 const fastify = require('fastify')()
 const fs = require('node:fs')
-const util = require('node:util')
-const { pipeline } = require('node:stream')
-const pump = util.promisify(pipeline)
+const { pipeline } = require('node:stream/promises')
 
 fastify.register(require('@fastify/multipart'))
 
@@ -50,7 +48,7 @@ fastify.post('/', async function (req, reply) {
   //
   // or
 
-  await pump(data.file, fs.createWriteStream(data.filename))
+  await pipeline(data.file, fs.createWriteStream(data.filename))
 
   // be careful of permission issues on disk and not overwrite
   // sensitive files that could cause security risks
@@ -89,7 +87,7 @@ fastify.register(require('@fastify/multipart'), {
 
 For security reasons, `@fastify/multipart` sets the limit for `parts` and `fileSize` being _1000_ and _1048576_ respectively.
 
-**Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pump, the promise will not be fulfilled at the end of the multipart processing.
+**Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pipeline, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 **Note**: if you set a `fileSize` limit and you want to know if the file limit was reached you can:
@@ -99,7 +97,7 @@ This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/b
 
 ```js
 const data = await req.file()
-await pump(data.file, fs.createWriteStream(data.filename))
+await pipeline(data.file, fs.createWriteStream(data.filename))
 if (data.file.truncated) {
   // you may need to delete the part of the file that has been saved on disk
   // before the `limits.fileSize` has been reached
@@ -122,7 +120,7 @@ Additionally, you can pass per-request options to the  `req.file`, `req.files`, 
 fastify.post('/', async function (req, reply) {
   const options = { limits: { fileSize: 1000 } };
   const data = await req.file(options)
-  await pump(data.file, fs.createWriteStream(data.filename))
+  await pipeline(data.file, fs.createWriteStream(data.filename))
   reply.send()
 })
 ```
@@ -133,7 +131,7 @@ fastify.post('/', async function (req, reply) {
 fastify.post('/', async function (req, reply) {
   const parts = req.files()
   for await (const part of parts) {
-    await pump(part.file, fs.createWriteStream(part.filename))
+    await pipeline(part.file, fs.createWriteStream(part.filename))
   }
   reply.send()
 })
@@ -146,7 +144,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = req.parts()
   for await (const part of parts) {
     if (part.type === 'file') {
-      await pump(part.file, fs.createWriteStream(part.filename))
+      await pipeline(part.file, fs.createWriteStream(part.filename))
     } else {
       // part.type === 'field
       console.log(part)
@@ -259,7 +257,7 @@ You can also define an `onFile` handler to avoid accumulating all files in memor
 async function onFile(part) {
   // you have access to original request via `this`
   console.log(this.id)
-  await pump(part.file, fs.createWriteStream(part.filename))
+  await pipeline(part.file, fs.createWriteStream(part.filename))
 }
 
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, onFile })
