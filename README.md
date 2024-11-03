@@ -52,7 +52,7 @@ fastify.post('/', async function (req, reply) {
 
   // be careful of permission issues on disk and not overwrite
   // sensitive files that could cause security risks
-  
+
   // also, consider that if the file stream is not consumed, the promise will never fulfill
 
   reply.send()
@@ -101,7 +101,7 @@ await pipeline(data.file, fs.createWriteStream(data.filename))
 if (data.file.truncated) {
   // you may need to delete the part of the file that has been saved on disk
   // before the `limits.fileSize` has been reached
-  reply.send(new fastify.multipartErrors.FilesLimitError());    
+  reply.send(new fastify.multipartErrors.FilesLimitError());
 }
 
 // OR
@@ -112,7 +112,7 @@ try {
   // fileSize limit reached!
 }
 
-``` 
+```
 
 Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.parts` function.
 
@@ -342,7 +342,7 @@ fastify.post('/upload/files', {
         // or a field that doesn't use the shared schema
         hello: {
           properties: {
-            value: { 
+            value: {
               type: 'string',
               enum: ['male']
             }
@@ -377,7 +377,7 @@ The shared schema, that is added, will look like this:
 If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
- 
+
 const fastify = require('fastify')({
  // ...
   ajv: {
@@ -422,7 +422,7 @@ When sending fields with the body (`attachFieldsToBody` set to true), the field 
 ```
 The mentioned field will be converted, by this plugin, to a more complex field. The converted field will look something like this:
 ```js
-{ 
+{
   hello: {
     fieldname: "hello",
     value: "world",
@@ -437,7 +437,7 @@ It is important to know that this conversion happens BEFORE the field is validat
 ```js
 hello: {
   properties: {
-    value: { 
+    value: {
       type: 'string'
     }
   }
@@ -446,14 +446,14 @@ hello: {
 
 #### JSON non-file fields
 
-If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`. 
+If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`.
 
 The schema to validate JSON fields should look like this:
 
 ```js
 hello: {
   properties: {
-    value: { 
+    value: {
       type: 'object',
       properties: {
         /* ... */
@@ -481,10 +481,10 @@ fastify.post('/upload/files', {
       properties: {
         field: {
           allOf: [
-            { $ref: '#mySharedSchema' }, 
-            { 
-              properties: { 
-                value: { 
+            { $ref: '#mySharedSchema' },
+            {
+              properties: {
+                value: {
                   type: 'object'
                   properties: {
                     child: {
