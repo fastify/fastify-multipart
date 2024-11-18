@@ -45,6 +45,10 @@
     "type": "git",
     "url": "git+https://github.com/fastify/fastify-multipart.git"
   },
+  "bugs": {
+    "url": "https://github.com/fastify/fastify-multipart/issues"
+  },
+  "homepage": "https://github.com/fastify/fastify-multipart#readme",
   "keywords": [
     "fastify",
     "multipart",
