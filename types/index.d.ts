@@ -1,6 +1,6 @@
 import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
-import { Readable } from 'stream'
+import { Readable } from 'node:stream'
 import { FastifyErrorConstructor } from '@fastify/error'
 
 declare module 'fastify' {

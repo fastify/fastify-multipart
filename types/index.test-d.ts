@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import fastify from 'fastify'
 import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
-import * as util from 'util'
-import { pipeline } from 'stream'
-import * as fs from 'fs'
+import * as util from 'node:util'
+import { pipeline } from 'node:stream'
+import * as fs from 'node:fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from '@fastify/error'
 import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
