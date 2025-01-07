@@ -450,7 +450,7 @@ function fastifyMultipart (fastify, options, done) {
       files = await this.files(options)
     }
     this.savedRequestFiles = []
-    const tmpdir = (options && options.tmpdir) || os.tmpdir()
+    const tmpdir = options?.tmpdir || os.tmpdir()
     this.tmpUploads = []
     for await (const file of files) {
       const filepath = path.join(tmpdir, generateId() + path.extname(file.filename))
