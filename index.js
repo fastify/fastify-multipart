@@ -27,7 +27,7 @@ const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a req
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
-function setMultipart (req, payload, done) {
+function setMultipart (req, _payload, done) {
   req[kMultipart] = true
   done()
 }
@@ -67,7 +67,7 @@ function fastifyMultipart (fastify, options, done) {
       })
     }
 
-    fastify.addHook('preValidation', async function (req, reply) {
+    fastify.addHook('preValidation', async function (req) {
       if (!req.isMultipart()) {
         return
       }
@@ -199,7 +199,7 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest('saveRequestFiles', saveRequestFiles)
   fastify.decorateRequest('cleanRequestFiles', cleanRequestFiles)
 
-  fastify.addHook('onResponse', async (request, reply) => {
+  fastify.addHook('onResponse', async (request) => {
     await request.cleanRequestFiles()
   })
 
@@ -317,7 +317,7 @@ function fastifyMultipart (fastify, options, done) {
         try {
           fieldValue = secureJSON.parse(fieldValue)
           contentType = 'application/json'
-        } catch (e) {
+        } catch {
           onError(new InvalidJSONFieldError())
           return
         }

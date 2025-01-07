@@ -10,7 +10,7 @@ const form = path.join(__dirname, '..', 'form.html')
 
 fastify.register(require('..'))
 
-fastify.get('/', function (req, reply) {
+fastify.get('/', function (_req, reply) {
   reply.type('text/html').send(fs.createReadStream(form))
 })
 

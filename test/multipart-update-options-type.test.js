@@ -76,7 +76,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
       await file.toBuffer()
       t.pass('OK')
       reply.code(200).send()
-    } catch (error) {
+    } catch {
       t.fail('Should not throw')
       reply.code(500).send()
     }
@@ -184,7 +184,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
       }
       t.pass('OK')
       reply.code(200).send()
-    } catch (error) {
+    } catch {
       t.fail('Should not throw')
       reply.code(500).send()
     }

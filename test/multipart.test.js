@@ -643,13 +643,13 @@ test('should not freeze when error is thrown during processing', async function 
     .register(multipart)
 
   app
-    .post('/', async (request, reply) => {
+    .post('/', async (request) => {
       const files = request.files()
 
       for await (const { file } of files) {
         try {
           const storage = new stream.Writable({
-            write (chunk, encoding, callback) {
+            write (_chunk, _encoding, callback) {
             // trigger error:
               callback(new Error('write error'))
             }

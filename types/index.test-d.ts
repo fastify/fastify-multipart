@@ -160,7 +160,7 @@ const runServer = async () => {
   })
 
   // access all errors
-  app.post('/upload/files', async function (req, reply) {
+  app.post('/upload/files', async function (_req, reply) {
     const { FilesLimitError } = app.multipartErrors
 
     expectType<FastifyErrorConstructor>(app.multipartErrors.FieldsLimitError)

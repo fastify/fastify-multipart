@@ -45,7 +45,7 @@ test('show modify the generated schema', async function (t) {
         }
       }
     },
-    async function (req, reply) {
+    async function (_req, reply) {
       reply.code(200).send()
     }
   )

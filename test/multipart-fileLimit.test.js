@@ -156,7 +156,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
       t.ok(part.file.truncated)
       t.notSame(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
-    } catch (error) {
+    } catch {
       t.fail('it should not throw')
     }
   })
@@ -282,7 +282,7 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
       t.ok(part.file.truncated)
       t.notSame(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
-    } catch (error) {
+    } catch {
       t.fail('it should not throw')
     }
   })
