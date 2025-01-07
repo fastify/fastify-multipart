@@ -505,6 +505,66 @@ fastify.post('/upload/files', {
 })
 ```
 
+## Zod Schema body validation
+
+To validate request using Zod you will need to use [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod) and the `attachFieldsToBody` parameter needs to be `true`, after setting it up, you can validate your request using zod.
+
+```js
+import { fastifyMultipart, type MultipartFile } from '@fastify/multipart'
+import {
+  jsonSchemaTransform,
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from 'fastify-type-provider-zod'
+
+const app = fastify().withTypeProvider<ZodTypeProvider>()
+
+app.setSerializerCompiler(serializerCompiler)
+app.setValidatorCompiler(validatorCompiler)
+
+app.register(fastifyMultipart, { attachFieldsToBody: true })
+
+app.post('/upload/files', {
+  schema: {
+    consumes: ['multipart/form-data'],
+    body: z.object({
+      file: z.custom<MultipartFile>()
+    })
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+```
+
+**Note**: Zod doesn't have native support for `FormData`, so you will need to use refinements, for more information, consult [`zod documentation`](https://zod.dev/?id=refine).
+Similarly `fastify-type-provider-zod` doesn't have support for `Swagger`, you can just disable it for this request with `hide: true`.
+
+```js
+
+fastify.post('/upload/files', {
+  schema: {
+    hide: true, // Disable Swagger
+    consumes: ['multipart/form-data'],
+    body: z.object({
+      file: z
+      .custom<MultipartFile>()
+      .refine((file) => file.file.bytesRead <= 10 * 1024 * 1024, {
+        message: 'The image must be a maximum of 10MB.',
+      })
+      .refine((file) => file.mimetype.startsWith('image'), {
+        message: 'Only images are allowed to be sent.',
+      })
+    })
+  }
+}, function (req, reply) {
+  console.log({ body: req.body })
+  reply.send('done')
+})
+
+```
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [@fastify/error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
