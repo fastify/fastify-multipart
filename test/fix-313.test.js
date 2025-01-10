@@ -59,7 +59,7 @@ test('should store file on disk, remove on response when attach fields to body i
   const ee = new EventEmitter()
 
   // ensure that file is removed after response
-  fastify.addHook('onResponse', async (request, reply) => {
+  fastify.addHook('onResponse', async (request) => {
     try {
       await access(request.tmpUploads[0], fs.constants.F_OK)
     } catch (error) {
