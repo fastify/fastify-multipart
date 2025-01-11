@@ -9,11 +9,11 @@ Fastify plugin to parse the multipart content-type. Supports:
 - Async / Await
 - Async iterator support to handle multiple parts
 - Stream & Disk mode
-- Accumulate whole file in memory
+- Accumulating the entire file in memory
 - Mode to attach all fields to the request body
 - Tested across Linux/Mac/Windows
 
-Under the hood it uses [`@fastify/busboy`](https://github.com/fastify/busboy).
+Under the hood, it uses [`@fastify/busboy`](https://github.com/fastify/busboy).
 
 ## Install
 ```sh
@@ -154,7 +154,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 })
 ```
 
-## Accumulate whole file in memory
+## Accumulating the entire file in memory
 
 ```js
 fastify.post('/upload/raw/any', async function (req, reply) {
@@ -168,7 +168,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 
 ## Upload files to disk and work with temporary file paths
 
-This will store all files in the operating system default directory for temporary files. As soon as the response ends all files are removed.
+This will store all files in the operating system's default directory for temporary files. As soon as the response ends all files are removed.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
@@ -188,7 +188,7 @@ fastify.post('/upload/files', async function (req, reply) {
 
 ## Handle file size limitation
 
-If you set a `fileSize` limit, it is able to throw a `RequestFileTooLargeError` error when limit reached.
+If you set a `fileSize` limit, it can throw a `RequestFileTooLargeError` error when limit reached.
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
@@ -222,7 +222,7 @@ fastify.post('/upload/file', async function (req, reply) {
 
 ## Parse all fields and assign them to the body
 
-This allows you to parse all fields automatically and assign them to the `request.body`. By default files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/main/docs/Reference/Hooks.md#manage-errors-from-a-hook) by Fastify.
+This allows you to parse all fields automatically and assign them to the `request.body`. By default, files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/main/docs/Reference/Hooks.md#manage-errors-from-a-hook) by Fastify.
 
 ```js
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true })
@@ -374,7 +374,7 @@ The shared schema, that is added, will look like this:
 
 ### JSON Schema with Swagger
 
-If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use custom instance of validator compiler [Docs](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
+If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use a custom instance of a validator compiler [Docs](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
 
@@ -446,7 +446,7 @@ hello: {
 
 #### JSON non-file fields
 
-If a non file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`.
+If a non-file field sent has `Content-Type` header starting with `application/json`, it will be parsed using `JSON.parse`.
 
 The schema to validate JSON fields should look like this:
 
@@ -463,7 +463,7 @@ hello: {
 }
 ```
 
-If you also use the shared JSON schema as shown above, this is a full example which validates the entire field:
+If you also use the shared JSON schema as shown above, this is a full example that validates the entire field:
 
 ```js
 const opts = {
@@ -515,7 +515,7 @@ fastify.post('/upload/files', async function (req, reply) {
 })
 ```
 
-## Acknowledgements
+## Acknowledgments
 
 This project is kindly sponsored by:
 - [nearForm](https://nearform.com)
