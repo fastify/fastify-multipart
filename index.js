@@ -203,6 +203,16 @@ function fastifyMultipart (fastify, options, done) {
     await request.cleanRequestFiles()
   })
 
+  fastify.addHook('onRequest', async (request) => {
+    request.raw.on('close', async () => {
+      if (request.raw.aborted) {
+        // both of this key has null values
+        console.log(request.tmpUploads)
+        console.log(request.savedRequestFiles)
+      }
+    })
+  })
+
   function isMultipart () {
     return this[kMultipart]
   }
