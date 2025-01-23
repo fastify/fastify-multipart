@@ -457,8 +457,8 @@ function fastifyMultipart (fastify, options, done) {
       const filepath = path.join(tmpdir, generateId() + path.extname(file.filename || ('file' + i++)))
       const target = createWriteStream(filepath)
       try {
-        await pump(file.file, target)
         this.tmpUploads.push(filepath)
+        await pump(file.file, target)
         this.savedRequestFiles.push({ ...file, filepath })
       } catch (err) {
         this.log.error({ err }, 'save request file')

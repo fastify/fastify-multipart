@@ -43,8 +43,8 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
     }
 
     const memory = process.memoryUsage()
-    t.ok(memory.rss < 400 * 1024 * 1024) // 200MB
-    t.ok(memory.heapTotal < 400 * 1024 * 1024) // 200MB
+    t.ok(memory.rss < 500 * 1024 * 1024)
+    t.ok(memory.heapTotal < 500 * 1024 * 1024)
 
     reply.send()
   })

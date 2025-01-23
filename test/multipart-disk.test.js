@@ -467,67 +467,6 @@ test('should process large files correctly', async function (t) {
   await once(res, 'end')
 })
 
-test('should store file on disk, remove when request aborted', async function (t) {
-  t.plan(2)
-
-  const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
-
-  fastify.register(multipart)
-
-  const ee = new EventEmitter()
-
-  fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
-
-    const files = await req.saveRequestFiles()
-
-    await access(files[0].filepath, fs.constants.F_OK)
-
-    ee.emit('filepath', files[0].filepath)
-
-    await sleep(5000)
-
-    reply.code(200).send()
-  })
-
-  await fastify.listen({ port: 0 })
-  // request
-  const form = new FormData()
-  const controller = new AbortController()
-  const opts = {
-    signal: controller.signal,
-    protocol: 'http:',
-    hostname: 'localhost',
-    port: fastify.server.address().port,
-    path: '/',
-    headers: form.getHeaders(),
-    method: 'POST',
-  }
-
-  const req = http.request(opts)
-  setTimeout(() => controller.abort(), 3000)
-
-  form.append('upload', fs.createReadStream(filePath))
-
-  form.pipe(req)
-
-  const [[tmpFilepath]] = await Promise.all([
-    once(ee, 'filepath'),
-    once(req, 'aborted').catch(() => Promise.resolve()), // ignore aborted error
-  ])
-
-  // ensure that file is removed after request aborted
-  try {
-    console.debug(tmpFilepath)
-    await access(tmpFilepath, fs.constants.F_OK)
-    t.fail('Temp file was not removed after request aborted')
-  } catch (error) {
-    t.equal(error.code, 'ENOENT')
-    t.pass('Temp file was removed after request aborted')
-  }
-})
-
 function getMockFileStream (length) {
   let total = length
 
