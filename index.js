@@ -481,7 +481,6 @@ function fastifyMultipart (fastify, options, done) {
         }
         if (!field.file) {
           continue
-
         }
         if (!field._buf) {
           throw new FileBufferNotFoundError()
