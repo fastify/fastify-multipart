@@ -12,8 +12,6 @@ const fs = require('node:fs')
 const { access } = require('node:fs').promises
 const EventEmitter = require('node:events')
 const { once } = EventEmitter
-const util = require('node:util')
-const sleep = util.promisify(setTimeout)
 
 const filePath = path.join(__dirname, '../README.md')
 
