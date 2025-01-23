@@ -1,38 +1,32 @@
 'use strict'
 
-const util = require('node:util')
 const test = require('tap').test
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('node:http')
-const sleep = util.promisify(setTimeout)
+const { setTimeout: sleep } = require('node:timers/promises')
 const { writableNoopStream } = require('noop-stream')
-const stream = require('node:stream')
-const pipeline = util.promisify(stream.pipeline)
+const { pipeline } = require('node:stream/promises')
+const { once } = require('node:events')
+const fs = require('node:fs/promises')
 
 test('should finish with error on partial upload', async function (t) {
-  t.plan(4)
+  t.plan(2)
 
   const fastify = Fastify()
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.register(multipart)
+  await fastify.register(multipart)
 
+  let tmpUploads
   fastify.post('/', async function (req) {
     t.ok(req.isMultipart())
-    const parts = await req.files()
     try {
-      for await (const part of parts) {
-        await pipeline(part.file, writableNoopStream())
-      }
-    } catch (e) {
-      t.equal(e.message, 'Premature close', 'File was closed prematurely')
-      throw e
+      await req.saveRequestFiles()
     } finally {
-      t.pass('Finished request')
+      tmpUploads = req.tmpUploads
     }
-    return 'ok'
   })
 
   await fastify.listen({ port: 0 })
@@ -50,13 +44,13 @@ test('should finish with error on partial upload', async function (t) {
   }
 
   const req = http.request(opts)
-  req.on('error', () => {
-    t.pass('ended http request with error')
-  })
   const data = form.getBuffer()
   req.write(data.slice(0, dataSize / 2))
-  await sleep(100)
-  req.destroy()
-  await sleep(100)
-  t.end()
+  req.end()
+
+  await once(req, 'close')
+
+  for (const tmpUpload of tmpUploads) {
+    await t.rejects(fs.access(tmpUpload))
+  }
 })

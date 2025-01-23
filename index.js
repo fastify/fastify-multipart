@@ -203,16 +203,6 @@ function fastifyMultipart (fastify, options, done) {
     await request.cleanRequestFiles()
   })
 
-  fastify.addHook('onRequest', async (request) => {
-    request.raw.on('close', async () => {
-      if (request.raw.aborted) {
-        // both of this key has null values
-        console.log(request.tmpUploads)
-        console.log(request.savedRequestFiles)
-      }
-    })
-  })
-
   function isMultipart () {
     return this[kMultipart]
   }
@@ -462,13 +452,14 @@ function fastifyMultipart (fastify, options, done) {
     this.savedRequestFiles = []
     const tmpdir = options?.tmpdir || os.tmpdir()
     this.tmpUploads = []
+    let i = 0
     for await (const file of files) {
-      const filepath = path.join(tmpdir, generateId() + path.extname(file.filename))
+      const filepath = path.join(tmpdir, generateId() + path.extname(file.filename || ('file' + i++)))
       const target = createWriteStream(filepath)
       try {
         await pump(file.file, target)
-        this.savedRequestFiles.push({ ...file, filepath })
         this.tmpUploads.push(filepath)
+        this.savedRequestFiles.push({ ...file, filepath })
       } catch (err) {
         this.log.error({ err }, 'save request file')
         throw err
@@ -490,6 +481,7 @@ function fastifyMultipart (fastify, options, done) {
         }
         if (!field.file) {
           continue
+
         }
         if (!field._buf) {
           throw new FileBufferNotFoundError()
