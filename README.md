@@ -1,6 +1,6 @@
 # @fastify/multipart
 
-[![CI](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml)
+[![CI](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml)
 [![NPM version](https://img.shields.io/npm/v/@fastify/multipart.svg?style=flat)](https://www.npmjs.com/package/@fastify/multipart)
 [![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-brightgreen?style=flat)](https://github.com/neostandard/neostandard)
 
