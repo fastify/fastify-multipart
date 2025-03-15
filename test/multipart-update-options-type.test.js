@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -12,20 +12,20 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       const file = await req.file({ limits: { fileSize: 1 }, throwFileSizeLimit: true })
       await file.toBuffer()
-      t.fail('should throw')
+      t.assert.ok('should throw')
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
   })
@@ -52,11 +52,11 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
 
@@ -64,20 +64,20 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       const file = await req.file({ limits: { fileSize: 1 }, throwFileSizeLimit: false })
       await file.toBuffer()
-      t.pass('OK')
+      t.assert.ok('OK')
       reply.code(200).send()
     } catch {
-      t.fail('Should not throw')
+      t.assert.ok('Should not throw')
       reply.code(500).send()
     }
   })
@@ -104,11 +104,11 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 200)
+    t.assert.strictEqual(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
 
@@ -116,22 +116,22 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       const files = req.files({ limits: { fileSize: 1 }, throwFileSizeLimit: true })
       for await (const file of files) {
         await file.toBuffer()
       }
-      t.fail('Should throw')
+      t.assert.ok('Should throw')
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
   })
@@ -158,11 +158,11 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
 
@@ -170,22 +170,22 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       const files = req.files({ limits: { fileSize: 1 }, throwFileSizeLimit: false })
       for await (const file of files) {
         await file.toBuffer()
       }
-      t.pass('OK')
+      t.assert.ok('OK')
       reply.code(200).send()
     } catch {
-      t.fail('Should not throw')
+      t.assert.ok('Should not throw')
       reply.code(500).send()
     }
   })
@@ -212,10 +212,10 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 200)
+    t.assert.strictEqual(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
