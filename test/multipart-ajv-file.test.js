@@ -1,6 +1,5 @@
 'use strict'
 
-const test = require('tap').test
 const Fastify = require('fastify')
 const FormData = require('form-data')
 const http = require('node:http')
@@ -8,10 +7,11 @@ const multipart = require('..')
 const { once } = require('node:events')
 const fs = require('node:fs')
 const path = require('node:path')
+const test = require('node:test')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('show modify the generated schema', async function (t) {
+test('show modify the generated schema', async t => {
   t.plan(4)
 
   const fastify = Fastify({
@@ -20,7 +20,7 @@ test('show modify the generated schema', async function (t) {
     }
   })
 
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   await fastify.register(multipart, { attachFieldsToBody: true })
   await fastify.register(require('@fastify/swagger'), {
@@ -31,7 +31,7 @@ test('show modify the generated schema', async function (t) {
     }
   })
 
-  await fastify.post(
+  fastify.post(
     '/',
     {
       schema: {
@@ -52,26 +52,24 @@ test('show modify the generated schema', async function (t) {
 
   await fastify.ready()
 
-  t.match(fastify.swagger(), {
-    paths: {
-      '/': {
-        post: {
-          operationId: 'test',
-          requestBody: {
-            content: {
-              'multipart/form-data': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    field: { type: 'string', format: 'binary' }
-                  }
+  t.assert.deepEqual(fastify.swagger().paths, {
+    '/': {
+      post: {
+        operationId: 'test',
+        requestBody: {
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                properties: {
+                  field: { type: 'string', format: 'binary' }
                 }
               }
             }
-          },
-          responses: {
-            200: { description: 'Default Response' }
           }
+        },
+        responses: {
+          200: { description: 'Default Response' }
         }
       }
     }
@@ -97,7 +95,7 @@ test('show modify the generated schema', async function (t) {
     const [res] = await once(req, 'response')
     res.resume()
     await once(res, 'end')
-    t.equal(res.statusCode, 400) // body/field should be a file
+    t.assert.strictEqual(res.statusCode, 400) // body/field should be a file
   }
 
   // request with file
@@ -118,7 +116,7 @@ test('show modify the generated schema', async function (t) {
     const [res] = await once(req, 'response')
     res.resume()
     await once(res, 'end')
-    t.equal(res.statusCode, 200)
+    t.assert.strictEqual(res.statusCode, 200)
   }
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
