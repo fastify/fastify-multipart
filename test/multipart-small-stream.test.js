@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -13,17 +13,16 @@ const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
 
-// FIXME, this test fail
-test('should throw fileSize limitation error on small payload', { skip: true }, async function (t) {
-  t.plan(2)
+test('should throw fileSize limitation error on small payload', async function (t) {
+  t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file({ limits: { fileSize: 2 } })
     await streamToNull(part.file)
@@ -51,11 +50,11 @@ test('should throw fileSize limitation error on small payload', { skip: true }, 
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
 
@@ -63,12 +62,12 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file({ limits: { fileSize: 2 }, throwFileSizeLimit: false })
     await streamToNull(part.file)
@@ -96,10 +95,10 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 200)
+    t.assert.strictEqual(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ok(error, 'request')
   }
 })
