@@ -12,6 +12,8 @@ const streamToNull = require('../lib/stream-consumer')
 const filePath = path.join(__dirname, '../README.md')
 
 test('should respond when all files are processed', function (t, done) {
+  t.plan(3)
+
   const fastify = Fastify({ http2: true })
   t.after(() => fastify.close())
 
