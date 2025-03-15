@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -16,18 +16,18 @@ test('should store file on disk, remove on response', async function (t) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   await fastify.register(multipart)
 
   await fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const files = await req.saveRequestFiles()
     const files2 = await req.saveRequestFiles()
 
     // If it really reused the previously response, their filepath should be the same
-    t.equal(files[0].filepath, files2[0].filepath)
+    t.assert.strictEqual(files[0].filepath, files2[0].filepath)
 
     reply.code(200).send()
   })
@@ -50,7 +50,7 @@ test('should store file on disk, remove on response', async function (t) {
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
 })
