@@ -28,7 +28,6 @@
     "noop-stream": "^0.1.0",
     "pump": "^3.0.0",
     "readable-stream": "^4.5.2",
-    "tap": "^18.6.1",
     "tsd": "^0.33.0"
   },
   "scripts": {
@@ -39,7 +38,7 @@
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap -t 120"
+    "test:unit": "node --test"
   },
   "repository": {
     "type": "git",
