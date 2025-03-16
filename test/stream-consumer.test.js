@@ -1,10 +1,11 @@
 'use strict'
 
-const tap = require('tap')
+const test = require('node:test')
 const { Readable } = require('node:stream')
 const streamToNull = require('../lib/stream-consumer')
 
-tap.test('does what it should', async t => {
+test('does what it should', async t => {
+  t.plan(1)
   let count = 1_000_000
   const stream = new Readable({
     read () {
@@ -18,10 +19,11 @@ tap.test('does what it should', async t => {
   })
 
   await streamToNull(stream)
-  t.pass()
+  t.assert.ok(true)
 })
 
-tap.test('handles close event', async t => {
+test('handles close event', async t => {
+  t.plan(1)
   let count = 1_000_000
   const stream = new Readable({
     read () {
@@ -35,10 +37,11 @@ tap.test('handles close event', async t => {
   })
 
   await streamToNull(stream)
-  t.pass()
+  t.assert.ok(true)
 })
 
-tap.test('handles error event', async t => {
+test('handles error event', async t => {
+  t.plan(1)
   let count = 1_000_000
   const stream = new Readable({
     read () {
@@ -54,6 +57,6 @@ tap.test('handles error event', async t => {
   try {
     await streamToNull(stream)
   } catch (error) {
-    t.match(error, /boom/)
+    t.assert.match(error.toString(), /boom/)
   }
 })
