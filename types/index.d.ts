@@ -43,14 +43,6 @@ type FastifyMultipartPlugin = FastifyPluginCallback<
 | fastifyMultipart.FastifyMultipartAttachFieldsToBodyOptions
 >
 
-export type MultipartHandler = (
-  field: string,
-  file: BusboyFileStream,
-  filename: string,
-  encoding: string,
-  mimetype: string
-) => void
-
 interface BodyEntry {
   data: Buffer;
   filename: string;
