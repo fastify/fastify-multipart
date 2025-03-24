@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -12,13 +12,13 @@ const crypto = require('node:crypto')
 const streamToNull = require('../lib/stream-consumer')
 
 // skipping on Github Actions because it takes too long
-test('should upload a big file in constant memory', { skip: process.env.CI }, function (t) {
+test('should upload a big file in constant memory', { skip: process.env.CI }, function (t, done) {
   t.plan(10)
 
   const fastify = Fastify()
   const hashInput = crypto.createHash('sha256')
 
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     limits: {
@@ -28,23 +28,23 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     for await (const part of req.parts()) {
       if (part.file) {
-        t.equal(part.type, 'file')
-        t.equal(part.fieldname, 'upload')
-        t.equal(part.filename, 'random-data')
-        t.equal(part.encoding, '7bit')
-        t.equal(part.mimetype, 'binary/octet-stream')
+        t.assert.strictEqual(part.type, 'file')
+        t.assert.strictEqual(part.fieldname, 'upload')
+        t.assert.strictEqual(part.filename, 'random-data')
+        t.assert.strictEqual(part.encoding, '7bit')
+        t.assert.strictEqual(part.mimetype, 'binary/octet-stream')
 
         await streamToNull(part.file)
       }
     }
 
     const memory = process.memoryUsage()
-    t.ok(memory.rss < 500 * 1024 * 1024)
-    t.ok(memory.heapTotal < 500 * 1024 * 1024)
+    t.assert.ok(memory.rss < 500 * 1024 * 1024)
+    t.assert.ok(memory.heapTotal < 500 * 1024 * 1024)
 
     reply.send()
   })
@@ -66,7 +66,7 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
         total -= n
 
         if (total === 0) {
-          t.pass('finished generating')
+          t.assert.ok('finished generating')
           hashInput.end()
           this.push(null)
         }
@@ -88,12 +88,18 @@ test('should upload a big file in constant memory', { skip: process.env.CI }, fu
       method: 'POST'
     }
 
-    const req = http.request(opts, () => { fastify.close(noop) })
+    const req = http.request(opts, (res) => {
+      res.on('data', () => {})
+
+      res.on('end', () => {
+        fastify.close(() => {
+          done()
+        })
+      })
+    })
 
     pump(form, req, function (err) {
-      t.error(err, 'client pump: no err')
+      t.assert.ifError(err, 'client pump: no err')
     })
   })
 })
-
-function noop () { }
