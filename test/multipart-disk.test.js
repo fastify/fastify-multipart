@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -11,6 +11,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { access } = require('node:fs').promises
 const EventEmitter = require('node:events')
+const os = require('node:os')
 const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
@@ -19,21 +20,21 @@ test('should store file on disk, remove on response', async function (t) {
   t.plan(10)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const files = await req.saveRequestFiles()
 
-    t.ok(files[0].filepath)
-    t.equal(files[0].fieldname, 'upload')
-    t.equal(files[0].filename, 'README.md')
-    t.equal(files[0].encoding, '7bit')
-    t.equal(files[0].mimetype, 'text/markdown')
-    t.ok(files[0].fields.upload)
+    t.assert.ok(files[0].filepath)
+    t.assert.strictEqual(files[0].fieldname, 'upload')
+    t.assert.strictEqual(files[0].filename, 'README.md')
+    t.assert.strictEqual(files[0].encoding, '7bit')
+    t.assert.strictEqual(files[0].mimetype, 'text/markdown')
+    t.assert.ok(files[0].fields.upload)
 
     await access(files[0].filepath, fs.constants.F_OK)
 
@@ -46,8 +47,8 @@ test('should store file on disk, remove on response', async function (t) {
     try {
       await access(request.tmpUploads[0], fs.constants.F_OK)
     } catch (error) {
-      t.equal(error.code, 'ENOENT')
-      t.pass('Temp file was removed after response')
+      t.assert.strictEqual(error.code, 'ENOENT')
+      t.assert.ok('Temp file was removed after response')
       ee.emit('response')
     }
   })
@@ -70,7 +71,7 @@ test('should store file on disk, remove on response', async function (t) {
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
   await once(ee, 'response')
@@ -80,12 +81,12 @@ test('should store file on disk, remove on response error', async function (t) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     await req.saveRequestFiles()
 
@@ -99,8 +100,8 @@ test('should store file on disk, remove on response error', async function (t) {
     try {
       await access(request.tmpUploads[0], fs.constants.F_OK)
     } catch (error) {
-      t.equal(error.code, 'ENOENT')
-      t.pass('Temp file was removed after response')
+      t.assert.strictEqual(error.code, 'ENOENT')
+      t.assert.ok('Temp file was removed after response')
       ee.emit('response')
     }
   })
@@ -118,10 +119,10 @@ test('should store file on disk, remove on response error', async function (t) {
   }
 
   const req = http.request(opts, (res) => {
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     res.on('end', () => {
-      t.pass('res ended successfully')
+      t.assert.ok('res ended successfully')
     })
   })
   form.append('upload', fs.createReadStream(filePath))
@@ -129,7 +130,7 @@ test('should store file on disk, remove on response error', async function (t) {
   try {
     await form.pipe(req)
   } catch (error) {
-    t.error(error, 'formData request pump: no err')
+    t.assert.ifError(error, 'formData request pump: no err')
   }
   await once(ee, 'response')
 })
@@ -138,19 +139,19 @@ test('should throw on file limit error', async function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.saveRequestFiles({ limits: { fileSize: 500 } })
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      t.equal(error.part.fieldname, 'upload')
+      t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.assert.strictEqual(error.part.fieldname, 'upload')
       reply.code(500).send()
     }
   })
@@ -173,11 +174,11 @@ test('should throw on file limit error', async function (t) {
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })
 
@@ -185,12 +186,12 @@ test('should throw on file save error', async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(require('..'))
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.saveRequestFiles({ tmpdir: 'something' })
@@ -220,11 +221,11 @@ test('should throw on file save error', async function (t) {
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })
 
@@ -232,19 +233,19 @@ test('should not throw on request files cleanup error', { skip: process.platform
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(require('..'))
 
-  const tmpdir = t.testdir()
+  const tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), ''))
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.saveRequestFiles({ tmpdir })
       // temp file saved, remove before the onResponse hook
-      await fs.promises.rm(tmpdir, { recursive: true, force: true })
+      fs.rmSync(tmpdir, { recursive: true, force: true })
       reply.code(200).send()
     } catch {
       reply.code(500).send()
@@ -271,11 +272,11 @@ test('should not throw on request files cleanup error', { skip: process.platform
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 200)
+    t.assert.strictEqual(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })
 
@@ -284,19 +285,19 @@ test('should throw on file limit error, after highWaterMark', async function (t)
 
   const hashInput = crypto.createHash('sha256')
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.saveRequestFiles({ limits: { fileSize: 17000 } })
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
-      t.equal(error.part.fieldname, 'upload2')
+      t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.assert.strictEqual(error.part.fieldname, 'upload2')
       reply.code(500).send()
     }
   })
@@ -320,7 +321,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
       total -= n
 
       if (total === 0) {
-        t.pass('finished generating')
+        t.assert.ok('finished generating')
         hashInput.end()
         this.push(null)
       }
@@ -347,11 +348,11 @@ test('should throw on file limit error, after highWaterMark', async function (t)
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })
 
@@ -359,16 +360,16 @@ test('should store file on disk, remove on response error, serial', async functi
   t.plan(18)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req) {
-    t.equal(req.tmpUploads, null)
+    t.assert.strictEqual(req.tmpUploads, null)
 
     await req.saveRequestFiles()
 
-    t.equal(req.tmpUploads.length, 1)
+    t.assert.strictEqual(req.tmpUploads.length, 1)
 
     throw new Error('test')
   })
@@ -379,8 +380,8 @@ test('should store file on disk, remove on response error, serial', async functi
     try {
       await access(request.tmpUploads[0], fs.constants.F_OK)
     } catch (error) {
-      t.equal(error.code, 'ENOENT')
-      t.pass('Temp file was removed after response')
+      t.assert.strictEqual(error.code, 'ENOENT')
+      t.assert.ok('Temp file was removed after response')
       ee.emit('response')
     }
   })
@@ -400,10 +401,10 @@ test('should store file on disk, remove on response error, serial', async functi
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -411,7 +412,7 @@ test('should store file on disk, remove on response error, serial', async functi
     try {
       await form.pipe(req)
     } catch (error) {
-      t.error(error, 'formData request pump: no err')
+      t.assert.ifError(error, 'formData request pump: no err')
     }
     await once(ee, 'response')
   }
@@ -425,12 +426,12 @@ test('should process large files correctly', async function (t) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     await req.saveRequestFiles()
     return { ok: true }
   })
@@ -460,7 +461,7 @@ test('should process large files correctly', async function (t) {
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
 })
