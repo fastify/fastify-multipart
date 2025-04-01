@@ -10,7 +10,7 @@
     "@fastify/deepmerge": "^3.0.0",
     "@fastify/error": "^4.0.0",
     "fastify-plugin": "^5.0.0",
-    "secure-json-parse": "^3.0.0"
+    "secure-json-parse": "^4.0.0"
   },
   "devDependencies": {
     "@fastify/pre-commit": "^2.1.0",
