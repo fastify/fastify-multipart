@@ -7,7 +7,7 @@
   "types": "types/index.d.ts",
   "dependencies": {
     "@fastify/busboy": "^3.0.0",
-    "@fastify/deepmerge": "^2.0.0",
+    "@fastify/deepmerge": "^3.0.0",
     "@fastify/error": "^4.0.0",
     "fastify-plugin": "^5.0.0",
     "secure-json-parse": "^3.0.0"
