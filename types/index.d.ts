@@ -35,6 +35,10 @@ declare module 'fastify' {
   interface FastifyInstance {
     multipartErrors: MultipartErrors;
   }
+
+  interface FastifyContextConfig {
+    multipart_options?: Omit<BusboyConfig, 'headers'>
+  }
 }
 
 type FastifyMultipartPlugin = FastifyPluginCallback<
