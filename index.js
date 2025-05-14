@@ -72,7 +72,7 @@ function fastifyMultipart (fastify, options, done) {
         return
       }
 
-      for await (const part of req.parts(req.routeOptions.config.multipart_options)) {
+      for await (const part of req.parts(req.routeOptions.config.multipartOptions)) {
         req.body = part.fields
 
         if (part.file) {

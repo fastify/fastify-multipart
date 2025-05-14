@@ -37,7 +37,7 @@ declare module 'fastify' {
   }
 
   interface FastifyContextConfig {
-    multipart_options?: Omit<BusboyConfig, 'headers'>
+    multipartOptions?: Omit<BusboyConfig, 'headers'>
   }
 }
 
