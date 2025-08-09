@@ -511,6 +511,7 @@ To validate requests using [Zod](https://github.com/colinhacks/zod), you need to
 
 1. Install and configure [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod).
 2. Make sure the `attachFieldsToBody` option is set to `true` when registering the `@fastify/multipart` plugin.
+3. You can use `attachFieldsToBody: "keyValues"` to avoid another fields preprocessing, but in that case, you will receive a Buffer for files that are not text/plain.
 
 After setup, you can validate your request body using a Zod schema as usual.
 

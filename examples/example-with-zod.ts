@@ -16,6 +16,7 @@ app.setSerializerCompiler(serializerCompiler)
 app.setValidatorCompiler(validatorCompiler)
 
 app.register(fastifyMultipart, { attachFieldsToBody: true })
+// You can use attachFieldsToBody: "keyValues" to avoid another fields preprocessing, but in that case, you will receive a Buffer for files that are not text/plain.
 
 app.post(
   '/upload',
