@@ -507,63 +507,14 @@ fastify.post('/upload/files', {
 
 ## Zod Schema body validation
 
-To validate request using Zod you will need to use [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod) and the `attachFieldsToBody` parameter needs to be `true`, after setting it up, you can validate your request using zod.
+To validate requests using [Zod](https://github.com/colinhacks/zod), you need to:
 
-```js
-import { fastifyMultipart, type MultipartFile } from '@fastify/multipart'
-import {
-  jsonSchemaTransform,
-  serializerCompiler,
-  validatorCompiler,
-  ZodTypeProvider,
-} from 'fastify-type-provider-zod'
+1. Install and configure [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod).
+2. Make sure the `attachFieldsToBody` option is set to `true` when registering the `@fastify/multipart` plugin.
 
-const app = fastify().withTypeProvider<ZodTypeProvider>()
+After setup, you can validate your request body using a Zod schema as usual.
 
-app.setSerializerCompiler(serializerCompiler)
-app.setValidatorCompiler(validatorCompiler)
-
-app.register(fastifyMultipart, { attachFieldsToBody: true })
-
-app.post('/upload/files', {
-  schema: {
-    consumes: ['multipart/form-data'],
-    body: z.object({
-      file: z.custom<MultipartFile>()
-    })
-  }
-}, function (req, reply) {
-  console.log({ body: req.body })
-  reply.send('done')
-})
-```
-
-**Note**: Zod doesn't have native support for `FormData`, so you will need to use refinements, for more information, consult [`zod documentation`](https://zod.dev/?id=refine).
-Similarly `fastify-type-provider-zod` doesn't have support for `Swagger`, you can just disable it for this request with `hide: true`.
-
-```js
-
-fastify.post('/upload/files', {
-  schema: {
-    hide: true, // Disable Swagger
-    consumes: ['multipart/form-data'],
-    body: z.object({
-      file: z
-      .custom<MultipartFile>()
-      .refine((file) => file.file.bytesRead <= 10 * 1024 * 1024, {
-        message: 'The image must be a maximum of 10MB.',
-      })
-      .refine((file) => file.mimetype.startsWith('image'), {
-        message: 'Only images are allowed to be sent.',
-      })
-    })
-  }
-}, function (req, reply) {
-  console.log({ body: req.body })
-  reply.send('done')
-})
-
-```
+See a full example in [`examples/example-with-zod.ts`](examples/example-with-zod.ts).
 
 ## Access all errors
 
