@@ -29,10 +29,10 @@ app.post(
           .refine((file) => file?.file, {
             message: 'The image is required.',
           })
-          .refine((file) => file.file?.bytesRead <= 10 * 1024 * 1024, {
+          .refine((file) => !file || file.file?.bytesRead <= 10 * 1024 * 1024, {
             message: 'The image must be a maximum of 10MB.',
           })
-          .refine((file) => file.mimetype.startsWith('image'), {
+          .refine((file) => !file || file.mimetype.startsWith('image'), {
             message: 'Only images are allowed to be sent.',
           }),
         anotherField: z.preprocess(
