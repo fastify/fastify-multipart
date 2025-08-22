@@ -25,7 +25,7 @@ npm i @fastify/multipart
 ```js
 import fastify from "fastify"
 import fs from "node:fs"
-import { pipeline } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import multipart from "@fastify/multipart";
 
 fastify.register(multipart)
