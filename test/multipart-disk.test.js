@@ -11,7 +11,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { access } = require('node:fs').promises
 const EventEmitter = require('node:events')
-const os = require('node:os')
+// const os = require('node:os')
 const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
@@ -237,7 +237,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
 
   fastify.register(require('..'))
 
-  const tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), ''))
+  const tmpdir = fs.mkdtempSync(path.join(__dirname, 'tmp'))
 
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
