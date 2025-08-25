@@ -34,7 +34,7 @@ test('should be able to use JSON schema to validate request', function (t, done)
   }, async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 

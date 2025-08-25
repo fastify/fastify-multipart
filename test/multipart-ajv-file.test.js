@@ -52,7 +52,7 @@ test('show modify the generated schema', async t => {
 
   await fastify.ready()
 
-  t.assert.deepEqual(fastify.swagger().paths, {
+  t.assert.deepStrictEqual(fastify.swagger().paths, {
     '/': {
       post: {
         operationId: 'test',

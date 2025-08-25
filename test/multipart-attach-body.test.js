@@ -26,7 +26,7 @@ test('should be able to attach all parsed fields and files and make it accessibl
 
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 
@@ -74,9 +74,9 @@ test('should be able to attach all parsed field values and json content files an
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
-    t.assert.deepEqual(req.body.upload, original)
+    t.assert.deepStrictEqual(req.body.upload, original)
     t.assert.strictEqual(req.body.hello, 'world')
 
     reply.code(200).send()
@@ -122,7 +122,7 @@ test('should be able to attach all parsed field values and files and make it acc
 
     req.body.upload = req.body.upload.toString('utf8')
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     t.assert.strictEqual(req.body.upload, original)
     t.assert.strictEqual(req.body.hello, 'world')
@@ -174,7 +174,7 @@ test('should be able to attach all parsed field values and files with custom "on
 
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     t.assert.strictEqual(req.body.upload, original)
     t.assert.strictEqual(req.body.hello, 'world')
@@ -225,7 +225,7 @@ test('should be able to define a custom "onFile" handler', async function (t) {
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 
@@ -312,7 +312,7 @@ test('should manage array fields', async function (t) {
     req.body.upload[0] = req.body.upload[0].toString('utf8')
     req.body.upload[1] = req.body.upload[1].toString('utf8')
 
-    t.assert.deepEqual(req.body, {
+    t.assert.deepStrictEqual(req.body, {
       upload: [original, original],
       hello: ['hello', 'world']
     })
@@ -453,7 +453,7 @@ test('should pass the buffer instead of converting to string', async function (t
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     t.assert.ok(req.body.upload instanceof Buffer)
     t.assert.strictEqual(Buffer.compare(req.body.upload, original), 0)
@@ -502,13 +502,13 @@ test('should be able to attach all parsed fields and files and make it accessibl
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    t.assert.deepEqual(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const formData = await req.formData()
 
     t.assert.strictEqual(formData instanceof globalThis.FormData, true)
     t.assert.strictEqual(formData.get('hello'), 'world')
-    t.assert.deepEqual(formData.getAll('hello'), ['world', 'foo'])
+    t.assert.deepStrictEqual(formData.getAll('hello'), ['world', 'foo'])
     t.assert.strictEqual(await formData.get('upload').text(), original)
     t.assert.strictEqual(formData.get('upload').type, 'text/markdown')
     t.assert.strictEqual(formData.get('upload').name, 'README.md')

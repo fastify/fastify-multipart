@@ -18,7 +18,7 @@ test('should parse JSON fields forms if content-type is set', function (t, done)
     for await (const part of req.parts()) {
       t.assert.strictEqual(part.filename, undefined)
       t.assert.strictEqual(part.mimetype, 'application/json')
-      t.assert.deepEqual(part.value, { a: 'b' })
+      t.assert.deepStrictEqual(part.value, { a: 'b' })
     }
 
     reply.code(200).send()
@@ -263,7 +263,7 @@ test('should be able to use JSON schema to validate request when value is a stri
     async function (req, reply) {
       t.assert.ok(req.isMultipart())
 
-      t.assert.deepEqual(Object.keys(req.body), ['field'])
+      t.assert.deepStrictEqual(Object.keys(req.body), ['field'])
       t.assert.strictEqual(req.body.field.value, '{"a":"b"}')
 
       reply.code(200).send()
@@ -322,8 +322,8 @@ test('should be able to use JSON schema to validate request when value is a JSON
     async function (req, reply) {
       t.assert.ok(req.isMultipart())
 
-      t.assert.deepEqual(Object.keys(req.body), ['field'])
-      t.assert.deepEqual(req.body.field.value, { a: 'b' })
+      t.assert.deepStrictEqual(Object.keys(req.body), ['field'])
+      t.assert.deepStrictEqual(req.body.field.value, { a: 'b' })
 
       reply.code(200).send()
     }
