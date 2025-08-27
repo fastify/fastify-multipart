@@ -297,7 +297,7 @@ test('should use default for fileSize', async function (t) {
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })
 

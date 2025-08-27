@@ -56,7 +56,7 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -108,7 +108,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })
 
@@ -162,7 +162,7 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -216,6 +216,6 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })

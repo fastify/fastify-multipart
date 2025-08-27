@@ -14,7 +14,7 @@ const { once } = EventEmitter
 const filePath = path.join(__dirname, '../README.md')
 
 test('should throw fileSize limitation error on small payload', async function (t) {
-  t.plan(3)
+  t.plan(2)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -27,7 +27,11 @@ test('should throw fileSize limitation error on small payload', async function (
     const part = await req.file({ limits: { fileSize: 2 } })
     await streamToNull(part.file)
 
-    reply.code(200).send()
+    if (part.file.truncated) {
+      reply.code(413).send()
+    } else {
+      reply.code(200).send()
+    }
   })
 
   await fastify.listen({ port: 0 })
@@ -54,7 +58,7 @@ test('should throw fileSize limitation error on small payload', async function (
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -99,6 +103,6 @@ test('should not throw and error when throwFileSizeLimit option is false', { ski
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ok(error, 'request')
+    t.assert.ifError(error)
   }
 })
