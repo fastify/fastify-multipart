@@ -178,7 +178,7 @@ test('should throw on file limit error', async function (t) {
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -225,7 +225,7 @@ test('should throw on file save error', async function (t) {
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -276,7 +276,7 @@ test('should not throw on request files cleanup error', { skip: process.platform
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -352,7 +352,7 @@ test('should throw on file limit error, after highWaterMark', async function (t)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 

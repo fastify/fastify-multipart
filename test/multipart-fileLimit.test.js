@@ -64,7 +64,7 @@ test('should throw fileSize limitation error when consuming the stream', async f
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -127,7 +127,7 @@ test('should throw fileSize limitation error when consuming the stream MBs', asy
 
     fs.unlinkSync(tmpFile)
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -187,7 +187,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
     t.assert.strictEqual(res.statusCode, 413)
     res.resume()
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -251,7 +251,7 @@ test('should throw fileSize limitation error when throwFileSizeLimit is globally
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -313,6 +313,6 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
     t.assert.strictEqual(res.statusCode, 413)
     res.resume()
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })

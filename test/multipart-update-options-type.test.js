@@ -108,7 +108,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.ifError(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
