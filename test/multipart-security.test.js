@@ -263,7 +263,7 @@ test('should use default for fileSize', async function (t) {
     try {
       await part.toBuffer()
       reply.send('not ok')
-      t.assert.ok('it should throw')
+      t.assert.fail('it should throw')
     } catch (error) {
       t.assert.ok(error)
       reply.send(error)
@@ -311,7 +311,7 @@ test('should use default for parts - 1000', function (t, done) {
     try {
       // eslint-disable-next-lint no-empty
       for await (const _ of req.parts()) { console.assert(_) }
-      t.assert.ok('should throw on 1001')
+      t.assert.fail('should throw on 1001')
       reply.code(200).send()
     } catch (error) {
       t.assert.ok(error instanceof fastify.multipartErrors.PartsLimitError)

@@ -81,6 +81,6 @@ test('should emit fileSize limitation error during streaming', async function (t
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.assert.fail(error, 'request')
+    t.assert.ifError(error, 'request')
   }
 })

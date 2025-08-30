@@ -157,7 +157,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
       t.assert.notStrictEqual(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
     } catch {
-      t.assert.ifError('it should not throw')
+      t.assert.fail('it should not throw')
     }
   })
 
@@ -283,7 +283,7 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
       t.assert.notStrictEqual(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
     } catch {
-      t.assert.ifError('it should not throw')
+      t.assert.fail('it should not throw')
     }
   })
 

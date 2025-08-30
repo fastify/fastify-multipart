@@ -22,7 +22,7 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
     try {
       const file = await req.file({ limits: { fileSize: 1 }, throwFileSizeLimit: true })
       await file.toBuffer()
-      t.assert.ok('should throw')
+      t.assert.fail('should throw')
       reply.code(200).send()
     } catch (error) {
       t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
@@ -77,7 +77,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
       t.assert.ok('OK')
       reply.code(200).send()
     } catch {
-      t.assert.ok('Should not throw')
+      t.assert.fail('Should not throw')
       reply.code(500).send()
     }
   })
@@ -128,7 +128,7 @@ test('Should throw RequestFileTooLargeError when throwFileSizeLimit: true for fi
       for await (const file of files) {
         await file.toBuffer()
       }
-      t.assert.ok('Should throw')
+      t.assert.fail('Should throw')
       reply.code(200).send()
     } catch (error) {
       t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
@@ -185,7 +185,7 @@ test('Should NOT throw RequestFileTooLargeError when throwFileSizeLimit: false f
       t.assert.ok('OK')
       reply.code(200).send()
     } catch {
-      t.assert.ok('Should not throw')
+      t.assert.fail('Should not throw')
       reply.code(500).send()
     }
   })
