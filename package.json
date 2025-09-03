@@ -29,7 +29,7 @@
     "pump": "^3.0.0",
     "readable-stream": "^4.5.2",
     "tap": "^18.6.1",
-    "tsd": "^0.32.0"
+    "tsd": "^0.33.0"
   },
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",
