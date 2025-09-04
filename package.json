@@ -1,6 +1,6 @@
 {
   "name": "@fastify/multipart",
-  "version": "9.2.0",
+  "version": "9.2.1",
   "description": "Multipart plugin for Fastify",
   "main": "index.js",
   "type": "commonjs",
