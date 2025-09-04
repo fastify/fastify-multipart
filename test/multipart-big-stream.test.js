@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -15,13 +15,13 @@ test('should emit fileSize limitation error during streaming', async function (t
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
   const hashInput = crypto.createHash('sha256')
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     const part = await req.file({ limits: { fileSize: 16500 } })
     await streamToNull(part.file)
     if (part.file.truncated) {
@@ -50,7 +50,7 @@ test('should emit fileSize limitation error during streaming', async function (t
       total -= n
 
       if (total === 0) {
-        t.pass('finished generating')
+        t.assert.ok('finished generating')
         hashInput.end()
         this.push(null)
       }
@@ -77,10 +77,10 @@ test('should emit fileSize limitation error during streaming', async function (t
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 500)
+    t.assert.strictEqual(res.statusCode, 500)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })

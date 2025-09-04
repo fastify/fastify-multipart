@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -11,16 +11,18 @@ const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should respond when all files are processed', function (t) {
+test('should respond when all files are processed', function (t, done) {
+  t.plan(3)
+
   const fastify = Fastify({ http2: true })
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     const parts = req.files()
     for await (const part of parts) {
-      t.ok(part.file)
+      t.assert.ok(part.file)
       await streamToNull(part.file)
     }
     reply.code(200).send()
@@ -37,7 +39,7 @@ test('should respond when all files are processed', function (t) {
 
     const res = await h2url.concat({ url, method: 'POST', headers: form.getHeaders(), body: form })
 
-    t.equal(res.headers[':status'], 200)
-    t.end()
+    t.assert.strictEqual(res.headers[':status'], 200)
+    done()
   })
 })

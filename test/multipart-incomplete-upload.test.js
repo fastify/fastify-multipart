@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -15,22 +15,22 @@ test('should finish with error on partial upload - files api', async function (t
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     const parts = await req.files()
     try {
       for await (const part of parts) {
         await pipeline(part.file, writableNoopStream())
       }
     } catch (e) {
-      t.equal(e.message, 'Premature close', 'File was closed prematurely')
+      t.assert.strictEqual(e.message, 'Premature close', 'File was closed prematurely')
       throw e
     } finally {
-      t.pass('Finished request')
+      t.assert.ok('Finished request')
     }
     return 'ok'
   })
@@ -51,27 +51,26 @@ test('should finish with error on partial upload - files api', async function (t
 
   const req = http.request(opts)
   req.on('error', () => {
-    t.pass('ended http request with error')
+    t.assert.ok('ended http request with error')
   })
   const data = form.getBuffer()
   req.write(data.slice(0, dataSize / 2))
   await sleep(100)
   req.destroy()
   await sleep(100)
-  t.end()
 })
 
 test('should finish with error on partial upload - saveRequestFiles', async function (t) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   await fastify.register(multipart)
 
   let tmpUploads
   fastify.post('/', async function (req) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     try {
       await req.saveRequestFiles()
     } finally {
@@ -101,9 +100,9 @@ test('should finish with error on partial upload - saveRequestFiles', async func
   req.end()
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 500)
+  t.assert.strictEqual(res.statusCode, 500)
 
   for (const tmpUpload of tmpUploads) {
-    await t.rejects(fs.access(tmpUpload))
+    await t.assert.rejects(fs.access(tmpUpload))
   }
 })
