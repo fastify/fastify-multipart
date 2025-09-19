@@ -505,6 +505,18 @@ fastify.post('/upload/files', {
 })
 ```
 
+## Zod Schema body validation
+
+To validate requests using [Zod](https://github.com/colinhacks/zod), you need to:
+
+1. Install and configure [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod).
+1. Make sure the `attachFieldsToBody` option is set to `true` when registering the `@fastify/multipart` plugin.
+1. You can use `attachFieldsToBody: "keyValues"` to avoid another fields preprocessing, but in that case, you will receive a Buffer for files that are not text/plain.
+
+After setup, you can validate your request body using a Zod schema as usual.
+
+See a full example in [`examples/example-with-zod.ts`](examples/example-with-zod.ts).
+
 ## Access all errors
 
 We export all custom errors via a server decorator `fastify.multipartErrors`. This is useful if you want to react to specific errors. They are derived from [@fastify/error](https://github.com/fastify/fastify-error) and include the correct `statusCode` property.
