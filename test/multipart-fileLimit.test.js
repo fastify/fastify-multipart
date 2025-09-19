@@ -321,7 +321,7 @@ test('should throw fileSize limitation error when used alongside attachFieldsToB
   t.plan(1)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     attachFieldsToBody: true
@@ -366,13 +366,13 @@ test('should throw fileSize limitation error when used alongside attachFieldsToB
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.equal(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
 
     fs.unlinkSync(tmpFile)
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -380,7 +380,7 @@ test('should not throw fileSize limitation error when used alongside attachField
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     attachFieldsToBody: true
@@ -398,13 +398,13 @@ test('should not throw fileSize limitation error when used alongside attachField
       }
     }
   }, async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload'])
 
     const content = await req.body.upload.toBuffer()
 
-    t.equal(content.toString(), randomFileBuffer.toString())
+    t.assert.strictEqual(content.toString(), randomFileBuffer.toString())
 
     reply.status(200).send()
   })
@@ -431,12 +431,12 @@ test('should not throw fileSize limitation error when used alongside attachField
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 200)
+    t.assert.equal(res.statusCode, 200)
     res.resume()
     await once(res, 'end')
 
     fs.unlinkSync(tmpFile)
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
