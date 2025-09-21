@@ -125,6 +125,20 @@ fastify.post('/', async function (req, reply) {
 })
 ```
 
+Or to a route options when `attachFieldsToBody` is used.
+```js
+fastify.post('/', {
+  config: {
+      multipartOptions: {
+        limits: { fileSize: 1000 }
+      }
+    }
+}, async function (req, reply) {
+  const buffer = req.body.file.toBuffer();
+  reply.send()
+})
+```
+
 ## Handle multiple file streams
 
 ```js
