@@ -13,7 +13,6 @@
     "secure-json-parse": "^4.0.0"
   },
   "devDependencies": {
-    "@fastify/pre-commit": "^2.1.0",
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
     "@types/node": "^24.0.8",
