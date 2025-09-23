@@ -232,9 +232,9 @@ fastify.post('/upload/files', async function (req, reply) {
   const fooValue = req.body.foo.value                  // other fields
   const body = Object.fromEntries(
     Object.keys(req.body).map((key) => [key, req.body[key].value])
-  ) // Request body in key-value pairs, like req.body in Express (Node 12+)
+  ) // Request body in key-value pairs, like req.body in Express (Node 20+)
 
-  // On Node 18+
+  // On Node 20+
   const formData = await req.formData()
   console.log(formData)
 })
