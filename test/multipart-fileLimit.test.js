@@ -339,7 +339,7 @@ test('should throw fileSize limitation error when used alongside attachFieldsToB
       }
     }
   }, async function (req, reply) {
-    t.fail('it should throw')
+    t.assert.fail('it should throw')
 
     reply.status(200).send()
   })
