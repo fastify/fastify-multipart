@@ -1,15 +1,17 @@
 'use strict'
 
-const test = require('tap').test
+const { test } = require('node:test')
+const assert = require('node:assert')
 const Fastify = require('fastify')
 const multipart = require('..')
 
 test('malformed request should not cause uncaught exception when await before req.file()', async function (t) {
-  t.plan(2)
-
   const fastify = Fastify()
 
   await fastify.register(multipart)
+
+  let errorListenerCalled = false
+  let errorCaught = false
 
   fastify.post('/', async function (req, reply) {
     // Simulate any async operation before req.file()
@@ -22,7 +24,7 @@ test('malformed request should not cause uncaught exception when await before re
       if (data) {
         // Attach error listener
         data.file.on('error', (_err) => {
-          t.pass('error listener was called')
+          errorListenerCalled = true
         })
 
         // Try to consume the file
@@ -31,7 +33,7 @@ test('malformed request should not cause uncaught exception when await before re
 
       reply.code(200).send({ ok: true })
     } catch (err) {
-      t.pass('error was caught in try/catch')
+      errorCaught = true
       reply.code(400).send({ error: err.message })
     }
   })
@@ -58,18 +60,18 @@ test('malformed request should not cause uncaught exception when await before re
     })
 
     // The request should complete without crashing
-    t.ok(response, 'request completed without uncaught exception')
+    assert.ok(response, 'request completed without uncaught exception')
   } catch (err) {
     // Even if there's an error, it should be catchable
-    t.ok(err, 'error was catchable')
+    assert.ok(err, 'error was catchable')
   }
+
+  assert.ok(errorListenerCalled || errorCaught, 'error was handled either by listener or catch block')
 
   await fastify.close()
 })
 
 test('malformed request with req.files() should not cause uncaught exception', async function (t) {
-  t.plan(1)
-
   const fastify = Fastify()
 
   await fastify.register(multipart)
@@ -109,17 +111,15 @@ test('malformed request with req.files() should not cause uncaught exception', a
       payload: malformedData
     })
 
-    t.ok(response, 'request completed without uncaught exception')
+    assert.ok(response, 'request completed without uncaught exception')
   } catch (err) {
-    t.ok(err, 'error was catchable')
+    assert.ok(err, 'error was catchable')
   }
 
   await fastify.close()
 })
 
 test('malformed request with req.parts() should not cause uncaught exception', async function (t) {
-  t.plan(1)
-
   const fastify = Fastify()
 
   await fastify.register(multipart)
@@ -161,9 +161,9 @@ test('malformed request with req.parts() should not cause uncaught exception', a
       payload: malformedData
     })
 
-    t.ok(response, 'request completed without uncaught exception')
+    assert.ok(response, 'request completed without uncaught exception')
   } catch (err) {
-    t.ok(err, 'error was catchable')
+    assert.ok(err, 'error was catchable')
   }
 
   await fastify.close()
