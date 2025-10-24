@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -18,21 +18,20 @@ test('should be able to attach all parsed fields and files and make it accessibl
   t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
-
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.ok(req.isMultipart())
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 
-    t.equal(content.toString(), original)
-    t.equal(req.body.hello.value, 'world')
+    t.assert.strictEqual(content.toString(), original)
+    t.assert.strictEqual(req.body.hello.value, 'world')
 
     reply.code(200).send()
   })
@@ -56,29 +55,29 @@ test('should be able to attach all parsed fields and files and make it accessibl
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should be able to attach all parsed field values and json content files and make it accessible through "req.body"', async function (t) {
   t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   const original = { testContent: 'test upload content' }
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
-    t.same(req.body.upload, original)
-    t.equal(req.body.hello, 'world')
+    t.assert.deepStrictEqual(req.body.upload, original)
+    t.assert.strictEqual(req.body.hello, 'world')
 
     reply.code(200).send()
   })
@@ -102,31 +101,31 @@ test('should be able to attach all parsed field values and json content files an
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should be able to attach all parsed field values and files and make it accessible through "req.body"', async function (t) {
   t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     req.body.upload = req.body.upload.toString('utf8')
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
-    t.equal(req.body.upload, original)
-    t.equal(req.body.hello, 'world')
+    t.assert.strictEqual(req.body.upload, original)
+    t.assert.strictEqual(req.body.hello, 'world')
 
     reply.code(200).send()
   })
@@ -150,20 +149,20 @@ test('should be able to attach all parsed field values and files and make it acc
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should be able to attach all parsed field values and files with custom "onFile" handler and make it accessible through "req.body"', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   async function onFile (part) {
-    t.pass('custom onFile handler')
+    t.assert.ok('custom onFile handler')
     const buff = await part.toBuffer()
     const decoded = Buffer.from(buff.toString(), 'base64').toString()
     part.value = decoded
@@ -174,11 +173,11 @@ test('should be able to attach all parsed field values and files with custom "on
   const original = 'test upload content'
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.ok(req.isMultipart())
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
-    t.equal(req.body.upload, original)
-    t.equal(req.body.hello, 'world')
+    t.assert.strictEqual(req.body.upload, original)
+    t.assert.strictEqual(req.body.hello, 'world')
 
     reply.code(200).send()
   })
@@ -202,20 +201,20 @@ test('should be able to attach all parsed field values and files with custom "on
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should be able to define a custom "onFile" handler', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   async function onFile (part) {
-    t.pass('custom onFile handler')
+    t.assert.ok('custom onFile handler')
     await part.toBuffer()
   }
 
@@ -224,14 +223,14 @@ test('should be able to define a custom "onFile" handler', async function (t) {
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 
-    t.equal(content.toString(), original)
-    t.equal(req.body.hello.value, 'world')
+    t.assert.strictEqual(content.toString(), original)
+    t.assert.strictEqual(req.body.hello.value, 'world')
 
     reply.code(200).send()
   })
@@ -255,17 +254,17 @@ test('should be able to define a custom "onFile" handler', async function (t) {
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
-test('should not process requests with content-type other than multipart', function (t) {
+test('should not process requests with content-type other than multipart', function (t, done) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true })
 
@@ -283,13 +282,14 @@ test('should not process requests with content-type other than multipart', funct
       method: 'POST'
     }
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.on('data', function (data) {
-        t.equal(JSON.parse(data).hello, 'world')
+        t.assert.strictEqual(JSON.parse(data).hello, 'world')
       })
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     req.end(JSON.stringify({ name: 'world' }))
@@ -300,19 +300,19 @@ test('should manage array fields', async function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     req.body.upload[0] = req.body.upload[0].toString('utf8')
     req.body.upload[1] = req.body.upload[1].toString('utf8')
 
-    t.same(req.body, {
+    t.assert.deepStrictEqual(req.body, {
       upload: [original, original],
       hello: ['hello', 'world']
     })
@@ -341,22 +341,22 @@ test('should manage array fields', async function (t) {
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should be able to attach all parsed field values and files with custom "onFile" handler with access to request object bind to "this"', async function (t) {
   t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   async function onFile (part) {
-    t.pass('custom onFile handler')
-    t.equal(this.id, 'req-1')
-    t.equal(typeof this, 'object')
+    t.assert.ok('custom onFile handler')
+    t.assert.strictEqual(this.id, 'req-1')
+    t.assert.strictEqual(typeof this, 'object')
     const buff = await part.toBuffer()
     const decoded = Buffer.from(buff.toString(), 'base64').toString()
     part.value = decoded
@@ -367,7 +367,7 @@ test('should be able to attach all parsed field values and files with custom "on
   const original = 'test upload content'
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     reply.code(200).send()
   })
 
@@ -389,21 +389,21 @@ test('should be able to attach all parsed field values and files with custom "on
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should handle file stream consumption when internal buffer is not yet loaded', async function (t) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   async function onFile (part) {
     pump(part.file, writableNoopStream()).once('end', () => {
-      t.pass('stream consumed successfully')
+      t.assert.ok('stream consumed successfully')
     })
   }
 
@@ -412,7 +412,7 @@ test('should handle file stream consumption when internal buffer is not yet load
   const original = 'test upload content'
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
     reply.code(200).send()
   })
 
@@ -434,30 +434,30 @@ test('should handle file stream consumption when internal buffer is not yet load
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should pass the buffer instead of converting to string', async function (t) {
   t.plan(7)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   const original = fs.readFileSync(filePath)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
-    t.ok(req.body.upload instanceof Buffer)
-    t.ok(Buffer.compare(req.body.upload, original) === 0)
-    t.equal(req.body.hello, 'world')
+    t.assert.ok(req.body.upload instanceof Buffer)
+    t.assert.strictEqual(Buffer.compare(req.body.upload, original), 0)
+    t.assert.strictEqual(req.body.hello, 'world')
 
     reply.code(200).send()
   })
@@ -481,10 +481,10 @@ test('should pass the buffer instead of converting to string', async function (t
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 const hasGlobalFormData = typeof globalThis.FormData === 'function'
@@ -493,25 +493,25 @@ test('should be able to attach all parsed fields and files and make it accessibl
   t.plan(10)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true })
 
   const original = fs.readFileSync(filePath, 'utf8')
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const formData = await req.formData()
 
-    t.equal(formData instanceof globalThis.FormData, true)
-    t.equal(formData.get('hello'), 'world')
-    t.same(formData.getAll('hello'), ['world', 'foo'])
-    t.equal(await formData.get('upload').text(), original)
-    t.equal(formData.get('upload').type, 'text/markdown')
-    t.equal(formData.get('upload').name, 'README.md')
+    t.assert.strictEqual(formData instanceof globalThis.FormData, true)
+    t.assert.strictEqual(formData.get('hello'), 'world')
+    t.assert.deepStrictEqual(formData.getAll('hello'), ['world', 'foo'])
+    t.assert.strictEqual(await formData.get('upload').text(), original)
+    t.assert.strictEqual(formData.get('upload').type, 'text/markdown')
+    t.assert.strictEqual(formData.get('upload').name, 'README.md')
 
     reply.code(200).send()
   })
@@ -536,8 +536,8 @@ test('should be able to attach all parsed fields and files and make it accessibl
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })

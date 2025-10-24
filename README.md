@@ -1,6 +1,6 @@
 # @fastify/multipart
 
-[![CI](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml)
+[![CI](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fastify/fastify-multipart/actions/workflows/ci.yml)
 [![NPM version](https://img.shields.io/npm/v/@fastify/multipart.svg?style=flat)](https://www.npmjs.com/package/@fastify/multipart)
 [![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-brightgreen?style=flat)](https://github.com/neostandard/neostandard)
 
@@ -232,9 +232,9 @@ fastify.post('/upload/files', async function (req, reply) {
   const fooValue = req.body.foo.value                  // other fields
   const body = Object.fromEntries(
     Object.keys(req.body).map((key) => [key, req.body[key].value])
-  ) // Request body in key-value pairs, like req.body in Express (Node 12+)
+  ) // Request body in key-value pairs, like req.body in Express (Node 20+)
 
-  // On Node 18+
+  // On Node 20+
   const formData = await req.formData()
   console.log(formData)
 })
@@ -504,6 +504,18 @@ fastify.post('/upload/files', {
   reply.send('done')
 })
 ```
+
+## Zod Schema body validation
+
+To validate requests using [Zod](https://github.com/colinhacks/zod), you need to:
+
+1. Install and configure [`fastify-type-provider-zod`](https://github.com/turkerdev/fastify-type-provider-zod).
+1. Make sure the `attachFieldsToBody` option is set to `true` when registering the `@fastify/multipart` plugin.
+1. You can use `attachFieldsToBody: "keyValues"` to avoid another fields preprocessing, but in that case, you will receive a Buffer for files that are not text/plain.
+
+After setup, you can validate your request body using a Zod schema as usual.
+
+See a full example in [`examples/example-with-zod.ts`](examples/example-with-zod.ts).
 
 ## Access all errors
 
