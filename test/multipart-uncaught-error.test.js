@@ -1,7 +1,6 @@
 'use strict'
 
 const test = require('tap').test
-const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 
@@ -22,7 +21,7 @@ test('malformed request should not cause uncaught exception when await before re
 
       if (data) {
         // Attach error listener
-        data.file.on('error', (err) => {
+        data.file.on('error', (_err) => {
           t.pass('error listener was called')
         })
 
@@ -40,8 +39,6 @@ test('malformed request should not cause uncaught exception when await before re
   await fastify.listen({ port: 0 })
 
   // Send malformed multipart request (missing closing boundary)
-  const form = new FormData()
-
   // Manually construct malformed multipart data
   const malformedData = '------MyBoundary\r\n' +
     'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n' +
