@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -10,11 +10,11 @@ const fs = require('node:fs')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should be able to use JSON schema to validate request', function (t) {
+test('should be able to use JSON schema to validate request', function (t, done) {
   t.plan(7)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -32,15 +32,15 @@ test('should be able to use JSON schema to validate request', function (t) {
       }
     }
   }, async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
-    t.same(Object.keys(req.body), ['upload', 'hello'])
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload', 'hello'])
 
     const content = await req.body.upload.toBuffer()
 
-    t.equal(content.toString(), original)
-    t.equal(req.body.hello.type, 'field')
-    t.equal(req.body.hello.value, 'world')
+    t.assert.strictEqual(content.toString(), original)
+    t.assert.strictEqual(req.body.hello.type, 'field')
+    t.assert.strictEqual(req.body.hello.value, 'world')
 
     reply.code(200).send()
   })
@@ -58,10 +58,11 @@ test('should be able to use JSON schema to validate request', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -70,11 +71,11 @@ test('should be able to use JSON schema to validate request', function (t) {
   })
 })
 
-test('should throw because JSON schema is invalid', function (t) {
+test('should throw because JSON schema is invalid', function (t, done) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -114,10 +115,11 @@ test('should throw because JSON schema is invalid', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 400)
+      t.assert.strictEqual(res.statusCode, 400)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('hello', 'world')

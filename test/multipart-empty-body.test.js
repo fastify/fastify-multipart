@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -11,17 +11,17 @@ test('should not break with a empty request body when attachFieldsToBody is true
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const files = await req.saveRequestFiles()
 
-    t.ok(Array.isArray(files))
-    t.equal(files.length, 0)
+    t.assert.ok(Array.isArray(files))
+    t.assert.strictEqual(files.length, 0)
 
     reply.code(200).send()
   })
@@ -43,27 +43,27 @@ test('should not break with a empty request body when attachFieldsToBody is true
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should not break with a empty request body when attachFieldsToBody is keyValues', async function (t) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const files = await req.saveRequestFiles()
 
-    t.ok(Array.isArray(files))
-    t.equal(files.length, 0)
+    t.assert.ok(Array.isArray(files))
+    t.assert.strictEqual(files.length, 0)
 
     reply.code(200).send()
   })
@@ -85,8 +85,8 @@ test('should not break with a empty request body when attachFieldsToBody is keyV
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })

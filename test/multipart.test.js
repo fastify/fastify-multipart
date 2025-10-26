@@ -1,7 +1,7 @@
 'use strict'
 
 const util = require('node:util')
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -16,29 +16,29 @@ const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should parse forms', function (t) {
+test('should parse forms', function (t, done) {
   t.plan(9)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
       if (part.file) {
-        t.equal(part.type, 'file')
-        t.equal(part.fieldname, 'upload')
-        t.equal(part.filename, 'README.md')
-        t.equal(part.encoding, '7bit')
-        t.equal(part.mimetype, 'text/markdown')
-        t.ok(part.fields.upload)
+        t.assert.strictEqual(part.type, 'file')
+        t.assert.strictEqual(part.fieldname, 'upload')
+        t.assert.strictEqual(part.filename, 'README.md')
+        t.assert.strictEqual(part.encoding, '7bit')
+        t.assert.strictEqual(part.mimetype, 'text/markdown')
+        t.assert.ok(part.fields.upload)
 
         const original = fs.readFileSync(filePath, 'utf8')
         await pump(
           part.file,
           concat(function (buf) {
-            t.equal(buf.toString(), original)
+            t.assert.strictEqual(buf.toString(), original)
           })
         )
       }
@@ -60,11 +60,12 @@ test('should parse forms', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       // consume all data without processing
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     const rs = fs.createReadStream(filePath)
@@ -76,19 +77,19 @@ test('should parse forms', function (t) {
   })
 })
 
-test('should respond when all files are processed', function (t) {
+test('should respond when all files are processed', function (t, done) {
   t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     const parts = req.files()
     for await (const part of parts) {
-      t.ok(part.file)
-      t.equal(part.type, 'file')
+      t.assert.ok(part.file)
+      t.assert.strictEqual(part.type, 'file')
       await streamToNull(part.file)
     }
     reply.code(200).send()
@@ -107,10 +108,11 @@ test('should respond when all files are processed', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -122,23 +124,23 @@ test('should respond when all files are processed', function (t) {
   })
 })
 
-test('should group parts with the same name to an array', function (t) {
+test('should group parts with the same name to an array', function (t, done) {
   t.plan(15)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     const parts = req.parts()
     for await (const part of parts) {
-      t.ok(part)
+      t.assert.ok(part)
       if (Array.isArray(part.fields.upload)) {
-        t.pass('multiple fields are grouped by array')
+        t.assert.ok('multiple fields are grouped by array')
       }
       if (Array.isArray(part.fields.hello)) {
-        t.pass('multiple files are grouped by array')
+        t.assert.ok('multiple files are grouped by array')
       }
       if (part.file) {
         await streamToNull(part.file)
@@ -160,10 +162,11 @@ test('should group parts with the same name to an array', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -177,22 +180,22 @@ test('should group parts with the same name to an array', function (t) {
   })
 })
 
-test('should error if it is not multipart', function (t) {
+test('should error if it is not multipart', function (t, done) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.notOk(req.isMultipart())
+    t.assert.ok(!req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.InvalidMultipartContentTypeError)
+      t.assert.ok(error instanceof fastify.multipartErrors.InvalidMultipartContentTypeError)
       reply.code(500).send()
     }
   })
@@ -211,28 +214,29 @@ test('should error if it is not multipart', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
+      done()
     })
     req.end(JSON.stringify({ hello: 'world' }))
   })
 })
 
-test('should error if boundary is empty', function (t) {
+test('should error if boundary is empty', function (t, done) {
   t.plan(3)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.equal(error.message, 'Multipart: Boundary not found')
+      t.assert.strictEqual(error.message, 'Multipart: Boundary not found')
       reply.code(500).send()
     }
   })
@@ -252,16 +256,17 @@ test('should error if boundary is empty', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
+      done()
     })
 
     form.pipe(req)
   })
 })
 
-test('should throw error due to filesLimit (The max number of file fields (Default: Infinity))', function (t) {
+test('should throw error due to filesLimit (The max number of file fields (Default: Infinity))', function (t, done) {
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
@@ -269,12 +274,12 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     try {
       const parts = req.files({ limits: { files: 1 } })
       for await (const part of parts) {
-        t.ok(part.file, 'part received')
+        t.assert.ok(part.file, 'part received')
         await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.FilesLimitError, 'error')
+      t.assert.ok(error instanceof fastify.multipartErrors.FilesLimitError, 'error')
       reply.code(500).send()
     }
   })
@@ -293,15 +298,15 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
 
     let ended = false
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500, 'status code')
+      t.assert.strictEqual(res.statusCode, 500, 'status code')
       res.resume()
       res.on('end', () => {
         if (ended) {
           return
         }
         ended = true
-        t.pass('res ended successfully')
-        t.end()
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -312,15 +317,15 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
         return
       }
       ended = true
-      t.equal(err.code, 'ECONNRESET')
-      t.end()
+      t.assert.strictEqual(err.code, 'ECONNRESET')
+      done()
     })
   })
 })
 
-test('should be able to configure limits globally with plugin register options', function (t) {
+test('should be able to configure limits globally with plugin register options', function (t, done) {
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { limits: { files: 1 } })
 
@@ -328,13 +333,13 @@ test('should be able to configure limits globally with plugin register options',
     try {
       const parts = req.files()
       for await (const part of parts) {
-        t.ok(part.file)
-        t.equal(part.type, 'file')
+        t.assert.ok(part.file)
+        t.assert.strictEqual(part.type, 'file')
         await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.FilesLimitError)
+      t.assert.ok(error instanceof fastify.multipartErrors.FilesLimitError)
       reply.code(500).send()
     }
   })
@@ -353,15 +358,15 @@ test('should be able to configure limits globally with plugin register options',
 
     let ended = false
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
         if (ended) {
           return
         }
         ended = true
-        t.pass('res ended successfully')
-        t.end()
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -371,30 +376,30 @@ test('should be able to configure limits globally with plugin register options',
         return
       }
       ended = true
-      t.equal(err.code, 'ECONNRESET')
-      t.end()
+      t.assert.strictEqual(err.code, 'ECONNRESET')
+      done()
     })
 
     pump(form, req).catch(() => {})
   })
 })
 
-test('should throw error due to fieldsLimit (Max number of non-file fields (Default: Infinity))', function (t) {
+test('should throw error due to fieldsLimit (Max number of non-file fields (Default: Infinity))', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     try {
       for await (const part of req.parts({ limits: { fields: 1 } })) {
-        t.ok(part)
+        t.assert.ok(part)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.FieldsLimitError)
+      t.assert.ok(error instanceof fastify.multipartErrors.FieldsLimitError)
       reply.code(500).send()
     }
   })
@@ -412,10 +417,11 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('hello', 'world')
@@ -425,22 +431,22 @@ test('should throw error due to fieldsLimit (Max number of non-file fields (Defa
   })
 })
 
-test('should throw error due to partsLimit (The max number of parts (fields + files) (Default: Infinity))', function (t) {
+test('should throw error due to partsLimit (The max number of parts (fields + files) (Default: Infinity))', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     try {
       for await (const part of req.parts({ limits: { parts: 1 } })) {
-        t.ok(part)
+        t.assert.ok(part)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PartsLimitError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PartsLimitError)
       reply.code(500).send()
     }
   })
@@ -458,10 +464,11 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('hello', 'world')
@@ -471,11 +478,11 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
   })
 })
 
-test('should throw error due to file size limit exceed (Default: true)', function (t) {
-  t.plan(6)
+test('should throw error due to file size limit exceed (Default: true)', function (t, done) {
+  t.plan(7)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { limits: { fileSize: 1 } })
 
@@ -483,13 +490,13 @@ test('should throw error due to file size limit exceed (Default: true)', functio
     try {
       const parts = req.files()
       for await (const part of parts) {
-        t.ok(part.file)
-        t.equal(part.type, 'file')
+        t.assert.ok(part.file)
+        t.assert.strictEqual(part.type, 'file')
         await streamToNull(part.file)
       }
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
+      t.assert.ok(error instanceof fastify.multipartErrors.RequestFileTooLargeError)
       reply.code(500).send()
     }
   })
@@ -507,9 +514,11 @@ test('should throw error due to file size limit exceed (Default: true)', functio
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
+      res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -519,19 +528,19 @@ test('should throw error due to file size limit exceed (Default: true)', functio
   })
 })
 
-test('should not throw error due to file size limit exceed - files setting (Default: true)', function (t) {
-  t.plan(5)
+test('should not throw error due to file size limit exceed - files setting (Default: true)', function (t, done) {
+  t.plan(6)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { throwFileSizeLimit: false })
 
   fastify.post('/', async function (req, reply) {
     const parts = req.files({ limits: { fileSize: 1 } })
     for await (const part of parts) {
-      t.ok(part.file)
-      t.equal(part.type, 'file')
+      t.assert.ok(part.file)
+      t.assert.strictEqual(part.type, 'file')
       await streamToNull(part.file)
     }
     reply.code(200).send()
@@ -550,9 +559,11 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
+      res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('upload', fs.createReadStream(filePath))
@@ -568,7 +579,7 @@ test('should not miss fields if part handler takes much time than formdata parsi
   const immediate = util.promisify(setImmediate)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
@@ -581,17 +592,17 @@ test('should not miss fields if part handler takes much time than formdata parsi
 
     for await (const part of req.parts()) {
       if (part.file) {
-        t.equal(part.type, 'file')
-        t.equal(part.fieldname, 'upload')
-        t.equal(part.filename, 'README.md')
-        t.equal(part.encoding, '7bit')
-        t.equal(part.mimetype, 'text/markdown')
-        t.ok(part.fields.upload)
+        t.assert.strictEqual(part.type, 'file')
+        t.assert.strictEqual(part.fieldname, 'upload')
+        t.assert.strictEqual(part.filename, 'README.md')
+        t.assert.strictEqual(part.encoding, '7bit')
+        t.assert.strictEqual(part.mimetype, 'text/markdown')
+        t.assert.ok(part.fields.upload)
 
         await pump(
           part.file,
           concat(function (buf) {
-            t.equal(buf.toString(), original)
+            t.assert.strictEqual(buf.toString(), original)
           })
         )
         await immediate()
@@ -600,9 +611,9 @@ test('should not miss fields if part handler takes much time than formdata parsi
       recvField[part.fieldname] = true
     }
 
-    t.equal(recvField.upload, true)
-    t.equal(recvField.hello, true)
-    t.equal(recvField.willbe, true)
+    t.assert.ok(recvField.upload)
+    t.assert.ok(recvField.hello)
+    t.assert.ok(recvField.willbe)
 
     reply.code(200).send()
   })
@@ -629,10 +640,10 @@ test('should not miss fields if part handler takes much time than formdata parsi
   form.pipe(req)
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully')
+  t.assert.ok('res ended successfully')
 })
 
 test('should not freeze when error is thrown during processing', async function (t) {
@@ -682,10 +693,10 @@ test('should not freeze when error is thrown during processing', async function 
   } catch {}
 
   const [res] = await once(req, 'response')
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   res.resume()
   await once(res, 'end')
-  t.pass('res ended successfully!')
+  t.assert.ok('res ended successfully!')
 
   await app.close()
 })

@@ -396,6 +396,20 @@ function fastifyMultipart (fastify, options, done) {
         }
       }
 
+      // Attach error listener immediately to prevent uncaught exceptions
+      // This is critical when there's an async operation before req.file() is called,
+      // allowing the file stream to emit errors before user code can attach listeners
+      // However, we only capture and propagate errors from malformed multipart data
+      // (e.g., "Part terminated early"), not errors from normal stream consumption
+      file.on('error', function (err) {
+        // Only propagate errors that indicate malformed multipart data
+        // These are the errors that would cause uncaught exceptions
+        if (err.message && err.message.includes('terminated early')) {
+          onError(err)
+        }
+        // Other errors are expected to be handled by the consumer of the stream
+      })
+
       if (throwFileSizeLimit) {
         file.on('limit', function () {
           const err = new RequestFileTooLargeError()

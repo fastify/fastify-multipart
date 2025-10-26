@@ -2,7 +2,7 @@
 
 const fs = require('node:fs')
 const crypto = require('node:crypto')
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -14,7 +14,7 @@ test('should throw fileSize limitation error when consuming the stream', async f
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: true,
@@ -24,16 +24,16 @@ test('should throw fileSize limitation error when consuming the stream', async f
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file()
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       await part.toBuffer()
-      t.fail('it should throw')
+      t.assert.fail('it should throw')
     } catch (error) {
-      t.ok(error)
+      t.assert.ok(error)
       reply.send(error)
     }
   })
@@ -60,11 +60,11 @@ test('should throw fileSize limitation error when consuming the stream', async f
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -72,7 +72,7 @@ test('should throw fileSize limitation error when consuming the stream MBs', asy
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: true,
@@ -82,16 +82,16 @@ test('should throw fileSize limitation error when consuming the stream MBs', asy
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file()
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       await part.toBuffer()
-      t.fail('it should throw')
+      t.assert.fail('it should throw')
     } catch (error) {
-      t.ok(error)
+      t.assert.ok(error)
       reply.send(error)
     }
   })
@@ -121,13 +121,13 @@ test('should throw fileSize limitation error when consuming the stream MBs', asy
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
 
     fs.unlinkSync(tmpFile)
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -135,7 +135,7 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: false,
@@ -146,18 +146,18 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
   const fileInputLength = 600000
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file()
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       const buffer = await part.toBuffer()
-      t.ok(part.file.truncated)
-      t.notSame(buffer.length, fileInputLength)
+      t.assert.ok(part.file.truncated)
+      t.assert.notStrictEqual(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
     } catch {
-      t.fail('it should not throw')
+      t.assert.fail('it should not throw')
     }
   })
 
@@ -184,10 +184,10 @@ test('should NOT throw fileSize limitation error when consuming the stream', asy
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -196,7 +196,7 @@ test('should throw fileSize limitation error when throwFileSizeLimit is globally
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: false,
@@ -206,7 +206,7 @@ test('should throw fileSize limitation error when throwFileSizeLimit is globally
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file({
       throwFileSizeLimit: true,
@@ -214,13 +214,13 @@ test('should throw fileSize limitation error when throwFileSizeLimit is globally
         fileSize: 524288
       }
     })
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       await part.toBuffer()
-      t.fail('it should throw')
+      t.assert.fail('it should throw')
     } catch (error) {
-      t.ok(error)
+      t.assert.ok(error)
       reply.send(error)
     }
   })
@@ -247,11 +247,11 @@ test('should throw fileSize limitation error when throwFileSizeLimit is globally
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
@@ -259,7 +259,7 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: true,
@@ -270,20 +270,20 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
   const fileInputLength = 600_000
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     const part = await req.file({
       throwFileSizeLimit: false
     })
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       const buffer = await part.toBuffer()
-      t.ok(part.file.truncated)
-      t.notSame(buffer.length, fileInputLength)
+      t.assert.ok(part.file.truncated)
+      t.assert.notStrictEqual(buffer.length, fileInputLength)
       reply.send(new fastify.multipartErrors.FilesLimitError())
     } catch {
-      t.fail('it should not throw')
+      t.assert.fail('it should not throw')
     }
   })
 
@@ -310,9 +310,9 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413)
+    t.assert.strictEqual(res.statusCode, 413)
     res.resume()
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })

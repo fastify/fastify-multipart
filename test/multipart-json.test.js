@@ -1,24 +1,24 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
 const http = require('node:http')
 
-test('should parse JSON fields forms if content-type is set', function (t) {
+test('should parse JSON fields forms if content-type is set', function (t, done) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
-      t.notOk(part.filename)
-      t.equal(part.mimetype, 'application/json')
-      t.same(part.value, { a: 'b' })
+      t.assert.strictEqual(part.filename, undefined)
+      t.assert.strictEqual(part.mimetype, 'application/json')
+      t.assert.deepStrictEqual(part.value, { a: 'b' })
     }
 
     reply.code(200).send()
@@ -37,10 +37,11 @@ test('should parse JSON fields forms if content-type is set', function (t) {
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -49,19 +50,19 @@ test('should parse JSON fields forms if content-type is set', function (t) {
   })
 })
 
-test('should not parse JSON fields forms if no content-type is set', function (t) {
+test('should not parse JSON fields forms if no content-type is set', function (t, done) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
-      t.notOk(part.filename)
-      t.equal(part.mimetype, 'text/plain')
-      t.type(part.value, 'string')
+      t.assert.strictEqual(part.filename, undefined)
+      t.assert.strictEqual(part.mimetype, 'text/plain')
+      t.assert.strictEqual(typeof part.value, 'string')
     }
 
     reply.code(200).send()
@@ -80,10 +81,11 @@ test('should not parse JSON fields forms if no content-type is set', function (t
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -93,19 +95,19 @@ test('should not parse JSON fields forms if no content-type is set', function (t
   })
 })
 
-test('should not parse JSON fields forms if non-json content-type is set', function (t) {
+test('should not parse JSON fields forms if non-json content-type is set', function (t, done) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     for await (const part of req.parts()) {
-      t.notOk(part.filename)
-      t.equal(part.mimetype, 'text/css')
-      t.type(part.value, 'string')
+      t.assert.strictEqual(part.filename, undefined)
+      t.assert.strictEqual(part.mimetype, 'text/css')
+      t.assert.strictEqual(typeof part.value, 'string')
     }
 
     reply.code(200).send()
@@ -124,10 +126,11 @@ test('should not parse JSON fields forms if non-json content-type is set', funct
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -137,23 +140,23 @@ test('should not parse JSON fields forms if non-json content-type is set', funct
   })
 })
 
-test('should throw error when parsing JSON fields failed', function (t) {
+test('should throw error when parsing JSON fields failed', function (t, done) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
     try {
       for await (const part of req.parts()) {
-        t.type(part.value, 'string')
+        t.assert.strictEqual(typeof part.value, 'string')
       }
 
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.InvalidJSONFieldError)
+      t.assert.ok(error instanceof fastify.multipartErrors.InvalidJSONFieldError)
       reply.code(500).send()
     }
   })
@@ -171,10 +174,11 @@ test('should throw error when parsing JSON fields failed', function (t) {
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -183,23 +187,23 @@ test('should throw error when parsing JSON fields failed', function (t) {
   })
 })
 
-test('should always reject JSON parsing if the value was truncated', function (t) {
+test('should always reject JSON parsing if the value was truncated', function (t, done) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { limits: { fieldSize: 2 } })
 
   fastify.post('/', async function (req, reply) {
     try {
       for await (const part of req.parts()) {
-        t.type(part.value, 'string')
+        t.assert.strictEqual(typeof part.value, 'string')
       }
 
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.InvalidJSONFieldError)
+      t.assert.ok(error instanceof fastify.multipartErrors.InvalidJSONFieldError)
       reply.code(500).send()
     }
   })
@@ -217,10 +221,11 @@ test('should always reject JSON parsing if the value was truncated', function (t
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -229,11 +234,11 @@ test('should always reject JSON parsing if the value was truncated', function (t
   })
 })
 
-test('should be able to use JSON schema to validate request when value is a string', function (t) {
+test('should be able to use JSON schema to validate request when value is a string', function (t, done) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -256,10 +261,10 @@ test('should be able to use JSON schema to validate request when value is a stri
       }
     },
     async function (req, reply) {
-      t.ok(req.isMultipart())
+      t.assert.ok(req.isMultipart())
 
-      t.same(Object.keys(req.body), ['field'])
-      t.equal(req.body.field.value, '{"a":"b"}')
+      t.assert.deepStrictEqual(Object.keys(req.body), ['field'])
+      t.assert.strictEqual(req.body.field.value, '{"a":"b"}')
 
       reply.code(200).send()
     }
@@ -278,10 +283,11 @@ test('should be able to use JSON schema to validate request when value is a stri
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -290,11 +296,11 @@ test('should be able to use JSON schema to validate request when value is a stri
   })
 })
 
-test('should be able to use JSON schema to validate request when value is a JSON', function (t) {
+test('should be able to use JSON schema to validate request when value is a JSON', function (t, done) {
   t.plan(5)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -314,10 +320,10 @@ test('should be able to use JSON schema to validate request when value is a JSON
       }
     },
     async function (req, reply) {
-      t.ok(req.isMultipart())
+      t.assert.ok(req.isMultipart())
 
-      t.same(Object.keys(req.body), ['field'])
-      t.same(req.body.field.value, { a: 'b' })
+      t.assert.deepStrictEqual(Object.keys(req.body), ['field'])
+      t.assert.deepStrictEqual(req.body.field.value, { a: 'b' })
 
       reply.code(200).send()
     }
@@ -336,10 +342,11 @@ test('should be able to use JSON schema to validate request when value is a JSON
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 200)
+      t.assert.strictEqual(res.statusCode, 200)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 
@@ -348,11 +355,11 @@ test('should be able to use JSON schema to validate request when value is a JSON
   })
 })
 
-test('should return 400 when the field validation fails', function (t) {
+test('should return 400 when the field validation fails', function (t, done) {
   t.plan(2)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, { attachFieldsToBody: true, sharedSchemaId: '#mySharedSchema' })
 
@@ -372,7 +379,7 @@ test('should return 400 when the field validation fails', function (t) {
       }
     },
     async function (req, reply) {
-      t.ok(req.isMultipart())
+      t.assert.ok(req.isMultipart())
       reply.code(200).send()
     }
   )
@@ -390,10 +397,11 @@ test('should return 400 when the field validation fails', function (t) {
     }
 
     const req = http.request(opts, res => {
-      t.equal(res.statusCode, 400)
+      t.assert.strictEqual(res.statusCode, 400)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
 

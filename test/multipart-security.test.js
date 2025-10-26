@@ -1,6 +1,6 @@
 'use strict'
 
-const test = require('tap').test
+const test = require('node:test')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -13,22 +13,22 @@ const { once } = EventEmitter
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should not allow __proto__ as file name', function (t) {
+test('should not allow __proto__ as file name', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -46,10 +46,11 @@ test('should not allow __proto__ as file name', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     const rs = fs.createReadStream(filePath)
@@ -59,22 +60,22 @@ test('should not allow __proto__ as file name', function (t) {
   })
 })
 
-test('should not allow __proto__ as field name', function (t) {
+test('should not allow __proto__ as field name', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -92,10 +93,11 @@ test('should not allow __proto__ as field name', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('__proto__', 'world')
@@ -104,22 +106,22 @@ test('should not allow __proto__ as field name', function (t) {
   })
 })
 
-test('should not allow toString as field name', function (t) {
+test('should not allow toString as field name', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -137,10 +139,11 @@ test('should not allow toString as field name', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('toString', 'world')
@@ -149,22 +152,22 @@ test('should not allow toString as field name', function (t) {
   })
 })
 
-test('should not allow hasOwnProperty as field name', function (t) {
+test('should not allow hasOwnProperty as field name', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -182,10 +185,11 @@ test('should not allow hasOwnProperty as field name', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('hasOwnProperty', 'world')
@@ -194,22 +198,22 @@ test('should not allow hasOwnProperty as field name', function (t) {
   })
 })
 
-test('should not allow propertyIsEnumerable as field name', function (t) {
+test('should not allow propertyIsEnumerable as field name', function (t, done) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart())
+    t.assert.ok(req.isMultipart())
 
     try {
       await req.file()
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PrototypeViolationError)
       reply.code(500).send()
     }
   })
@@ -227,10 +231,11 @@ test('should not allow propertyIsEnumerable as field name', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     form.append('propertyIsEnumerable', 'world')
@@ -243,24 +248,24 @@ test('should use default for fileSize', async function (t) {
   t.plan(4)
 
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart, {
     throwFileSizeLimit: true
   })
 
   fastify.post('/', async function (req, reply) {
-    t.ok(req.isMultipart(), 'is multipart')
+    t.assert.ok(req.isMultipart(), 'is multipart')
 
     const part = await req.file()
-    t.pass('the file is not consumed yet')
+    t.assert.ok('the file is not consumed yet')
 
     try {
       await part.toBuffer()
       reply.send('not ok')
-      t.fail('it should throw')
+      t.assert.fail('it should throw')
     } catch (error) {
-      t.ok(error)
+      t.assert.ok(error)
       reply.send(error)
     }
     return reply
@@ -288,17 +293,17 @@ test('should use default for fileSize', async function (t) {
 
   try {
     const [res] = await once(req, 'response')
-    t.equal(res.statusCode, 413, 'status code equal')
+    t.assert.strictEqual(res.statusCode, 413, 'status code equal')
     res.resume()
     await once(res, 'end')
   } catch (error) {
-    t.error(error, 'request')
+    t.assert.ifError(error)
   }
 })
 
-test('should use default for parts - 1000', function (t) {
+test('should use default for parts - 1000', function (t, done) {
   const fastify = Fastify()
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.register(multipart)
 
@@ -306,10 +311,10 @@ test('should use default for parts - 1000', function (t) {
     try {
       // eslint-disable-next-lint no-empty
       for await (const _ of req.parts()) { console.assert(_) }
-      t.fail('should throw on 1001')
+      t.assert.fail('should throw on 1001')
       reply.code(200).send()
     } catch (error) {
-      t.ok(error instanceof fastify.multipartErrors.PartsLimitError)
+      t.assert.ok(error instanceof fastify.multipartErrors.PartsLimitError)
       reply.code(500).send()
     }
   })
@@ -327,11 +332,11 @@ test('should use default for parts - 1000', function (t) {
     }
 
     const req = http.request(opts, (res) => {
-      t.equal(res.statusCode, 500)
+      t.assert.strictEqual(res.statusCode, 500)
       res.resume()
       res.on('end', () => {
-        t.pass('res ended successfully')
-        t.end()
+        t.assert.ok('res ended successfully')
+        done()
       })
     })
     for (let i = 0; i < 1000; ++i) {
