@@ -24,7 +24,7 @@ test('should parse JSON fields forms if content-type is set', function (t, done)
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -68,7 +68,7 @@ test('should not parse JSON fields forms if no content-type is set', function (t
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -113,7 +113,7 @@ test('should not parse JSON fields forms if non-json content-type is set', funct
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -161,7 +161,7 @@ test('should throw error when parsing JSON fields failed', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -208,7 +208,7 @@ test('should always reject JSON parsing if the value was truncated', function (t
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -270,7 +270,7 @@ test('should be able to use JSON schema to validate request when value is a stri
     }
   )
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -329,7 +329,7 @@ test('should be able to use JSON schema to validate request when value is a JSON
     }
   )
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -384,7 +384,7 @@ test('should return 400 when the field validation fails', function (t, done) {
     }
   )
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {

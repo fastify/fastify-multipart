@@ -11,9 +11,8 @@ const streamToNull = require('../lib/stream-consumer')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('should respond when all files are processed', function (t, done) {
+test('should respond when all files are processed', async function (t) {
   t.plan(3)
-
   const fastify = Fastify({ http2: true })
   t.after(() => fastify.close())
 
@@ -28,18 +27,17 @@ test('should respond when all files are processed', function (t, done) {
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
-    const url = `http://localhost:${fastify.server.address().port}`
-    const form = new FormData()
+  await fastify.listen({ port: 0 })
 
-    form.append('upload', fs.createReadStream(filePath))
-    form.append('upload2', fs.createReadStream(filePath))
-    form.append('hello', 'world')
-    form.append('willbe', 'dropped')
+  const url = `http://localhost:${fastify.server.address().port}`
+  const form = new FormData()
 
-    const res = await h2url.concat({ url, method: 'POST', headers: form.getHeaders(), body: form })
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('upload2', fs.createReadStream(filePath))
+  form.append('hello', 'world')
+  form.append('willbe', 'dropped')
 
-    t.assert.strictEqual(res.headers[':status'], 200)
-    done()
-  })
+  const res = await h2url.concat({ url, method: 'POST', headers: form.getHeaders(), body: form })
+
+  t.assert.strictEqual(res.headers[':status'], 200)
 })

@@ -45,7 +45,7 @@ test('should be able to use JSON schema to validate request', function (t, done)
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -102,7 +102,7 @@ test('should throw because JSON schema is invalid', function (t, done) {
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {

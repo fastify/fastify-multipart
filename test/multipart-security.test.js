@@ -33,7 +33,7 @@ test('should not allow __proto__ as file name', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -80,7 +80,7 @@ test('should not allow __proto__ as field name', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -126,7 +126,7 @@ test('should not allow toString as field name', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -172,7 +172,7 @@ test('should not allow hasOwnProperty as field name', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -218,7 +218,7 @@ test('should not allow propertyIsEnumerable as field name', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -319,7 +319,7 @@ test('should use default for parts - 1000', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {

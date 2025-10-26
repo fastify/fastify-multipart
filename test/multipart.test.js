@@ -47,7 +47,7 @@ test('should parse forms', function (t, done) {
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -95,7 +95,7 @@ test('should respond when all files are processed', function (t, done) {
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -149,7 +149,7 @@ test('should group parts with the same name to an array', function (t, done) {
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -241,7 +241,7 @@ test('should error if boundary is empty', function (t, done) {
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -284,7 +284,7 @@ test('should throw error due to filesLimit (The max number of file fields (Defau
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -451,7 +451,7 @@ test('should throw error due to partsLimit (The max number of parts (fields + fi
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -501,7 +501,7 @@ test('should throw error due to file size limit exceed (Default: true)', functio
     }
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
@@ -546,7 +546,7 @@ test('should not throw error due to file size limit exceed - files setting (Defa
     reply.code(200).send()
   })
 
-  fastify.listen({ port: 0 }, async function () {
+  fastify.listen({ port: 0 }, function () {
     // request
     const form = new FormData()
     const opts = {
