@@ -153,3 +153,7 @@ yarn.lock
 
 #tap files
 .tap/
+
+# Claude files
+.claude/
+CLAUDE.md
