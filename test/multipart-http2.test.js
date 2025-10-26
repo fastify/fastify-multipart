@@ -39,5 +39,5 @@ test('should respond when all files are processed', async function (t) {
 
   const res = await h2url.concat({ url, method: 'POST', headers: form.getHeaders(), body: form })
 
-  t.equal(res.headers[':status'], 200)
+  t.assert.strictEqual(res.headers[':status'], 200)
 })
