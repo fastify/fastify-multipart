@@ -98,7 +98,6 @@ test('should throw because JSON schema is invalid', function (t, done) {
       }
     }
   }, async function (req, reply) {
-    console.log(req.body)
     reply.code(200).send()
   })
 
