@@ -327,14 +327,14 @@ test('should throw fileSize limitation error when used alongside attachFieldsToB
     attachFieldsToBody: true
   })
 
-  const randomFileBuffer = Buffer.alloc(2_000_000)
+  const randomFileBuffer = Buffer.alloc(900_000)
   crypto.randomFillSync(randomFileBuffer)
 
   fastify.post('/', {
     config: {
       multipartOptions: {
         limits: {
-          fileSize: 1_000_000
+          fileSize: 800_000
         }
       }
     }
