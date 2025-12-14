@@ -316,3 +316,127 @@ test('should NOT throw fileSize limitation error when throwFileSizeLimit is glob
     t.assert.ifError(error)
   }
 })
+
+test('should throw fileSize limitation error when used alongside attachFieldsToBody and set request config', async function (t) {
+  t.plan(1)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart, {
+    attachFieldsToBody: true
+  })
+
+  const randomFileBuffer = Buffer.alloc(900_000)
+  crypto.randomFillSync(randomFileBuffer)
+
+  fastify.post('/', {
+    config: {
+      multipartOptions: {
+        limits: {
+          fileSize: 800_000
+        }
+      }
+    }
+  }, async function (req, reply) {
+    t.assert.fail('it should throw')
+
+    reply.status(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    hostname: '127.0.0.1',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const tmpFile = 'test/random-file'
+  fs.writeFileSync(tmpFile, randomFileBuffer)
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(tmpFile))
+
+  form.pipe(req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.assert.equal(res.statusCode, 413)
+    res.resume()
+    await once(res, 'end')
+
+    fs.unlinkSync(tmpFile)
+  } catch (error) {
+    t.assert.ifError(error)
+  }
+})
+
+test('should not throw fileSize limitation error when used alongside attachFieldsToBody and set request config', async function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart, {
+    attachFieldsToBody: true
+  })
+
+  const randomFileBuffer = Buffer.alloc(900_000)
+  crypto.randomFillSync(randomFileBuffer)
+
+  fastify.post('/', {
+    config: {
+      multipartOptions: {
+        limits: {
+          fileSize: 1_000_000
+        }
+      }
+    }
+  }, async function (req, reply) {
+    t.assert.ok(req.isMultipart())
+
+    t.assert.deepStrictEqual(Object.keys(req.body), ['upload'])
+
+    const content = await req.body.upload.toBuffer()
+
+    t.assert.strictEqual(content.toString(), randomFileBuffer.toString())
+
+    reply.status(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  // request
+  const form = new FormData()
+  const opts = {
+    hostname: '127.0.0.1',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const tmpFile = 'test/random-file'
+  fs.writeFileSync(tmpFile, randomFileBuffer)
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(tmpFile))
+
+  form.pipe(req)
+
+  try {
+    const [res] = await once(req, 'response')
+    t.assert.equal(res.statusCode, 200)
+    res.resume()
+    await once(res, 'end')
+
+    fs.unlinkSync(tmpFile)
+  } catch (error) {
+    t.assert.ifError(error)
+  }
+})
