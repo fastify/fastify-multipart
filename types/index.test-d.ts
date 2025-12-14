@@ -184,13 +184,11 @@ const runServer = async () => {
       multipartOptions: {}
     }
   }, async function (req, reply) {
-    req.routeOptions.config.multipartOptions
     expectType<Omit<BusboyConfig, 'headers'>>(req.routeOptions.config.multipartOptions)
     reply.send()
   })
 
   app.post('/upload/files', async function (req, reply) {
-    req.routeOptions.config.multipartOptions
     expectError<Omit<BusboyConfig, 'headers'>>(req.routeOptions.config?.multipartOptions)
     reply.send()
   })
