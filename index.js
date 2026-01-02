@@ -29,6 +29,7 @@ const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 
 
 function setMultipart (req, _payload, done) {
   req[kMultipart] = true
+  req.rawBody = payload.rawBody
   done()
 }
 
@@ -181,6 +182,8 @@ function fastifyMultipart (fastify, options, done) {
     FileBufferNotFoundError
   })
 
+  fastify.decorateRequest('rawBody', null)
+
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
@@ -297,7 +300,11 @@ function fastifyMultipart (fastify, options, done) {
       process.nextTick(() => cleanup(err))
     })
 
-    request.pipe(bb)
+    if (request.rawBody) {
+      bb.end(request.rawBody)
+    } else {
+      request.pipe(bb)
+    }
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
