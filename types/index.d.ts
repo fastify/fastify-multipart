@@ -162,6 +162,16 @@ declare namespace fastifyMultipart {
        * @default 1000
        */
       parts?: number;
+
+      /**
+       * Provide a custom stream for multipart parsing
+       *
+       * By default, the request stream is used directly
+       *
+       * Useful for environments like Google Cloud Functions
+       * where the request body has already been consumed
+       */
+      transformRequest?: (request: Readable) => Readable;
     };
   }
 

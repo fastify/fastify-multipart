@@ -171,6 +171,10 @@ function fastifyMultipart (fastify, options, done) {
     ? options.throwFileSizeLimit
     : true
 
+  const defaultTransformRequest = (request) => request
+
+  const transformRequest = options.transformRequest || defaultTransformRequest
+
   fastify.decorate('multipartErrors', {
     PartsLimitError,
     FilesLimitError,
@@ -297,7 +301,8 @@ function fastifyMultipart (fastify, options, done) {
       process.nextTick(() => cleanup(err))
     })
 
-    request.pipe(bb)
+    const stream = transformRequest(request)
+    stream.pipe(bb)
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
@@ -435,7 +440,7 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     function cleanup (err) {
-      request.unpipe(bb)
+      stream.unpipe(bb)
 
       if ((err || request.aborted) && currentFile) {
         currentFile.destroy()
