@@ -8,6 +8,7 @@ const http = require('node:http')
 const path = require('node:path')
 const fs = require('node:fs')
 const streamToNull = require('../lib/stream-consumer')
+const { Readable } = require('node:stream')
 
 const filePath = path.join(__dirname, '../README.md')
 
@@ -60,6 +61,61 @@ test('should transformRequest called when option passed', function (t, done) {
     })
     form.append('upload', fs.createReadStream(filePath))
     form.append('hello', 'world')
+
+    form.pipe(req)
+  })
+})
+
+test('should use custom stream from transformRequest', function (t, done) {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  const boundary = '----TestBoundary'
+  const payload = Buffer.from(
+    `--${boundary}\r\n` +
+    'Content-Disposition: form-data; name="file"; filename="test.txt"\r\n' +
+    'Content-Type: text/plain\r\n' +
+    '\r\n' +
+    'test content\r\n' +
+    `--${boundary}--\r\n`
+  )
+
+  fastify.register(multipart, {
+    transformRequest: (request) => {
+      return Readable.from(payload)
+    }
+  })
+
+  fastify.post('/', async function (req, reply) {
+    const file = await req.file()
+    const content = await file.toBuffer()
+    t.assert.strictEqual(content.toString(), 'test content')
+
+    reply.code(200).send()
+  })
+
+  fastify.listen({ port: 0 }, function () {
+    // request
+    const form = new FormData()
+    const opts = {
+      protocol: 'http:',
+      hostname: 'localhost',
+      port: fastify.server.address().port,
+      path: '/',
+      headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+      method: 'POST'
+    }
+
+    const req = http.request(opts, (res) => {
+      t.assert.strictEqual(res.statusCode, 200)
+      res.resume()
+      res.on('end', () => {
+        t.assert.ok('res ended successfully')
+        done()
+      })
+    })
 
     form.pipe(req)
   })
