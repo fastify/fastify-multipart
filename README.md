@@ -114,6 +114,16 @@ try {
 
 ```
 
+You can provide a custom stream using the `transformRequest` option. This is useful for environments like Google Cloud Functions where the request body has already been consumed:
+
+```js
+const { Readable } = require('node:stream')
+
+fastify.register(require('@fastify/multipart'), {
+  transformRequest: (request) => Readable.from(request.rawBody)
+})
+```
+
 Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.parts` function.
 
 ```js
