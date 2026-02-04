@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import fastify from 'fastify'
-import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '../..'
 import * as util from 'node:util'
 import { pipeline } from 'node:stream'
 import * as fs from 'node:fs'
