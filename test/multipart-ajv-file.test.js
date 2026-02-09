@@ -57,6 +57,7 @@ test('show modify the generated schema', async t => {
       post: {
         operationId: 'test',
         requestBody: {
+          required: true,
           content: {
             'multipart/form-data': {
               schema: {

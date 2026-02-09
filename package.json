@@ -38,7 +38,7 @@
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "c8 --100 node --test"
+    "test:unit": "c8 --100 node --test 'test/*.test.js'"
   },
   "repository": {
     "type": "git",
@@ -86,7 +86,7 @@
   ],
   "license": "MIT",
   "tsd": {
-    "directory": "test"
+    "directory": "test/types"
   },
   "publishConfig": {
     "access": "public"
