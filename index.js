@@ -10,7 +10,7 @@ const { generateId } = require('./lib/generateId')
 const createError = require('@fastify/error')
 const streamToNull = require('./lib/stream-consumer')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
-const { PassThrough, Readable } = require('node:stream')
+const { PassThrough, Readable, pipeline } = require('node:stream')
 const { pipeline: pump } = require('node:stream/promises')
 const secureJSON = require('secure-json-parse')
 
@@ -26,6 +26,7 @@ const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONT
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
 const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
+const InvalidTransformRequestError = createError('FST_INVALID_TRANSFORM_REQUEST', 'transformRequest must return a readable stream', 500)
 
 function setMultipart (req, _payload, done) {
   req[kMultipart] = true
@@ -171,9 +172,17 @@ function fastifyMultipart (fastify, options, done) {
     ? options.throwFileSizeLimit
     : true
 
-  const defaultTransformRequest = (request) => request
+  const userTransformRequest = typeof options.transformRequest === 'function' ? options.transformRequest : (request) => request
 
-  const transformRequest = options.transformRequest || defaultTransformRequest
+  const transformRequest = (request) => {
+    try {
+      const stream = userTransformRequest(request)
+      if (!stream || typeof stream.pipe !== 'function') throw new InvalidTransformRequestError()
+      return stream
+    } catch (error) {
+      return error
+    }
+  }
 
   fastify.decorate('multipartErrors', {
     PartsLimitError,
@@ -302,7 +311,15 @@ function fastifyMultipart (fastify, options, done) {
     })
 
     const stream = transformRequest(request)
-    stream.pipe(bb)
+    if (stream instanceof Error) {
+      onError(stream)
+      process.nextTick(() => cleanup(stream))
+      return
+    }
+
+    pipeline(stream, bb, (err) => {
+      cleanup(err)
+    })
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
@@ -440,8 +457,6 @@ function fastifyMultipart (fastify, options, done) {
     }
 
     function cleanup (err) {
-      stream.unpipe(bb)
-
       if ((err || request.aborted) && currentFile) {
         currentFile.destroy()
         currentFile = null
