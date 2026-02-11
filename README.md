@@ -119,9 +119,19 @@ You can provide a custom stream using the `transformRequest` option. This is use
 ```js
 const { Readable } = require('node:stream')
 
+// In environments like Google Cloud Functions/Firebase, `request.rawBody`
+// contains the full raw request body buffer/string.
 fastify.register(require('@fastify/multipart'), {
   transformRequest: (request) => Readable.from(request.rawBody)
 })
+
+// In a standard Fastify/Node.js server, `request.raw` is already a readable
+// stream for the incoming HTTP request, so you can usually omit
+// `transformRequest` entirely or simply return `request.raw`:
+//
+// fastify.register(require('@fastify/multipart'), {
+//   transformRequest: (request) => request.raw
+// })
 ```
 
 Additionally, you can pass per-request options to the  `req.file`, `req.files`, `req.saveRequestFiles` or `req.parts` function.
