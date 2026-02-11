@@ -172,17 +172,7 @@ function fastifyMultipart (fastify, options, done) {
     ? options.throwFileSizeLimit
     : true
 
-  const userTransformRequest = typeof options.transformRequest === 'function' ? options.transformRequest : (request) => request
-
-  const transformRequest = (request) => {
-    try {
-      const stream = userTransformRequest(request)
-      if (!stream || typeof stream.pipe !== 'function') throw new InvalidTransformRequestError()
-      return stream
-    } catch (error) {
-      return error
-    }
-  }
+  const transformRequest = typeof options.transformRequest === 'function' ? options.transformRequest : (request) => request
 
   fastify.decorate('multipartErrors', {
     PartsLimitError,
@@ -311,11 +301,7 @@ function fastifyMultipart (fastify, options, done) {
     })
 
     const stream = transformRequest(request)
-    if (stream instanceof Error) {
-      onError(stream)
-      process.nextTick(() => cleanup(stream))
-      return
-    }
+    if (!stream || typeof stream.pipe !== 'function') throw new InvalidTransformRequestError()
 
     pipeline(stream, bb, (err) => {
       cleanup(err)
