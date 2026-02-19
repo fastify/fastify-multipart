@@ -52,36 +52,6 @@ test("show modify the generated schema", async (t) => {
 
   await fastify.ready();
 
-  /**
-   * Only verify ajvFilePlugin's core behavior: transforming { isFile: true }
-   * into { type: 'string', format: 'binary' }. The full paths assertion is
-   * commented out because @fastify/swagger v9.7.0 introduced
-   * requestBody.required (fastify/fastify-swagger#903), making the exact
-   * shape version-dependent.
-   */
-  // t.assert.deepStrictEqual(fastify.swagger().paths, {
-  //   '/': {
-  //     post: {
-  //       operationId: 'test',
-  //       requestBody: {
-  //         required: true,
-  //         content: {
-  //           'multipart/form-data': {
-  //             schema: {
-  //               type: 'object',
-  //               properties: {
-  //                 field: { type: 'string', format: 'binary' }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       },
-  //       responses: {
-  //         200: { description: 'Default Response' }
-  //       }
-  //     }
-  //   }
-  // })
   const post = fastify.swagger().paths["/"].post;
   t.assert.strictEqual(post.operationId, "test");
   // requestBody.required is not asserted because @fastify/swagger v9.7.0
