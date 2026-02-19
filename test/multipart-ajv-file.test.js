@@ -12,7 +12,7 @@ const test = require("node:test");
 const filePath = path.join(__dirname, "../README.md");
 
 test("show modify the generated schema", async (t) => {
-  t.plan(4);
+  t.plan(6);
 
   const fastify = Fastify({
     ajv: {
@@ -82,14 +82,22 @@ test("show modify the generated schema", async (t) => {
   //     }
   //   }
   // })
-  const schema =
-    fastify.swagger().paths["/"].post.requestBody.content["multipart/form-data"]
-      .schema;
-  t.assert.deepStrictEqual(schema, {
-    type: "object",
-    properties: {
-      field: { type: "string", format: "binary" },
+  const post = fastify.swagger().paths["/"].post;
+  t.assert.strictEqual(post.operationId, "test");
+  // requestBody.required is not asserted because @fastify/swagger v9.7.0
+  // introduced it (fastify/fastify-swagger#903), making it version-dependent.
+  t.assert.deepStrictEqual(post.requestBody.content, {
+    "multipart/form-data": {
+      schema: {
+        type: "object",
+        properties: {
+          field: { type: "string", format: "binary" },
+        },
+      },
     },
+  });
+  t.assert.deepStrictEqual(post.responses, {
+    200: { description: "Default Response" },
   });
 
   await fastify.listen({ port: 0 });
