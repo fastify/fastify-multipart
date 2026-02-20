@@ -102,7 +102,19 @@ test('should finish with error on partial upload - saveRequestFiles', async func
   const [res] = await once(req, 'response')
   t.assert.strictEqual(res.statusCode, 500)
 
+  // Retry with exponential backoff until temp files are cleaned up.
+  // File cleanup is async and may not complete immediately on macOS.
   for (const tmpUpload of tmpUploads) {
-    await t.assert.rejects(fs.access(tmpUpload))
+    let deleted = false
+    for (let i = 0; i < 5; i++) {
+      try {
+        await fs.access(tmpUpload)
+        await sleep(50 * Math.pow(2, i))
+      } catch {
+        deleted = true
+        break
+      }
+    }
+    t.assert.ok(deleted, `tmp file ${tmpUpload} should be deleted`)
   }
 })
