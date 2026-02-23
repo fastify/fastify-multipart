@@ -1,121 +1,121 @@
-"use strict";
+'use strict'
 
-const Fastify = require("fastify");
-const FormData = require("form-data");
-const http = require("node:http");
-const multipart = require("..");
-const { once } = require("node:events");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
+const Fastify = require('fastify')
+const FormData = require('form-data')
+const http = require('node:http')
+const multipart = require('..')
+const { once } = require('node:events')
+const fs = require('node:fs')
+const path = require('node:path')
+const test = require('node:test')
 
-const filePath = path.join(__dirname, "../README.md");
+const filePath = path.join(__dirname, '../README.md')
 
-test("show modify the generated schema", async (t) => {
-  t.plan(6);
+test('show modify the generated schema', async (t) => {
+  t.plan(6)
 
   const fastify = Fastify({
     ajv: {
-      plugins: [multipart.ajvFilePlugin],
-    },
-  });
+      plugins: [multipart.ajvFilePlugin]
+    }
+  })
 
-  t.after(() => fastify.close());
+  t.after(() => fastify.close())
 
-  await fastify.register(multipart, { attachFieldsToBody: true });
-  await fastify.register(require("@fastify/swagger"), {
-    mode: "dynamic",
+  await fastify.register(multipart, { attachFieldsToBody: true })
+  await fastify.register(require('@fastify/swagger'), {
+    mode: 'dynamic',
 
     openapi: {
-      openapi: "3.1.0",
-    },
-  });
+      openapi: '3.1.0'
+    }
+  })
 
   fastify.post(
-    "/",
+    '/',
     {
       schema: {
-        operationId: "test",
-        consumes: ["multipart/form-data"],
+        operationId: 'test',
+        consumes: ['multipart/form-data'],
         body: {
-          type: "object",
+          type: 'object',
           properties: {
-            field: { isFile: true },
-          },
-        },
-      },
+            field: { isFile: true }
+          }
+        }
+      }
     },
     async function (_req, reply) {
-      reply.code(200).send();
-    },
-  );
+      reply.code(200).send()
+    }
+  )
 
-  await fastify.ready();
+  await fastify.ready()
 
-  const post = fastify.swagger().paths["/"].post;
-  t.assert.strictEqual(post.operationId, "test");
+  const post = fastify.swagger().paths['/'].post
+  t.assert.strictEqual(post.operationId, 'test')
   // requestBody.required is not asserted because @fastify/swagger v9.7.0
   // introduced it (fastify/fastify-swagger#903), making it version-dependent.
   t.assert.deepStrictEqual(post.requestBody.content, {
-    "multipart/form-data": {
+    'multipart/form-data': {
       schema: {
-        type: "object",
+        type: 'object',
         properties: {
-          field: { type: "string", format: "binary" },
-        },
-      },
-    },
-  });
+          field: { type: 'string', format: 'binary' }
+        }
+      }
+    }
+  })
   t.assert.deepStrictEqual(post.responses, {
-    200: { description: "Default Response" },
-  });
+    200: { description: 'Default Response' }
+  })
 
-  await fastify.listen({ port: 0 });
+  await fastify.listen({ port: 0 })
 
   // request without file
   {
-    const form = new FormData();
+    const form = new FormData()
     const req = http.request({
-      protocol: "http:",
-      hostname: "localhost",
+      protocol: 'http:',
+      hostname: 'localhost',
       port: fastify.server.address().port,
-      path: "/",
+      path: '/',
       headers: form.getHeaders(),
-      method: "POST",
-    });
+      method: 'POST'
+    })
 
-    form.append("field", JSON.stringify({}), {
-      contentType: "application/json",
-    });
-    form.pipe(req);
+    form.append('field', JSON.stringify({}), {
+      contentType: 'application/json'
+    })
+    form.pipe(req)
 
-    const [res] = await once(req, "response");
-    res.resume();
-    await once(res, "end");
-    t.assert.strictEqual(res.statusCode, 400); // body/field should be a file
+    const [res] = await once(req, 'response')
+    res.resume()
+    await once(res, 'end')
+    t.assert.strictEqual(res.statusCode, 400) // body/field should be a file
   }
 
   // request with file
   {
-    const form = new FormData();
+    const form = new FormData()
     const req = http.request({
-      protocol: "http:",
-      hostname: "localhost",
+      protocol: 'http:',
+      hostname: 'localhost',
       port: fastify.server.address().port,
-      path: "/",
+      path: '/',
       headers: form.getHeaders(),
-      method: "POST",
-    });
+      method: 'POST'
+    })
 
-    form.append("field", fs.createReadStream(filePath), {
-      contentType: "multipart/form-data",
-    });
-    form.pipe(req);
+    form.append('field', fs.createReadStream(filePath), {
+      contentType: 'multipart/form-data'
+    })
+    form.pipe(req)
 
-    const [res] = await once(req, "response");
-    res.resume();
-    await once(res, "end");
-    t.assert.strictEqual(res.statusCode, 200);
+    const [res] = await once(req, 'response')
+    res.resume()
+    await once(res, 'end')
+    t.assert.strictEqual(res.statusCode, 200)
   }
-  t.assert.ok("res ended successfully");
-});
+  t.assert.ok('res ended successfully')
+})
