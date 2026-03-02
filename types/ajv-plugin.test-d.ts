@@ -1,7 +1,7 @@
 import fastify from 'fastify'
 import { expectType } from 'tsd'
 import type Ajv from 'ajv'
-import { fastifyMultipart, ajvFilePlugin } from '../..'
+import { fastifyMultipart, ajvFilePlugin } from '..'
 
 // Test: ajvFilePlugin should be compatible with Fastify's ajv.plugins option
 const app = fastify({

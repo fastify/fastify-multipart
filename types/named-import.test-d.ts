@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import { fastifyMultipart } from '../..'
+import { fastifyMultipart } from '..'
 
 const app = fastify()
 
