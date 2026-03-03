@@ -11,8 +11,8 @@ const test = require('node:test')
 
 const filePath = path.join(__dirname, '../README.md')
 
-test('show modify the generated schema', async t => {
-  t.plan(4)
+test('show modify the generated schema', async (t) => {
+  t.plan(6)
 
   const fastify = Fastify({
     ajv: {
@@ -52,28 +52,22 @@ test('show modify the generated schema', async t => {
 
   await fastify.ready()
 
-  t.assert.deepStrictEqual(fastify.swagger().paths, {
-    '/': {
-      post: {
-        operationId: 'test',
-        requestBody: {
-          content: {
-            'multipart/form-data': {
-              schema: {
-                type: 'object',
-                properties: {
-                  field: { type: 'string', format: 'binary' }
-                }
-              }
-            }
-          },
-          required: true,
-        },
-        responses: {
-          200: { description: 'Default Response' }
+  const post = fastify.swagger().paths['/'].post
+  t.assert.strictEqual(post.operationId, 'test')
+  // requestBody.required is not asserted because @fastify/swagger v9.7.0
+  // introduced it (fastify/fastify-swagger#903), making it version-dependent.
+  t.assert.deepStrictEqual(post.requestBody.content, {
+    'multipart/form-data': {
+      schema: {
+        type: 'object',
+        properties: {
+          field: { type: 'string', format: 'binary' }
         }
       }
     }
+  })
+  t.assert.deepStrictEqual(post.responses, {
+    200: { description: 'Default Response' }
   })
 
   await fastify.listen({ port: 0 })
@@ -90,7 +84,9 @@ test('show modify the generated schema', async t => {
       method: 'POST'
     })
 
-    form.append('field', JSON.stringify({}), { contentType: 'application/json' })
+    form.append('field', JSON.stringify({}), {
+      contentType: 'application/json'
+    })
     form.pipe(req)
 
     const [res] = await once(req, 'response')
@@ -111,7 +107,9 @@ test('show modify the generated schema', async t => {
       method: 'POST'
     })
 
-    form.append('field', fs.createReadStream(filePath), { contentType: 'multipart/form-data' })
+    form.append('field', fs.createReadStream(filePath), {
+      contentType: 'multipart/form-data'
+    })
     form.pipe(req)
 
     const [res] = await once(req, 'response')
