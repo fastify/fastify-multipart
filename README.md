@@ -23,11 +23,12 @@ npm i @fastify/multipart
 ## Usage
 
 ```js
-const fastify = require('fastify')()
-const fs = require('node:fs')
-const { pipeline } = require('node:stream/promises')
+import fastify from "fastify"
+import fs from "node:fs"
+import { pipeline } from "node:stream/promises";
+import multipart from "@fastify/multipart";
 
-fastify.register(require('@fastify/multipart'))
+fastify.register(multipart)
 
 fastify.post('/', async function (req, reply) {
   // process a single file
@@ -72,7 +73,7 @@ If you cannot control the order of the placed fields, be sure to read `data.fiel
 You can also pass optional arguments to `@fastify/busboy` when registering with Fastify. This is useful for setting limits on the content that can be uploaded. A full list of available options can be found in the [`@fastify/busboy` documentation](https://github.com/fastify/busboy#busboy-methods).
 
 ```js
-fastify.register(require('@fastify/multipart'), {
+fastify.register(multipart, {
   limits: {
     fieldNameSize: 100, // Max field name size in bytes
     fieldSize: 100,     // Max field value size in bytes
@@ -239,7 +240,7 @@ fastify.post('/upload/file', async function (req, reply) {
 This allows you to parse all fields automatically and assign them to the `request.body`. By default, files are accumulated in memory (Be careful!) to buffer objects. Uncaught errors are [handled](https://github.com/fastify/fastify/blob/main/docs/Reference/Hooks.md#manage-errors-from-a-hook) by Fastify.
 
 ```js
-fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true })
+fastify.register(multipart, { attachFieldsToBody: true })
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = await req.body.upload.toBuffer() // access files
@@ -257,7 +258,7 @@ fastify.post('/upload/files', async function (req, reply) {
 Request body key-value pairs can be assigned directly using `attachFieldsToBody: 'keyValues'`. Field values, including file buffers, will be attached to the body object.
 
 ```js
-fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
+fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = req.body.upload // access file as buffer
@@ -274,7 +275,7 @@ async function onFile(part) {
   await pipeline(part.file, fs.createWriteStream(part.filename))
 }
 
-fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, onFile })
+fastify.register(multipart, { attachFieldsToBody: true, onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
   const fooValue = req.body.foo.value // other fields
@@ -290,7 +291,7 @@ async function onFile(part) {
   part.value = decoded // set `part.value` to specify the request body value
 }
 
-fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues', onFile })
+fastify.register(multipart, { attachFieldsToBody: 'keyValues', onFile })
 
 fastify.post('/upload/files', async function (req, reply) {
   const uploadValue = req.body.upload // access file as base64 string
@@ -307,7 +308,7 @@ If you try to read from a stream and pipe to a new file, you will obtain an empt
 When the `attachFieldsToBody` parameter is set to `'keyValues'`, JSON Schema validation on the body will behave similarly to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Additionally, uploaded files will be attached to the body as `Buffer` objects.
 
 ```js
-fastify.register(require('@fastify/multipart'), { attachFieldsToBody: 'keyValues' })
+fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
 
 fastify.post('/upload/files', {
   schema: {
@@ -340,7 +341,7 @@ const opts = {
   attachFieldsToBody: true,
   sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(require('@fastify/multipart'), opts)
+fastify.register(multipart, opts)
 
 fastify.post('/upload/files', {
   schema: {
@@ -391,16 +392,17 @@ The shared schema, that is added, will look like this:
 If you want to use `@fastify/multipart` with `@fastify/swagger` and `@fastify/swagger-ui` you must add a new type called `isFile` and use a custom instance of a validator compiler [Docs](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/#validator-compiler).
 
 ```js
-
-const fastify = require('fastify')({
+import fastify from "fastify"
+import multipart from "@fastify/multipart";
+const fastify = fastify({
  // ...
   ajv: {
     // Adds the file plugin to help @fastify/swagger schema generation
-    plugins: [require('@fastify/multipart').ajvFilePlugin]
+    plugins: [multipart.ajvFilePlugin]
   }
 })
 
-fastify.register(require("@fastify/multipart"), {
+fastify.register(multipart, {
   attachFieldsToBody: true,
 });
 
@@ -484,7 +486,7 @@ const opts = {
   attachFieldsToBody: true,
   sharedSchemaId: '#mySharedSchema'
 }
-fastify.register(require('@fastify/multipart'), opts)
+fastify.register(multipart, opts)
 
 fastify.post('/upload/files', {
   schema: {
