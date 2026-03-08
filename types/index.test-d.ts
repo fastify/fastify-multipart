@@ -2,7 +2,7 @@
 import fastify from 'fastify'
 import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
 import * as util from 'node:util'
-import { pipeline } from 'node:stream'
+import { pipeline, Readable } from 'node:stream'
 import * as fs from 'node:fs'
 import { expectError, expectType } from 'tsd'
 import { FastifyErrorConstructor } from '@fastify/error'
@@ -18,6 +18,10 @@ const runServer = async () => {
     attachFieldsToBody: true,
     limits: {
       parts: 500
+    },
+    transformRequest: (request) => {
+      expectType<Readable>(request)
+      return request
     },
     onFile: (part: MultipartFile) => {
       console.log(part)
