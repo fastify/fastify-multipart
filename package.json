@@ -16,6 +16,7 @@
     "@fastify/swagger": "^9.0.0",
     "@fastify/swagger-ui": "^5.0.0",
     "@types/node": "^25.0.3",
+    "ajv": "^8.17.1",
     "benchmark": "^2.1.4",
     "c8": "^11.0.0",
     "climem": "^2.0.0",
@@ -85,7 +86,7 @@
   ],
   "license": "MIT",
   "tsd": {
-    "directory": "test"
+    "directory": "types"
   },
   "publishConfig": {
     "access": "public"

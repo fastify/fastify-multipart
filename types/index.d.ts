@@ -2,6 +2,7 @@ import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Readable } from 'node:stream'
 import { FastifyErrorConstructor } from '@fastify/error'
+import type Ajv from 'ajv'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -200,7 +201,7 @@ declare namespace fastifyMultipart {
   /**
    * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
    */
-  export function ajvFilePlugin (ajv: any): void
+  export function ajvFilePlugin (ajv: Ajv): Ajv
 
   export const fastifyMultipart: FastifyMultipartPlugin
   export { fastifyMultipart as default }
