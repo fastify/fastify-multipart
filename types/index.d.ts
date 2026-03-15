@@ -200,7 +200,7 @@ declare namespace fastifyMultipart {
   /**
    * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
    */
-  export function ajvFilePlugin (ajv: any): void
+  export function ajvFilePlugin (ajv: any): any
 
   export const fastifyMultipart: FastifyMultipartPlugin
   export { fastifyMultipart as default }
