@@ -25,7 +25,7 @@ declare module 'fastify' {
     // Disk mode
     saveRequestFiles: (
       options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }
-    ) => Promise<Array<fastifyMultipart.SavedMultipartFile>>;
+    ) => Promise<fastifyMultipart.SavedMultipartFilesResult>;
     cleanRequestFiles: () => Promise<void>;
     tmpUploads: Array<string> | null;
     /** This will get populated as soon as a call to `saveRequestFiles` gets resolved. Avoiding any future duplicate work */
@@ -70,6 +70,11 @@ declare namespace fastifyMultipart {
      * Path to the temporary file
      */
     filepath: string;
+  }
+
+  export interface SavedMultipartFilesResult {
+    files: Array<SavedMultipartFile>;
+    values: MultipartFields | Record<string, unknown>;
   }
 
   export type Multipart = MultipartFile | MultipartValue

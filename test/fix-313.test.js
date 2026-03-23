@@ -26,7 +26,7 @@ test('should store file on disk, remove on response when attach fields to body i
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    const files = await req.saveRequestFiles()
+    const { files } = await req.saveRequestFiles()
 
     t.assert.ok(files[0].filepath)
     t.assert.strictEqual(files[0].type, 'file')

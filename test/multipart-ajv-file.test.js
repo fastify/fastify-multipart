@@ -66,8 +66,7 @@ test('show modify the generated schema', async t => {
                 }
               }
             }
-          },
-          required: true,
+          }
         },
         responses: {
           200: { description: 'Default Response' }

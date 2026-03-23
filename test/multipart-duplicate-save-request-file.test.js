@@ -13,7 +13,7 @@ const { once } = EventEmitter
 const filePath = path.join(__dirname, '../README.md')
 
 test('should store file on disk, remove on response', async function (t) {
-  t.plan(3)
+  t.plan(4)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -23,11 +23,12 @@ test('should store file on disk, remove on response', async function (t) {
   await fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    const files = await req.saveRequestFiles()
-    const files2 = await req.saveRequestFiles()
+    const { files, values } = await req.saveRequestFiles()
+    const { files: files2, values: values2 } = await req.saveRequestFiles()
 
     // If it really reused the previously response, their filepath should be the same
     t.assert.strictEqual(files[0].filepath, files2[0].filepath)
+    t.assert.strictEqual(values, values2)
 
     reply.code(200).send()
   })

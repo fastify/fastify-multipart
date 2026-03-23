@@ -138,8 +138,8 @@ const runServer = async () => {
 
   // upload files to disk and work with temporary file paths
   app.post('/upload/files', async function (req, reply) {
-    // stores files to tmp dir and return files
-    const files = await req.saveRequestFiles()
+    // stores files to tmp dir and return files + values
+    const { files, values } = await req.saveRequestFiles()
     files[0].type // "file"
     files[0].filepath
     files[0].fieldname
@@ -147,6 +147,7 @@ const runServer = async () => {
     files[0].encoding
     files[0].mimetype
     files[0].fields // other parsed parts
+    values.foo
 
     reply.send()
   })

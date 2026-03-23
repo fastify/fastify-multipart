@@ -16,6 +16,7 @@ const secureJSON = require('secure-json-parse')
 
 const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
+const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
 
 const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
 const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -184,6 +185,7 @@ function fastifyMultipart (fastify, options, done) {
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
+  fastify.decorateRequest(kSavedRequestFilesResult, null)
 
   fastify.decorateRequest('parts', getMultipartIterator)
 
@@ -450,37 +452,49 @@ function fastifyMultipart (fastify, options, done) {
 
   async function saveRequestFiles (options) {
     // Checks if this has already been run
-    if (this.savedRequestFiles) {
-      return this.savedRequestFiles
+    if (this[kSavedRequestFilesResult]) {
+      return this[kSavedRequestFilesResult]
     }
-    let files
-    if (attachFieldsToBody === true) {
-      // Skip the whole process if the body is empty
-      if (!this.body) {
-        return []
-      }
-      files = filesFromFields.call(this, this.body)
+
+    let parts
+    let values = {}
+
+    if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
+      parts = this.body ? filesFromFields.call(this, this.body) : []
+      values = this.body || {}
     } else {
-      files = await this.files(options)
+      parts = this.parts(options)
     }
+
     this.savedRequestFiles = []
     const tmpdir = options?.tmpdir || os.tmpdir()
     this.tmpUploads = []
     let i = 0
-    for await (const file of files) {
-      const filepath = path.join(tmpdir, generateId() + path.extname(file.filename || ('file' + i++)))
+    for await (const part of parts) {
+      values = part.fields
+
+      if (!part.file) {
+        continue
+      }
+
+      const filepath = path.join(tmpdir, generateId() + path.extname(part.filename || ('file' + i++)))
       const target = createWriteStream(filepath)
       try {
         this.tmpUploads.push(filepath)
-        await pump(file.file, target)
-        this.savedRequestFiles.push({ ...file, filepath })
+        await pump(part.file, target)
+        this.savedRequestFiles.push({ ...part, filepath })
       } catch (err) {
         this.log.error({ err }, 'save request file')
         throw err
       }
     }
 
-    return this.savedRequestFiles
+    this[kSavedRequestFilesResult] = {
+      files: this.savedRequestFiles,
+      values
+    }
+
+    return this[kSavedRequestFilesResult]
   }
 
   function * filesFromFields (container) {

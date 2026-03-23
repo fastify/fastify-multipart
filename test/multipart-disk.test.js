@@ -27,7 +27,7 @@ test('should store file on disk, remove on response', async function (t) {
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    const files = await req.saveRequestFiles()
+    const { files } = await req.saveRequestFiles()
 
     t.assert.ok(files[0].filepath)
     t.assert.strictEqual(files[0].fieldname, 'upload')
@@ -133,6 +133,96 @@ test('should store file on disk, remove on response error', async function (t) {
     t.assert.ifError(error, 'formData request pump: no err')
   }
   await once(ee, 'response')
+})
+
+test('should return saved files and values from saveRequestFiles', async function (t) {
+  t.plan(8)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    const { files, values } = await req.saveRequestFiles()
+
+    t.assert.ok(Array.isArray(files))
+    t.assert.strictEqual(files.length, 1)
+    t.assert.strictEqual(files[0].fieldname, 'upload')
+    t.assert.strictEqual(values.hello.value, 'world')
+    t.assert.strictEqual(values.count.value, '42')
+    t.assert.ok(values.upload)
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('hello', 'world')
+  form.append('count', '42')
+  form.append('upload', fs.createReadStream(filePath))
+
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.assert.strictEqual(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.assert.ok('res ended successfully')
+})
+
+test('should return values when saveRequestFiles receives only fields', async function (t) {
+  t.plan(6)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    const { files, values } = await req.saveRequestFiles()
+
+    t.assert.ok(Array.isArray(files))
+    t.assert.strictEqual(files.length, 0)
+    t.assert.strictEqual(values.hello.value, 'world')
+    t.assert.strictEqual(values.count.value, '42')
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('hello', 'world')
+  form.append('count', '42')
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.assert.strictEqual(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.assert.ok('res ended successfully')
 })
 
 test('should throw on file limit error', async function (t) {

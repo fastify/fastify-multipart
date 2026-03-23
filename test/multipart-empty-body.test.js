@@ -8,7 +8,7 @@ const http = require('node:http')
 const { once } = require('node:events')
 
 test('should not break with a empty request body when attachFieldsToBody is true', async function (t) {
-  t.plan(5)
+  t.plan(6)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -18,10 +18,11 @@ test('should not break with a empty request body when attachFieldsToBody is true
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    const files = await req.saveRequestFiles()
+    const { files, values } = await req.saveRequestFiles()
 
     t.assert.ok(Array.isArray(files))
     t.assert.strictEqual(files.length, 0)
+    t.assert.deepStrictEqual(values, {})
 
     reply.code(200).send()
   })
@@ -50,7 +51,7 @@ test('should not break with a empty request body when attachFieldsToBody is true
 })
 
 test('should not break with a empty request body when attachFieldsToBody is keyValues', async function (t) {
-  t.plan(5)
+  t.plan(6)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -60,10 +61,11 @@ test('should not break with a empty request body when attachFieldsToBody is keyV
   fastify.post('/', async function (req, reply) {
     t.assert.ok(req.isMultipart())
 
-    const files = await req.saveRequestFiles()
+    const { files, values } = await req.saveRequestFiles()
 
     t.assert.ok(Array.isArray(files))
     t.assert.strictEqual(files.length, 0)
+    t.assert.deepStrictEqual(values, {})
 
     reply.code(200).send()
   })

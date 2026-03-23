@@ -186,8 +186,8 @@ This will store all files in the operating system's default directory for tempor
 
 ```js
 fastify.post('/upload/files', async function (req, reply) {
-  // stores files to tmp dir and return files
-  const files = await req.saveRequestFiles()
+  // stores files to tmp dir and returns files + parsed values
+  const { files, values } = await req.saveRequestFiles()
   files[0].type // "file"
   files[0].filepath
   files[0].fieldname
@@ -195,6 +195,7 @@ fastify.post('/upload/files', async function (req, reply) {
   files[0].encoding
   files[0].mimetype
   files[0].fields // other parsed parts
+  values.hello?.value // non-file fields are available even if no file was uploaded
 
   reply.send()
 })
