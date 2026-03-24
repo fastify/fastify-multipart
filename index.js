@@ -484,6 +484,8 @@ function fastifyMultipart (fastify, options, done) {
         await pump(part.file, target)
         this.savedRequestFiles.push({ ...part, filepath })
       } catch (err) {
+        target.destroy()
+        await this.cleanRequestFiles()
         this.log.error({ err }, 'save request file')
         throw err
       }
