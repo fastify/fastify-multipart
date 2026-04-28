@@ -31,9 +31,9 @@ const runServer = async () => {
     if (data == null) throw new Error('missing file')
 
     expect(data.type).type.toBe<'file'>()
-    expect(data.file).type.toBeAssignableTo<BusboyFileStream>()
+    expect(data.file).type.toBe<BusboyFileStream>()
     expect(data.file.truncated).type.toBe<boolean>()
-    expect(data.fields).type.toBeAssignableTo<MultipartFields>()
+    expect(data.fields).type.toBe<MultipartFields>()
     expect(data.fieldname).type.toBe<string>()
     expect(data.filename).type.toBe<string>()
     expect(data.encoding).type.toBe<string>()
@@ -59,13 +59,11 @@ const runServer = async () => {
 
   // Multiple fields including scalar values
   app.post<{ Body: { file: MultipartFile, foo: MultipartValue<string> } }>('/upload/stringvalue', async (req, reply) => {
-    // @ts-expect-error!
-    req.body.foo.file
-
+    expect(req.body.foo).type.not.toHaveProperty('file')
     expect(req.body.foo.type).type.toBe<'field'>()
     expect(req.body.foo.value).type.toBe<string>()
 
-    expect(req.body.file.file).type.toBeAssignableTo<BusboyFileStream>()
+    expect(req.body.file.file).type.toBe<BusboyFileStream>()
     expect(req.body.file.type).type.toBe<'file'>()
     reply.send()
   })
@@ -74,9 +72,8 @@ const runServer = async () => {
     expect(req.body.num.value).type.toBe<number>()
     reply.send()
 
-    expect(req.body.file.file).type.toBeAssignableTo<BusboyFileStream>()
-    // @ts-expect-error!
-    req.body.file.value
+    expect(req.body.file.file).type.toBe<BusboyFileStream>()
+    expect(req.body.file).type.not.toHaveProperty('value')
   })
 
   // busboy
@@ -187,13 +184,12 @@ const runServer = async () => {
       multipartOptions: {}
     }
   }, async function (req, reply) {
-    expect(req.routeOptions.config.multipartOptions).type.toBeAssignableTo<Omit<BusboyConfig, 'headers'>>()
+    expect(req.routeOptions.config.multipartOptions).type.toBe<Omit<BusboyConfig, 'headers'>>()
     reply.send()
   })
 
   app.post('/upload/files', async function (req, reply) {
-    // @ts-expect-error!
-    req.routeOptions.config.multipartOptions satisfies Omit<BusboyConfig, 'headers'>
+    expect(req.routeOptions.config.multipartOptions).type.toBe<Omit<BusboyConfig, 'headers'> | undefined>()
     reply.send()
   })
 
