@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import fastify from 'fastify'
-import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '..'
+import fastifyMultipart, { MultipartValue, MultipartFields, MultipartFile } from '.'
 import * as util from 'node:util'
 import { pipeline } from 'node:stream'
 import * as fs from 'node:fs'
-import { expectError, expectType } from 'tsd'
+import { expect } from 'tstyche'
 import { FastifyErrorConstructor } from '@fastify/error'
 import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 
@@ -26,18 +26,18 @@ const runServer = async () => {
 
   // usage
   app.post('/', async (req, reply) => {
-    expectType<Promise<FormData>>(req.formData())
+    expect(req.formData()).type.toBe<Promise<FormData>>()
     const data = await req.file()
     if (data == null) throw new Error('missing file')
 
-    expectType<'file'>(data.type)
-    expectType<BusboyFileStream>(data.file)
-    expectType<boolean>(data.file.truncated)
-    expectType<MultipartFields>(data.fields)
-    expectType<string>(data.fieldname)
-    expectType<string>(data.filename)
-    expectType<string>(data.encoding)
-    expectType<string>(data.mimetype)
+    expect(data.type).type.toBe<'file'>()
+    expect(data.file).type.toBeAssignableTo<BusboyFileStream>()
+    expect(data.file.truncated).type.toBe<boolean>()
+    expect(data.fields).type.toBeAssignableTo<MultipartFields>()
+    expect(data.fieldname).type.toBe<string>()
+    expect(data.filename).type.toBe<string>()
+    expect(data.encoding).type.toBe<string>()
+    expect(data.mimetype).type.toBe<string>()
 
     const field = data.fields.myField
     if (field === undefined) {
@@ -59,22 +59,24 @@ const runServer = async () => {
 
   // Multiple fields including scalar values
   app.post<{ Body: { file: MultipartFile, foo: MultipartValue<string> } }>('/upload/stringvalue', async (req, reply) => {
-    expectError(req.body.foo.file)
-    expectType<'field'>(req.body.foo.type)
-    expectType<string>(req.body.foo.value)
+    // @ts-expect-error!
+    req.body.foo.file
 
-    expectType<BusboyFileStream>(req.body.file.file)
-    expectType<'file'>(req.body.file.type)
+    expect(req.body.foo.type).type.toBe<'field'>()
+    expect(req.body.foo.value).type.toBe<string>()
+
+    expect(req.body.file.file).type.toBeAssignableTo<BusboyFileStream>()
+    expect(req.body.file.type).type.toBe<'file'>()
     reply.send()
   })
 
   app.post<{ Body: { file: MultipartFile, num: MultipartValue<number> } }>('/upload/stringvalue', async (req, reply) => {
-    expectType<number>(req.body.num.value)
+    expect(req.body.num.value).type.toBe<number>()
     reply.send()
 
-    // file is a file
-    expectType<BusboyFileStream>(req.body.file.file)
-    expectError(req.body.file.value)
+    expect(req.body.file.file).type.toBeAssignableTo<BusboyFileStream>()
+    // @ts-expect-error!
+    req.body.file.value
   })
 
   // busboy
@@ -84,9 +86,9 @@ const runServer = async () => {
       throwFileSizeLimit: true,
       sharedSchemaId: 'schemaId',
       isPartAFile: (fieldName, contentType, fileName) => {
-        expectType<string | undefined>(fieldName)
-        expectType<string | undefined>(contentType)
-        expectType<string | undefined>(fileName)
+        expect(fieldName).type.toBe<string | undefined>()
+        expect(contentType).type.toBe<string | undefined>()
+        expect(fileName).type.toBe<string | undefined>()
         return true
       }
     })
@@ -102,9 +104,9 @@ const runServer = async () => {
       throwFileSizeLimit: true,
       sharedSchemaId: 'schemaId',
       isPartAFile: (fieldName, contentType, fileName) => {
-        expectType<string | undefined>(fieldName)
-        expectType<string | undefined>(contentType)
-        expectType<string | undefined>(fileName)
+        expect(fieldName).type.toBe<string | undefined>()
+        expect(contentType).type.toBe<string | undefined>()
+        expect(fileName).type.toBe<string | undefined>()
         return true
       }
     })
@@ -131,7 +133,7 @@ const runServer = async () => {
   app.post('/upload/raw/any', async function (req, reply) {
     const data = await req.file()
     if (!data) throw new Error('missing file')
-    expectType<Buffer>(await data.toBuffer())
+    expect(await data.toBuffer()).type.toBe<Buffer>()
     // upload to S3
     reply.send()
   })
@@ -140,13 +142,13 @@ const runServer = async () => {
   app.post('/upload/files', async function (req, reply) {
     // stores files to tmp dir and return files + values
     const { files, values } = await req.saveRequestFiles()
-    files[0].type // "file"
-    files[0].filepath
-    files[0].fieldname
-    files[0].filename
-    files[0].encoding
-    files[0].mimetype
-    files[0].fields // other parsed parts
+    files[0]!.type // "file"
+    files[0]!.filepath
+    files[0]!.fieldname
+    files[0]!.filename
+    files[0]!.encoding
+    files[0]!.mimetype
+    files[0]!.fields // other parsed parts
     values.foo
 
     reply.send()
@@ -164,12 +166,12 @@ const runServer = async () => {
   app.post('/upload/files', async function (_req, reply) {
     const { FilesLimitError } = app.multipartErrors
 
-    expectType<FastifyErrorConstructor>(app.multipartErrors.FieldsLimitError)
-    expectType<FastifyErrorConstructor>(app.multipartErrors.FilesLimitError)
-    expectType<FastifyErrorConstructor>(app.multipartErrors.InvalidMultipartContentTypeError)
-    expectType<FastifyErrorConstructor>(app.multipartErrors.PartsLimitError)
-    expectType<FastifyErrorConstructor>(app.multipartErrors.PrototypeViolationError)
-    expectType<FastifyErrorConstructor>(app.multipartErrors.RequestFileTooLargeError)
+    expect(app.multipartErrors.FieldsLimitError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.FilesLimitError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.InvalidMultipartContentTypeError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.PartsLimitError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.PrototypeViolationError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.RequestFileTooLargeError).type.toBe<FastifyErrorConstructor>()
 
     // test instanceof Error
     const a = new FilesLimitError()
@@ -185,12 +187,13 @@ const runServer = async () => {
       multipartOptions: {}
     }
   }, async function (req, reply) {
-    expectType<Omit<BusboyConfig, 'headers'>>(req.routeOptions.config.multipartOptions)
+    expect(req.routeOptions.config.multipartOptions).type.toBeAssignableTo<Omit<BusboyConfig, 'headers'>>()
     reply.send()
   })
 
   app.post('/upload/files', async function (req, reply) {
-    expectError<Omit<BusboyConfig, 'headers'>>(req.routeOptions.config?.multipartOptions)
+    // @ts-expect-error!
+    req.routeOptions.config.multipartOptions satisfies Omit<BusboyConfig, 'headers'>
     reply.send()
   })
 

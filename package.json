@@ -28,7 +28,7 @@
     "noop-stream": "^0.1.0",
     "pump": "^3.0.0",
     "readable-stream": "^4.5.2",
-    "tsd": "^0.33.0"
+    "tstyche": "^7.0.0"
   },
   "scripts": {
     "climem": "climem 8999 localhost",
@@ -36,7 +36,7 @@
     "lint:fix": "eslint --fix",
     "start": "CLIMEM=8999 node -r climem ./examples/example",
     "test": "npm run test:unit && npm run test:typescript",
-    "test:typescript": "tsd",
+    "test:typescript": "tstyche",
     "test:unit": "c8 --100 node --test"
   },
   "repository": {
@@ -84,9 +84,6 @@
     }
   ],
   "license": "MIT",
-  "tsd": {
-    "directory": "test"
-  },
   "publishConfig": {
     "access": "public"
   }
