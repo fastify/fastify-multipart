@@ -1,6 +1,7 @@
 'use strict'
 
 const test = require('node:test')
+const { once } = require('node:events')
 const FormData = require('form-data')
 const Fastify = require('fastify')
 const multipart = require('..')
@@ -141,7 +142,7 @@ test('should not parse JSON fields forms if non-json content-type is set', funct
 })
 
 test('should throw error when parsing JSON fields failed', function (t, done) {
-  t.plan(2)
+  t.plan(3)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -188,7 +189,7 @@ test('should throw error when parsing JSON fields failed', function (t, done) {
 })
 
 test('should always reject JSON parsing if the value was truncated', function (t, done) {
-  t.plan(2)
+  t.plan(3)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -407,5 +408,71 @@ test('should return 400 when the field validation fails', function (t, done) {
 
     form.append('field', JSON.stringify('abc'), { contentType: 'application/json' })
     form.pipe(req)
+  })
+})
+
+test('multipartErrors should expose InvalidJSONFieldError', async function (t) {
+  t.plan(2)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart)
+  await fastify.ready()
+
+  t.assert.ok(fastify.multipartErrors.InvalidJSONFieldError, 'InvalidJSONFieldError is exposed on multipartErrors')
+  t.assert.strictEqual(typeof fastify.multipartErrors.InvalidJSONFieldError, 'function')
+})
+
+test('thrown InvalidJSONFieldError should be an instance of multipartErrors.InvalidJSONFieldError', function (t, done) {
+  t.plan(3)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart)
+
+  fastify.post('/', async function (req, reply) {
+    try {
+      for await (const part of req.parts()) {
+        t.assert.strictEqual(typeof part.value, 'string')
+      }
+      reply.code(200).send()
+    } catch (error) {
+      t.assert.ok(error instanceof fastify.multipartErrors.InvalidJSONFieldError)
+      t.assert.strictEqual(error.code, 'FST_INVALID_JSON_FIELD_ERROR')
+      reply.code(error.statusCode).send()
+    }
+  })
+
+  fastify.listen({ port: 0 }, function () {
+    const boundary = 'testboundary'
+    const body = [
+      '--' + boundary,
+      'Content-Disposition: form-data; name="jsonfield"',
+      'Content-Type: application/json',
+      '',
+      'not valid json',
+      '--' + boundary + '--',
+      ''
+    ].join('\r\n')
+
+    const opts = {
+      hostname: '127.0.0.1',
+      port: fastify.server.address().port,
+      path: '/',
+      method: 'POST',
+      headers: {
+        'content-type': 'multipart/form-data; boundary=' + boundary,
+        'content-length': Buffer.byteLength(body)
+      }
+    }
+
+    const req = http.request(opts, res => {
+      t.assert.strictEqual(res.statusCode, 406)
+      res.resume()
+      res.on('end', done)
+    })
+    req.end(body)
   })
 })
