@@ -20,6 +20,7 @@ const runServer = async () => {
       parts: 500
     },
     onFile: (part: MultipartFile) => {
+      part.value = 'decoded'
       console.log(part)
     }
   })
@@ -73,7 +74,7 @@ const runServer = async () => {
     reply.send()
 
     expect(req.body.file.file).type.toBe<BusboyFileStream>()
-    expect(req.body.file).type.not.toHaveProperty('value')
+    expect(req.body.file).type.toHaveProperty('value')
   })
 
   // busboy
