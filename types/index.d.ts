@@ -81,6 +81,11 @@ declare namespace fastifyMultipart {
 
   export interface MultipartFile {
     type: 'file';
+    /**
+     * A value can be assigned to a file part inside an `onFile` handler when
+     * using `attachFieldsToBody: 'keyValues'` to specify the decoded body value.
+     */
+    value?: unknown;
     toBuffer: () => Promise<Buffer>;
     file: BusboyFileStream;
     fieldname: string;
