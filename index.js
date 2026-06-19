@@ -179,7 +179,9 @@ function fastifyMultipart (fastify, options, done) {
     PrototypeViolationError,
     InvalidMultipartContentTypeError,
     RequestFileTooLargeError,
-    FileBufferNotFoundError
+    FileBufferNotFoundError,
+    InvalidJSONFieldError,
+    NoFormData
   })
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
