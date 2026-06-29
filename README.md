@@ -373,6 +373,17 @@ fastify.post('/upload/files', {
 
 If provided, the `sharedSchemaId` parameter must be a string ID and a shared schema will be added to your fastify instance so you will be able to apply the validation to your service (like in the example mentioned above).
 
+Multipart fields are converted before validation. Repeated field names are grouped into arrays, but a field sent once remains a single field object. This means AJV `coerceTypes: 'array'` will not wrap a single multipart field object in an array for a schema like `myFiles: { type: 'array', items: fastify.getSchema('#mySharedSchema') }`. If a field accepts one or more values, validate both the single-value and repeated-value shapes, then normalize the value in your handler if needed:
+
+```js
+myFiles: {
+  anyOf: [
+    { $ref: '#mySharedSchema' },
+    { type: 'array', items: fastify.getSchema('#mySharedSchema') }
+  ]
+}
+```
+
 The shared schema, that is added, will look like this:
 ```js
 {
