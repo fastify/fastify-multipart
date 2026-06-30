@@ -545,8 +545,10 @@ fastify.post('/upload/files', async function (req, reply) {
 
 This project is kindly sponsored by:
 - [nearForm](https://nearform.com)
-- [LetzDoIt](https://www.letzdoitapp.com/)
 - [platformatic](https://platformatic.dev)
+
+Past sponsors:
+- LetzDoIt
 
 ## License
 
