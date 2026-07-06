@@ -62,6 +62,7 @@ interface MultipartErrors {
   PrototypeViolationError: FastifyErrorConstructor;
   InvalidMultipartContentTypeError: FastifyErrorConstructor;
   RequestFileTooLargeError: FastifyErrorConstructor;
+  PrematureCloseError: FastifyErrorConstructor;
 }
 
 declare namespace fastifyMultipart {

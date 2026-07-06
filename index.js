@@ -26,6 +26,7 @@ const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype pr
 const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
+const PrematureCloseError = createError('FST_MP_PREMATURE_CLOSE', 'the request was closed before the multipart data was fully parsed', 400)
 const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
 function setMultipart (req, _payload, done) {
@@ -179,7 +180,8 @@ function fastifyMultipart (fastify, options, done) {
     PrototypeViolationError,
     InvalidMultipartContentTypeError,
     RequestFileTooLargeError,
-    FileBufferNotFoundError
+    FileBufferNotFoundError,
+    PrematureCloseError
   })
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
@@ -243,16 +245,8 @@ function fastifyMultipart (fastify, options, done) {
     const parts = () => {
       return new Promise((resolve, reject) => {
         handle((val) => {
-          if (val instanceof Error) {
-            if (val.message === 'Unexpected end of multipart data') {
-              // Stop parsing without throwing an error
-              resolve(null)
-            } else {
-              reject(val)
-            }
-          } else {
-            resolve(val)
-          }
+          if (val instanceof Error) return reject(val)
+          resolve(val)
         })
       })
     }
@@ -260,6 +254,7 @@ function fastifyMultipart (fastify, options, done) {
     const body = {}
     let lastError = null
     let currentFile = null
+    let sawData = false
     const request = this.raw
     const busboyOptions = deepmergeAll(
       { headers: request.headers },
@@ -270,7 +265,7 @@ function fastifyMultipart (fastify, options, done) {
     this.log.trace({ busboyOptions }, 'Providing options to busboy')
     const bb = busboy(busboyOptions)
 
-    request.on('close', cleanup)
+    request.on('close', onRequestClose)
     request.on('error', cleanup)
 
     bb
@@ -279,7 +274,7 @@ function fastifyMultipart (fastify, options, done) {
       .on('end', cleanup)
       .on('finish', cleanup)
       .on('close', cleanup)
-      .on('error', cleanup)
+      .on('error', onBusboyError)
 
     bb.on('partsLimit', function () {
       const err = new PartsLimitError()
@@ -299,7 +294,22 @@ function fastifyMultipart (fastify, options, done) {
       process.nextTick(() => cleanup(err))
     })
 
+    request.once('data', onFirstData)
     request.pipe(bb)
+
+    function onFirstData () {
+      sawData = true
+    }
+
+    function onBusboyError (err) {
+      // an empty body is treated as an empty form rather than as
+      // truncated multipart data
+      if (!sawData && err.message === 'Unexpected end of multipart data') {
+        cleanup()
+      } else {
+        cleanup(err)
+      }
+    }
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
@@ -412,6 +422,15 @@ function fastifyMultipart (fastify, options, done) {
         // Other errors are expected to be handled by the consumer of the stream
       })
 
+      // If the consumer destroys the file stream without reading it to the
+      // end, busboy stops parsing and will never emit 'finish', so the
+      // iteration has to end here (with the last error, if there is one)
+      file.on('close', function () {
+        if (!file.readableEnded) {
+          cleanup()
+        }
+      })
+
       if (throwFileSizeLimit) {
         file.on('limit', function () {
           const err = new RequestFileTooLargeError()
@@ -434,6 +453,16 @@ function fastifyMultipart (fastify, options, done) {
     function onError (err) {
       lastError = err
       currentFile = null
+    }
+
+    function onRequestClose () {
+      // 'close' on a completed request says nothing about parts busboy is
+      // still holding: they must keep flowing and iteration ends on busboy's
+      // own end events. A premature close has to end iteration here though,
+      // as busboy will never emit 'finish' for a truncated stream.
+      if (!request.readableEnded) {
+        cleanup(lastError || new PrematureCloseError())
+      }
     }
 
     function cleanup (err) {
