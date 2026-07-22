@@ -15,6 +15,7 @@ const { pipeline: pump } = require('node:stream/promises')
 const secureJSON = require('secure-json-parse')
 
 const kMultipart = Symbol('multipart')
+const kMultipartPayload = Symbol('multipartPayload')
 const kMultipartHandler = Symbol('multipartHandler')
 const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
 
@@ -29,8 +30,9 @@ const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the fi
 const PrematureCloseError = createError('FST_MP_PREMATURE_CLOSE', 'the request was closed before the multipart data was fully parsed', 400)
 const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
-function setMultipart (req, _payload, done) {
+function setMultipart (req, payload, done) {
   req[kMultipart] = true
+  req[kMultipartPayload] = payload
   done()
 }
 
@@ -186,6 +188,7 @@ function fastifyMultipart (fastify, options, done) {
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipart, false)
+  fastify.decorateRequest(kMultipartPayload, null)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
   fastify.decorateRequest(kSavedRequestFilesResult, null)
 
@@ -255,9 +258,9 @@ function fastifyMultipart (fastify, options, done) {
     let lastError = null
     let currentFile = null
     let sawData = false
-    const request = this.raw
+    const request = this[kMultipartPayload]
     const busboyOptions = deepmergeAll(
-      { headers: request.headers },
+      { headers: this.headers },
       options,
       opts
     )
