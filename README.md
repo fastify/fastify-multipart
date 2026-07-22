@@ -302,6 +302,20 @@ fastify.post('/upload/files', async function (req, reply) {
 You can only use the `toBuffer` method to read the content.
 If you try to read from a stream and pipe to a new file, you will obtain an empty new file.
 
+When `attachFieldsToBody` is enabled, the plugin registers its own `preValidation` hook to do the parsing. Because instance-level hooks always run before route-level ones, this hook always runs first among your other `preValidation` hooks, and you can't reorder it relative to them. If you need to run something before it (e.g. verifying a signature on the raw body), set `attachFieldsToBodyHook: false` to skip automatic registration, then call `request.attachFieldsToBody()` yourself from a hook you control:
+
+```js
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, attachFieldsToBodyHook: false })
+
+fastify.addHook('preValidation', async function (req) {
+  await verifySignature(req) // runs first
+
+  if (req.isMultipart()) {
+    await req.attachFieldsToBody() // parses fields into req.body
+  }
+})
+```
+
 ## JSON Schema body validation
 
 When the `attachFieldsToBody` parameter is set to `'keyValues'`, JSON Schema validation on the body will behave similarly to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Additionally, uploaded files will be attached to the body as `Buffer` objects.
