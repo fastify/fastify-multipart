@@ -553,8 +553,7 @@ test('attachFieldsToBodyHook: false lets the caller control when attachFieldsToB
   const order = []
 
   fastify.addHook('preValidation', async function (req) {
-    // must run before the fields are parsed, e.g. a signature check on the raw body
-    order.push('signature-check')
+    order.push('auth-check')
   })
 
   fastify.addHook('preValidation', async function (req) {
@@ -566,7 +565,7 @@ test('attachFieldsToBodyHook: false lets the caller control when attachFieldsToB
   })
 
   fastify.post('/', async function (req, reply) {
-    t.assert.deepStrictEqual(order, ['signature-check', 'attach-fields-to-body'])
+    t.assert.deepStrictEqual(order, ['auth-check', 'attach-fields-to-body'])
     t.assert.strictEqual(req.body.hello.value, 'world')
     reply.code(200).send()
   })
