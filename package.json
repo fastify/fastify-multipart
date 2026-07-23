@@ -17,7 +17,7 @@
     "@fastify/swagger-ui": "^6.0.0",
     "@types/node": "^26.0.1",
     "benchmark": "^2.1.4",
-    "c8": "^11.0.0",
+    "c8": "^12.0.0",
     "climem": "^2.0.0",
     "concat-stream": "^2.0.0",
     "eslint": "^9.17.0",
