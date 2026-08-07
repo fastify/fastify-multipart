@@ -165,7 +165,9 @@ const runServer = async () => {
 
     expect(app.multipartErrors.FieldsLimitError).type.toBe<FastifyErrorConstructor>()
     expect(app.multipartErrors.FilesLimitError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.InvalidJSONFieldError).type.toBe<FastifyErrorConstructor>()
     expect(app.multipartErrors.InvalidMultipartContentTypeError).type.toBe<FastifyErrorConstructor>()
+    expect(app.multipartErrors.NoFormData).type.toBe<FastifyErrorConstructor>()
     expect(app.multipartErrors.PartsLimitError).type.toBe<FastifyErrorConstructor>()
     expect(app.multipartErrors.PrototypeViolationError).type.toBe<FastifyErrorConstructor>()
     expect(app.multipartErrors.RequestFileTooLargeError).type.toBe<FastifyErrorConstructor>()
