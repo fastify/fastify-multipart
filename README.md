@@ -302,6 +302,27 @@ fastify.post('/upload/files', async function (req, reply) {
 You can only use the `toBuffer` method to read the content.
 If you try to read from a stream and pipe to a new file, you will obtain an empty new file.
 
+When `attachFieldsToBody` is enabled, the plugin registers its own `preValidation` hook to parse the body. If you need to control exactly where that parsing happens among your own `preValidation` hooks, set `attachFieldsToBodyHook: false` to skip the automatic registration, then call `request.attachFieldsToBody()` yourself from a hook you control:
+
+```js
+fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, attachFieldsToBodyHook: false })
+
+fastify.addHook('preValidation', async function (req, reply) {
+  // Reject unauthorized requests before the plugin buffers a potentially
+  // large upload into memory. This checks headers/token, not the body,
+  // so it does not consume the stream.
+  if (!isAuthorized(req)) {
+    return reply.code(401).send()
+  }
+
+  if (req.isMultipart()) {
+    await req.attachFieldsToBody() // parses fields into req.body
+  }
+})
+```
+
+> **Note:** `request.attachFieldsToBody()` reads and consumes the request stream. A hook that runs before it must **not** read the payload itself — once the stream is consumed, there is nothing left to parse. If you need the raw payload (for example to verify a webhook signature) *and* the parsed fields, tee the stream in a [`preParsing` hook](https://fastify.dev/docs/latest/Reference/Hooks/#preparsing) instead: read the copy for verification and return a replacement stream for the parser to consume.
+
 ## JSON Schema body validation
 
 When the `attachFieldsToBody` parameter is set to `'keyValues'`, JSON Schema validation on the body will behave similarly to `application/json` and [`application/x-www-form-urlencoded`](https://github.com/fastify/fastify-formbody) content types. Additionally, uploaded files will be attached to the body as `Buffer` objects.
