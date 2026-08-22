@@ -276,22 +276,29 @@ function fastifyMultipart (fastify, options, done) {
       .on('close', cleanup)
       .on('error', onBusboyError)
 
-    bb.on('partsLimit', function () {
-      const err = new PartsLimitError()
+    // A parser limit is raised between parts, so busboy is holding either a
+    // part it has just finished or one it has only just opened -- `fieldsLimit`
+    // suppresses further fields but keeps emitting files. Either way the
+    // consumer still has to read that part before it can observe the limit
+    // error, and tearing the pipe down here stops it ever getting there: a
+    // finished part would be handed over already closed and never settle, and a
+    // part still arriving would never receive the rest of its body. Deliver the
+    // error and leave the pipe alone; the normal end-of-request path unpipes.
+    function onLimit (err) {
       onError(err)
-      process.nextTick(() => cleanup(err))
+      process.nextTick(() => cleanup(err, true))
+    }
+
+    bb.on('partsLimit', function () {
+      onLimit(new PartsLimitError())
     })
 
     bb.on('filesLimit', function () {
-      const err = new FilesLimitError()
-      onError(err)
-      process.nextTick(() => cleanup(err))
+      onLimit(new FilesLimitError())
     })
 
     bb.on('fieldsLimit', function () {
-      const err = new FieldsLimitError()
-      onError(err)
-      process.nextTick(() => cleanup(err))
+      onLimit(new FieldsLimitError())
     })
 
     request.once('data', onFirstData)
@@ -464,12 +471,14 @@ function fastifyMultipart (fastify, options, done) {
       }
     }
 
-    function cleanup (err) {
-      request.unpipe(bb)
+    function cleanup (err, keepParsing = false) {
+      if (!keepParsing) {
+        request.unpipe(bb)
 
-      if ((err || request.aborted) && currentFile) {
-        currentFile.destroy()
-        currentFile = null
+        if ((err || request.aborted) && currentFile) {
+          currentFile.destroy()
+          currentFile = null
+        }
       }
 
       ch(err || lastError || null)
