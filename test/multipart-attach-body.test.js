@@ -489,6 +489,50 @@ test('should pass the buffer instead of converting to string', async function (t
 
 const hasGlobalFormData = typeof globalThis.FormData === 'function'
 
+test('should make keyValues body entries accessible through "req.formData"', { skip: !hasGlobalFormData }, async function (t) {
+  t.plan(6)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart, { attachFieldsToBody: 'keyValues' })
+
+  fastify.post('/', async function (req, reply) {
+    t.assert.ok(req.isMultipart())
+    const formData = await req.formData()
+    const upload = formData.get('upload')
+
+    t.assert.strictEqual(formData.get('hello'), 'world')
+    t.assert.ok(upload instanceof globalThis.Blob)
+    t.assert.strictEqual(await upload.text(), 'test upload content')
+
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', Buffer.from('test upload content'), { filename: 'test.txt', contentType: 'text/plain' })
+  form.append('hello', 'world')
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.assert.strictEqual(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.assert.ok('res ended successfully')
+})
+
 test('should be able to attach all parsed fields and files and make it accessible through "req.formdata"', { skip: !hasGlobalFormData }, async function (t) {
   t.plan(10)
 
