@@ -149,7 +149,7 @@ declare namespace fastifyMultipart {
       fields?: number;
 
       /**
-       * For multipart forms, the max file size
+       * For multipart forms, the max file size (defaults to the Fastify `bodyLimit`)
        */
       fileSize?: number;
 

@@ -85,7 +85,9 @@ fastify.register(require('@fastify/multipart'), {
 });
 ```
 
-For security reasons, `@fastify/multipart` sets the limit for `parts` and `fileSize` being _1000_ and _1048576_ respectively.
+For security reasons, `@fastify/multipart` defaults `parts` to _1000_ and `fileSize` to the Fastify `bodyLimit` (1 MiB by default).
+
+> **Note**: multipart requests are parsed by a dedicated streaming parser and do not go through Fastify's `bodyLimit` enforcement. `bodyLimit` is only used to compute the per-file `fileSize` default; it is **not** enforced as an aggregate limit across the whole multipart payload. A single request can therefore contain more data than `bodyLimit` once spread across many fields and files, and the route-level `bodyLimit` is not applied to the multipart parser. If you need to bound the total request size, set explicit `fieldSize`, `fields`, `files`, `parts`, and `fileSize` limits and/or enforce a request-size limit upstream.
 
 **Note**: if the file stream that is provided by `data.file` is not consumed, like in the example below with the usage of pipeline, the promise will not be fulfilled at the end of the multipart processing.
 This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/busboy).
