@@ -125,7 +125,7 @@ test('should respond when all files are processed', function (t, done) {
 })
 
 test('should group parts with the same name to an array', function (t, done) {
-  t.plan(15)
+  t.plan(10)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -134,18 +134,24 @@ test('should group parts with the same name to an array', function (t, done) {
 
   fastify.post('/', async function (req, reply) {
     const parts = req.parts()
+    let seenUploadArray = false
+    let seenHelloArray = false
     for await (const part of parts) {
       t.assert.ok(part)
       if (Array.isArray(part.fields.upload)) {
-        t.assert.ok('multiple fields are grouped by array')
+        seenUploadArray = true
       }
       if (Array.isArray(part.fields.hello)) {
-        t.assert.ok('multiple files are grouped by array')
+        seenHelloArray = true
       }
       if (part.file) {
         await streamToNull(part.file)
       }
     }
+    // Assert the grouping once, deterministically, instead of relying on the
+    // variable number of times the streaming loop observes the arrays.
+    t.assert.ok(seenUploadArray)
+    t.assert.ok(seenHelloArray)
     reply.code(200).send()
   })
 
