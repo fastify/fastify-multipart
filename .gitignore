@@ -157,3 +157,6 @@ yarn.lock
 # Claude files
 .claude/
 CLAUDE.md
+
+# Pi files
+.pi
