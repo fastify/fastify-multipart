@@ -27,6 +27,8 @@ declare module 'fastify' {
       options?: Omit<BusboyConfig, 'headers'> & { tmpdir?: string }
     ) => Promise<fastifyMultipart.SavedMultipartFilesResult>;
     cleanRequestFiles: () => Promise<void>;
+
+    attachFieldsToBody: () => Promise<void>;
     tmpUploads: Array<string> | null;
     /** This will get populated as soon as a call to `saveRequestFiles` gets resolved. Avoiding any future duplicate work */
     savedRequestFiles: Array<fastifyMultipart.SavedMultipartFile> | null;
@@ -196,6 +198,19 @@ declare namespace fastifyMultipart {
      * Only valid in the promise api. Append the multipart parameters to the body object.
      */
     attachFieldsToBody: true | 'keyValues';
+
+    /**
+     * Whether to automatically register the `preValidation` hook that calls
+     * `request.attachFieldsToBody()`.
+     *
+     * Set to `false` to opt out of automatic registration and call
+     * `request.attachFieldsToBody()` yourself from your own hook, giving you
+     * control over its execution order relative to other `preValidation`
+     * hooks.
+     *
+     * @default true
+     */
+    attachFieldsToBodyHook?: boolean;
 
     /**
      * Manage the file stream like you need

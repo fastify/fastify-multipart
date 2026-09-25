@@ -541,3 +541,54 @@ test('should be able to attach all parsed fields and files and make it accessibl
   await once(res, 'end')
   t.assert.ok('res ended successfully')
 })
+
+test('attachFieldsToBodyHook: false lets the caller control when attachFieldsToBody() runs', async function (t) {
+  t.plan(4)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart, { attachFieldsToBody: true, attachFieldsToBodyHook: false })
+
+  const order = []
+
+  fastify.addHook('preValidation', async function (req) {
+    order.push('auth-check')
+  })
+
+  fastify.addHook('preValidation', async function (req) {
+    if (!req.isMultipart()) {
+      return
+    }
+    await req.attachFieldsToBody()
+    order.push('attach-fields-to-body')
+  })
+
+  fastify.post('/', async function (req, reply) {
+    t.assert.deepStrictEqual(order, ['auth-check', 'attach-fields-to-body'])
+    t.assert.strictEqual(req.body.hello.value, 'world')
+    reply.code(200).send()
+  })
+
+  await fastify.listen({ port: 0 })
+
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('hello', 'world')
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.assert.strictEqual(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  t.assert.ok('res ended successfully')
+})

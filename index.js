@@ -69,10 +69,20 @@ function fastifyMultipart (fastify, options, done) {
       })
     }
 
-    fastify.addHook('preValidation', async function (req) {
-      if (!req.isMultipart()) {
-        return
-      }
+    fastify.decorateRequest('attachFieldsToBody', attachFieldsToBodyImpl)
+
+    if (options.attachFieldsToBodyHook !== false) {
+      fastify.addHook('preValidation', async function (req) {
+        if (!req.isMultipart()) {
+          return
+        }
+
+        await req.attachFieldsToBody()
+      })
+    }
+
+    async function attachFieldsToBodyImpl () {
+      const req = this
 
       for await (const part of req.parts(req.routeOptions.config.multipartOptions)) {
         req.body = part.fields
@@ -123,7 +133,7 @@ function fastifyMultipart (fastify, options, done) {
 
         req.body = body
       }
-    })
+    }
 
     // The following is not available on old Node.js versions
     // so we must skip it in the test coverage
