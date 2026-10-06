@@ -19,8 +19,10 @@ const runServer = async () => {
     limits: {
       parts: 500
     },
-    onFile: (part: MultipartFile) => {
-      console.log(part)
+    onFile: async (part: MultipartFile) => {
+      const buffer = await part.toBuffer()
+      part.value = Buffer.from(buffer.toString(), 'base64').toString()
+      expect(part.value).type.toBe<unknown>()
     }
   })
 
@@ -73,7 +75,7 @@ const runServer = async () => {
     reply.send()
 
     expect(req.body.file.file).type.toBe<BusboyFileStream>()
-    expect(req.body.file).type.not.toHaveProperty('value')
+    expect(req.body.file).type.toHaveProperty('value')
   })
 
   // busboy
