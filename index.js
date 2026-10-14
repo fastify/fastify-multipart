@@ -143,14 +143,16 @@ function fastifyMultipart (fastify, options, done) {
         }
 
         async function append (key, entry) {
-          /* c8 ignore next: Buffer.isBuffer is not covered and causing `npm test` to fail */
-          if (entry.type === 'file' || (attachFieldsToBody === 'keyValues' && Buffer.isBuffer(entry))) {
+          if (entry?.type === 'file') {
             // TODO use File constructor with fs.openAsBlob()
             // if attachFieldsToBody is not set
             // https://nodejs.org/api/fs.html#fsopenasblobpath-options
             formData.append(key, new Blob([await entry.toBuffer()], {
               type: entry.mimetype
             }), entry.filename)
+          } else if (attachFieldsToBody === 'keyValues') {
+            const value = Buffer.isBuffer(entry) ? new Blob([entry]) : entry
+            formData.append(key, value)
           } else {
             formData.append(key, entry.value)
           }
