@@ -17,6 +17,7 @@ const secureJSON = require('secure-json-parse')
 const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
 const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
+const kResponseEnded = Symbol('responseEnded')
 
 const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
 const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -188,6 +189,7 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
   fastify.decorateRequest(kSavedRequestFilesResult, null)
+  fastify.decorateRequest(kResponseEnded, false)
 
   fastify.decorateRequest('parts', getMultipartIterator)
 
@@ -204,7 +206,26 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest('cleanRequestFiles', cleanRequestFiles)
 
   fastify.addHook('onResponse', async (request) => {
+    request[kResponseEnded] = true
     await request.cleanRequestFiles()
+  })
+
+  // onResponse fires only when the response emits 'finish'/'error'. If the
+  // client disconnects before the reply is written, reply.raw emits 'close'
+  // without 'finish' and onResponse never runs. Clean the saved temp files on
+  // that premature close, and record that the response ended so files saved
+  // afterwards (a buffered body saved after the disconnect) are cleaned by
+  // saveRequestFiles too.
+  fastify.addHook('onRequest', async (request, reply) => {
+    reply.raw.on('close', () => {
+      if (reply.raw.writableFinished) {
+        // Normal completion: the response finished, so onResponse runs and
+        // cleans. Nothing to do here.
+        return
+      }
+      request[kResponseEnded] = true
+      request.cleanRequestFiles()
+    })
   })
 
   function isMultipart () {
@@ -528,6 +549,14 @@ function fastifyMultipart (fastify, options, done) {
       await this.cleanRequestFiles()
       this.log.error({ err }, 'save request file')
       throw err
+    }
+
+    // The response lifecycle may have already ended before these files were
+    // saved: the client disconnected while a buffered body was being saved, or
+    // the files were saved after the response finished. In either case no
+    // onResponse or close cleanup will run for them, so clean now.
+    if (this[kResponseEnded]) {
+      await this.cleanRequestFiles()
     }
 
     this[kSavedRequestFilesResult] = {
