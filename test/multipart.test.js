@@ -390,6 +390,47 @@ test('should be able to configure limits globally with plugin register options',
   })
 })
 
+for (const { name, limits, errorCode } of [
+  {
+    name: 'fileSize',
+    limits: { fileSize: 0 },
+    errorCode: 'FST_REQ_FILE_TOO_LARGE'
+  },
+  {
+    name: 'parts',
+    limits: { parts: 0 },
+    errorCode: 'FST_PARTS_LIMIT'
+  }
+]) {
+  test(`should preserve a global zero ${name} limit`, async function (t) {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+
+    await fastify.register(multipart, { limits })
+
+    fastify.post('/', async function (req) {
+      for await (const part of req.parts()) {
+        if (part.file) {
+          await part.toBuffer()
+        }
+      }
+    })
+
+    const form = new FormData()
+    form.append('upload', Buffer.from('content'), { filename: 'file.txt' })
+
+    const response = await fastify.inject({
+      method: 'POST',
+      url: '/',
+      headers: form.getHeaders(),
+      payload: form.getBuffer()
+    })
+
+    t.assert.strictEqual(response.statusCode, 413)
+    t.assert.strictEqual(response.json().code, errorCode)
+  })
+}
+
 test('should throw error due to fieldsLimit (Max number of non-file fields (Default: Infinity))', function (t, done) {
   t.plan(4)
 

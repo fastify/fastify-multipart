@@ -49,8 +49,8 @@ function busboy (options) {
 function fastifyMultipart (fastify, options, done) {
   options.limits = {
     ...options.limits,
-    parts: options.limits?.parts || 1000,
-    fileSize: options.limits?.fileSize || fastify.initialConfig.bodyLimit
+    parts: options.limits?.parts ?? 1000,
+    fileSize: options.limits?.fileSize ?? fastify.initialConfig.bodyLimit
   }
 
   const attachFieldsToBody = options.attachFieldsToBody
