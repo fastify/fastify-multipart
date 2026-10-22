@@ -17,6 +17,7 @@ const secureJSON = require('secure-json-parse')
 const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
 const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
+const kResponseEnded = Symbol('responseEnded')
 
 const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
 const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -26,6 +27,7 @@ const PrototypeViolationError = createError('FST_PROTO_VIOLATION', 'prototype pr
 const InvalidMultipartContentTypeError = createError('FST_INVALID_MULTIPART_CONTENT_TYPE', 'the request is not multipart', 406)
 const InvalidJSONFieldError = createError('FST_INVALID_JSON_FIELD_ERROR', 'a request field is not a valid JSON as declared by its Content-Type', 406)
 const FileBufferNotFoundError = createError('FST_FILE_BUFFER_NOT_FOUND', 'the file buffer was not found', 500)
+const PrematureCloseError = createError('FST_MP_PREMATURE_CLOSE', 'the request was closed before the multipart data was fully parsed', 400)
 const NoFormData = createError('FST_NO_FORM_DATA', 'FormData is not available', 500)
 
 function setMultipart (req, _payload, done) {
@@ -48,8 +50,8 @@ function busboy (options) {
 function fastifyMultipart (fastify, options, done) {
   options.limits = {
     ...options.limits,
-    parts: options.limits?.parts || 1000,
-    fileSize: options.limits?.fileSize || fastify.initialConfig.bodyLimit
+    parts: options.limits?.parts ?? 1000,
+    fileSize: options.limits?.fileSize ?? fastify.initialConfig.bodyLimit
   }
 
   const attachFieldsToBody = options.attachFieldsToBody
@@ -179,13 +181,15 @@ function fastifyMultipart (fastify, options, done) {
     PrototypeViolationError,
     InvalidMultipartContentTypeError,
     RequestFileTooLargeError,
-    FileBufferNotFoundError
+    FileBufferNotFoundError,
+    PrematureCloseError
   })
 
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
   fastify.decorateRequest(kSavedRequestFilesResult, null)
+  fastify.decorateRequest(kResponseEnded, false)
 
   fastify.decorateRequest('parts', getMultipartIterator)
 
@@ -202,7 +206,26 @@ function fastifyMultipart (fastify, options, done) {
   fastify.decorateRequest('cleanRequestFiles', cleanRequestFiles)
 
   fastify.addHook('onResponse', async (request) => {
+    request[kResponseEnded] = true
     await request.cleanRequestFiles()
+  })
+
+  // onResponse fires only when the response emits 'finish'/'error'. If the
+  // client disconnects before the reply is written, reply.raw emits 'close'
+  // without 'finish' and onResponse never runs. Clean the saved temp files on
+  // that premature close, and record that the response ended so files saved
+  // afterwards (a buffered body saved after the disconnect) are cleaned by
+  // saveRequestFiles too.
+  fastify.addHook('onRequest', async (request, reply) => {
+    reply.raw.on('close', () => {
+      if (reply.raw.writableFinished) {
+        // Normal completion: the response finished, so onResponse runs and
+        // cleans. Nothing to do here.
+        return
+      }
+      request[kResponseEnded] = true
+      request.cleanRequestFiles()
+    })
   })
 
   function isMultipart () {
@@ -243,16 +266,8 @@ function fastifyMultipart (fastify, options, done) {
     const parts = () => {
       return new Promise((resolve, reject) => {
         handle((val) => {
-          if (val instanceof Error) {
-            if (val.message === 'Unexpected end of multipart data') {
-              // Stop parsing without throwing an error
-              resolve(null)
-            } else {
-              reject(val)
-            }
-          } else {
-            resolve(val)
-          }
+          if (val instanceof Error) return reject(val)
+          resolve(val)
         })
       })
     }
@@ -260,6 +275,7 @@ function fastifyMultipart (fastify, options, done) {
     const body = {}
     let lastError = null
     let currentFile = null
+    let sawData = false
     const request = this.raw
     const busboyOptions = deepmergeAll(
       { headers: request.headers },
@@ -270,7 +286,7 @@ function fastifyMultipart (fastify, options, done) {
     this.log.trace({ busboyOptions }, 'Providing options to busboy')
     const bb = busboy(busboyOptions)
 
-    request.on('close', cleanup)
+    request.on('close', onRequestClose)
     request.on('error', cleanup)
 
     bb
@@ -279,27 +295,49 @@ function fastifyMultipart (fastify, options, done) {
       .on('end', cleanup)
       .on('finish', cleanup)
       .on('close', cleanup)
-      .on('error', cleanup)
+      .on('error', onBusboyError)
+
+    // A parser limit is raised between parts, so busboy is holding either a
+    // part it has just finished or one it has only just opened -- `fieldsLimit`
+    // suppresses further fields but keeps emitting files. Either way the
+    // consumer still has to read that part before it can observe the limit
+    // error, and tearing the pipe down here stops it ever getting there: a
+    // finished part would be handed over already closed and never settle, and a
+    // part still arriving would never receive the rest of its body. Deliver the
+    // error and leave the pipe alone; the normal end-of-request path unpipes.
+    function onLimit (err) {
+      onError(err)
+      process.nextTick(() => cleanup(err, true))
+    }
 
     bb.on('partsLimit', function () {
-      const err = new PartsLimitError()
-      onError(err)
-      process.nextTick(() => cleanup(err))
+      onLimit(new PartsLimitError())
     })
 
     bb.on('filesLimit', function () {
-      const err = new FilesLimitError()
-      onError(err)
-      process.nextTick(() => cleanup(err))
+      onLimit(new FilesLimitError())
     })
 
     bb.on('fieldsLimit', function () {
-      const err = new FieldsLimitError()
-      onError(err)
-      process.nextTick(() => cleanup(err))
+      onLimit(new FieldsLimitError())
     })
 
+    request.once('data', onFirstData)
     request.pipe(bb)
+
+    function onFirstData () {
+      sawData = true
+    }
+
+    function onBusboyError (err) {
+      // an empty body is treated as an empty form rather than as
+      // truncated multipart data
+      if (!sawData && err.message === 'Unexpected end of multipart data') {
+        cleanup()
+      } else {
+        cleanup(err)
+      }
+    }
 
     function onField (name, fieldValue, fieldnameTruncated, valueTruncated, encoding, contentType) {
       // don't overwrite prototypes
@@ -412,6 +450,15 @@ function fastifyMultipart (fastify, options, done) {
         // Other errors are expected to be handled by the consumer of the stream
       })
 
+      // If the consumer destroys the file stream without reading it to the
+      // end, busboy stops parsing and will never emit 'finish', so the
+      // iteration has to end here (with the last error, if there is one)
+      file.on('close', function () {
+        if (!file.readableEnded) {
+          cleanup()
+        }
+      })
+
       if (throwFileSizeLimit) {
         file.on('limit', function () {
           const err = new RequestFileTooLargeError()
@@ -433,15 +480,26 @@ function fastifyMultipart (fastify, options, done) {
 
     function onError (err) {
       lastError = err
-      currentFile = null
     }
 
-    function cleanup (err) {
-      request.unpipe(bb)
+    function onRequestClose () {
+      // 'close' on a completed request says nothing about parts busboy is
+      // still holding: they must keep flowing and iteration ends on busboy's
+      // own end events. A premature close has to end iteration here though,
+      // as busboy will never emit 'finish' for a truncated stream.
+      if (!request.readableEnded) {
+        cleanup(lastError || new PrematureCloseError())
+      }
+    }
 
-      if ((err || request.aborted) && currentFile) {
-        currentFile.destroy()
-        currentFile = null
+    function cleanup (err, keepParsing = false) {
+      if (!keepParsing) {
+        request.unpipe(bb)
+
+        if ((err || request.aborted) && currentFile) {
+          currentFile.destroy()
+          currentFile = null
+        }
       }
 
       ch(err || lastError || null)
@@ -470,25 +528,35 @@ function fastifyMultipart (fastify, options, done) {
     const tmpdir = options?.tmpdir || os.tmpdir()
     this.tmpUploads = []
     let i = 0
-    for await (const part of parts) {
-      values = part.fields
+    let target
+    try {
+      for await (const part of parts) {
+        values = part.fields
 
-      if (!part.file) {
-        continue
-      }
+        if (!part.file) {
+          continue
+        }
 
-      const filepath = path.join(tmpdir, generateId() + path.extname(part.filename || ('file' + i++)))
-      const target = createWriteStream(filepath)
-      try {
+        const filepath = path.join(tmpdir, generateId() + path.extname(part.filename || ('file' + i++)))
+        target = createWriteStream(filepath)
         this.tmpUploads.push(filepath)
         await pump(part.file, target)
+        target = null
         this.savedRequestFiles.push({ ...part, filepath })
-      } catch (err) {
-        target.destroy()
-        await this.cleanRequestFiles()
-        this.log.error({ err }, 'save request file')
-        throw err
       }
+    } catch (err) {
+      target?.destroy()
+      await this.cleanRequestFiles()
+      this.log.error({ err }, 'save request file')
+      throw err
+    }
+
+    // The response lifecycle may have already ended before these files were
+    // saved: the client disconnected while a buffered body was being saved, or
+    // the files were saved after the response finished. In either case no
+    // onResponse or close cleanup will run for them, so clean now.
+    if (this[kResponseEnded]) {
+      await this.cleanRequestFiles()
     }
 
     this[kSavedRequestFilesResult] = {

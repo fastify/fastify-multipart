@@ -2,6 +2,7 @@ import { BusboyConfig, BusboyFileStream } from '@fastify/busboy'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Readable } from 'node:stream'
 import { FastifyErrorConstructor } from '@fastify/error'
+import type Ajv from 'ajv'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -62,6 +63,7 @@ interface MultipartErrors {
   PrototypeViolationError: FastifyErrorConstructor;
   InvalidMultipartContentTypeError: FastifyErrorConstructor;
   RequestFileTooLargeError: FastifyErrorConstructor;
+  PrematureCloseError: FastifyErrorConstructor;
 }
 
 declare namespace fastifyMultipart {
@@ -81,6 +83,11 @@ declare namespace fastifyMultipart {
 
   export interface MultipartFile {
     type: 'file';
+    /**
+     * A value can be assigned to a file part inside an `onFile` handler when
+     * using `attachFieldsToBody: 'keyValues'` to specify the decoded body value.
+     */
+    value?: unknown;
     toBuffer: () => Promise<Buffer>;
     file: BusboyFileStream;
     fieldname: string;
@@ -148,7 +155,7 @@ declare namespace fastifyMultipart {
       fields?: number;
 
       /**
-       * For multipart forms, the max file size
+       * For multipart forms, the max file size (defaults to the Fastify `bodyLimit`)
        */
       fileSize?: number;
 
@@ -205,7 +212,7 @@ declare namespace fastifyMultipart {
   /**
    * Adds a new type `isFile` to help @fastify/swagger generate the correct schema.
    */
-  export function ajvFilePlugin (ajv: any): void
+  export function ajvFilePlugin (ajv: Ajv): Ajv
 
   export const fastifyMultipart: FastifyMultipartPlugin
   export { fastifyMultipart as default }
