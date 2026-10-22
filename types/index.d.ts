@@ -63,6 +63,7 @@ interface MultipartErrors {
   PrototypeViolationError: FastifyErrorConstructor;
   InvalidMultipartContentTypeError: FastifyErrorConstructor;
   RequestFileTooLargeError: FastifyErrorConstructor;
+  PrematureCloseError: FastifyErrorConstructor;
 }
 
 declare namespace fastifyMultipart {
@@ -82,6 +83,11 @@ declare namespace fastifyMultipart {
 
   export interface MultipartFile {
     type: 'file';
+    /**
+     * A value can be assigned to a file part inside an `onFile` handler when
+     * using `attachFieldsToBody: 'keyValues'` to specify the decoded body value.
+     */
+    value?: unknown;
     toBuffer: () => Promise<Buffer>;
     file: BusboyFileStream;
     fieldname: string;
@@ -149,7 +155,7 @@ declare namespace fastifyMultipart {
       fields?: number;
 
       /**
-       * For multipart forms, the max file size
+       * For multipart forms, the max file size (defaults to the Fastify `bodyLimit`)
        */
       fileSize?: number;
 

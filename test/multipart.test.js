@@ -125,7 +125,7 @@ test('should respond when all files are processed', function (t, done) {
 })
 
 test('should group parts with the same name to an array', function (t, done) {
-  t.plan(15)
+  t.plan(10)
 
   const fastify = Fastify()
   t.after(() => fastify.close())
@@ -134,18 +134,24 @@ test('should group parts with the same name to an array', function (t, done) {
 
   fastify.post('/', async function (req, reply) {
     const parts = req.parts()
+    let seenUploadArray = false
+    let seenHelloArray = false
     for await (const part of parts) {
       t.assert.ok(part)
       if (Array.isArray(part.fields.upload)) {
-        t.assert.ok('multiple fields are grouped by array')
+        seenUploadArray = true
       }
       if (Array.isArray(part.fields.hello)) {
-        t.assert.ok('multiple files are grouped by array')
+        seenHelloArray = true
       }
       if (part.file) {
         await streamToNull(part.file)
       }
     }
+    // Assert the grouping once, deterministically, instead of relying on the
+    // variable number of times the streaming loop observes the arrays.
+    t.assert.ok(seenUploadArray)
+    t.assert.ok(seenHelloArray)
     reply.code(200).send()
   })
 
@@ -383,6 +389,47 @@ test('should be able to configure limits globally with plugin register options',
     pump(form, req).catch(() => {})
   })
 })
+
+for (const { name, limits, errorCode } of [
+  {
+    name: 'fileSize',
+    limits: { fileSize: 0 },
+    errorCode: 'FST_REQ_FILE_TOO_LARGE'
+  },
+  {
+    name: 'parts',
+    limits: { parts: 0 },
+    errorCode: 'FST_PARTS_LIMIT'
+  }
+]) {
+  test(`should preserve a global zero ${name} limit`, async function (t) {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+
+    await fastify.register(multipart, { limits })
+
+    fastify.post('/', async function (req) {
+      for await (const part of req.parts()) {
+        if (part.file) {
+          await part.toBuffer()
+        }
+      }
+    })
+
+    const form = new FormData()
+    form.append('upload', Buffer.from('content'), { filename: 'file.txt' })
+
+    const response = await fastify.inject({
+      method: 'POST',
+      url: '/',
+      headers: form.getHeaders(),
+      payload: form.getBuffer()
+    })
+
+    t.assert.strictEqual(response.statusCode, 413)
+    t.assert.strictEqual(response.json().code, errorCode)
+  })
+}
 
 test('should throw error due to fieldsLimit (Max number of non-file fields (Default: Infinity))', function (t, done) {
   t.plan(4)
