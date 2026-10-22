@@ -501,7 +501,7 @@ fastify.post('/upload/files', {
             {
               properties: {
                 value: {
-                  type: 'object'
+                  type: 'object',
                   properties: {
                     child: {
                       type: 'string'
