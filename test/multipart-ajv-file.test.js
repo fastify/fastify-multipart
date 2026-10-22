@@ -77,7 +77,9 @@ test('show modify the generated schema', async t => {
       method: 'POST'
     })
 
-    form.append('field', JSON.stringify({}), { contentType: 'application/json' })
+    form.append('field', JSON.stringify({}), {
+      contentType: 'application/json'
+    })
     form.pipe(req)
 
     const [res] = await once(req, 'response')
@@ -98,7 +100,9 @@ test('show modify the generated schema', async t => {
       method: 'POST'
     })
 
-    form.append('field', fs.createReadStream(filePath), { contentType: 'multipart/form-data' })
+    form.append('field', fs.createReadStream(filePath), {
+      contentType: 'multipart/form-data'
+    })
     form.pipe(req)
 
     const [res] = await once(req, 'response')
