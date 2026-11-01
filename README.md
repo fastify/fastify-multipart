@@ -170,6 +170,35 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 })
 ```
 
+## Handle file parts without a filename (e.g. Blobs or programmatic clients)
+
+By default, `@fastify/multipart` detects a part as a file if the part specifies `filename` in its `Content-Disposition` header or if its `Content-Type` is `application/octet-stream`. Parts without a filename and with other content types (such as `text/plain`, `application/pdf`, or `image/png`) are parsed as fields, causing `request.file()` to return `undefined`.
+
+To customize file detection (e.g. when receiving files from programmatic HTTP clients like `fetch`, `form-auto-content`, or browser `Blob` uploads that omit the `filename` parameter), provide an `isPartAFile` function either globally or per-request:
+
+```js
+// Global configuration
+await fastify.register(require('@fastify/multipart'), {
+  isPartAFile: (fieldName, contentType, fileName) => {
+    return fileName !== undefined || contentType === 'application/pdf'
+  }
+})
+
+// Or per-request configuration
+fastify.post('/upload', async function (req, reply) {
+  const file = await req.file({
+    isPartAFile: (fieldName, contentType, fileName) => {
+      return fileName !== undefined || Boolean(contentType)
+    }
+  })
+  if (!file) {
+    return reply.badRequest('No file uploaded')
+  }
+  await pipeline(file.file, fs.createWriteStream(file.filename || 'uploaded-file'))
+  reply.send({ status: 'ok' })
+})
+```
+
 ## Accumulating the entire file in memory
 
 ```js
