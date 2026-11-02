@@ -497,7 +497,12 @@ function fastifyMultipart (fastify, options, done) {
         request.unpipe(bb)
 
         if ((err || request.aborted) && currentFile) {
-          currentFile.destroy()
+          // Destroy the file stream with the error so that consumers which
+          // attach their stream handlers after the fact (e.g. after an async
+          // operation) still observe the failure instead of hanging. A plain
+          // destroy() leaves the stream destroyed with no error and no
+          // 'end', which never settles a later pipeline()/toBuffer() call.
+          currentFile.destroy(err)
           currentFile = null
         }
       }
