@@ -7,6 +7,7 @@ const { createWriteStream } = require('node:fs')
 const { unlink } = require('node:fs/promises')
 const path = require('node:path')
 const { generateId } = require('./lib/generateId')
+const { safeExtension } = require('./lib/sanitize')
 const createError = require('@fastify/error')
 const streamToNull = require('./lib/stream-consumer')
 const deepmergeAll = require('@fastify/deepmerge')({ all: true })
@@ -542,7 +543,7 @@ function fastifyMultipart (fastify, options, done) {
           continue
         }
 
-        const filepath = path.join(tmpdir, generateId() + path.extname(part.filename || ('file' + i++)))
+        const filepath = path.join(tmpdir, generateId() + safeExtension(part.filename || ('file' + i++)))
         target = createWriteStream(filepath)
         this.tmpUploads.push(filepath)
         await pump(part.file, target)
