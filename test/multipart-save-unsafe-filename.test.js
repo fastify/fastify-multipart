@@ -19,6 +19,14 @@ function multipartBody (filenames) {
   return Buffer.from(parts.join('') + `--${BOUNDARY}--\r\n`)
 }
 
+// Resolves once the plugin's onResponse cleanup has run. Hooks run serially in
+// registration order, so this must be called after registering the plugin.
+function onCleanup (app) {
+  return new Promise(resolve => {
+    app.addHook('onResponse', async () => resolve())
+  })
+}
+
 test('saveRequestFiles does not leak an NTFS alternate data stream path (GHSA-c9pp-p9r3-vv86)', async function (t) {
   // Regression test for the advisory: a client-supplied filename whose extension
   // contains ':' (e.g. 'a.txt:s') must not reach the temp path. On NTFS ':' is
@@ -31,6 +39,8 @@ test('saveRequestFiles does not leak an NTFS alternate data stream path (GHSA-c9
   t.after(() => app.close())
 
   await app.register(multipart)
+
+  const cleaned = onCleanup(app)
 
   app.post('/upload', async (req) => {
     const { files } = await req.saveRequestFiles({ tmpdir: dir })
@@ -55,6 +65,7 @@ test('saveRequestFiles does not leak an NTFS alternate data stream path (GHSA-c9
   t.assert.strictEqual(path.extname(saved[0].filepath), '')
 
   // The response lifecycle cleans up the temp files: nothing may be left behind.
+  await cleaned
   const left = fs.readdirSync(dir)
   t.assert.deepStrictEqual(left, [])
 })
@@ -67,6 +78,8 @@ test('saveRequestFiles still keeps a safe extension', async function (t) {
   t.after(() => app.close())
 
   await app.register(multipart)
+
+  const cleaned = onCleanup(app)
 
   app.post('/upload', async (req) => {
     const { files } = await req.saveRequestFiles({ tmpdir: dir })
@@ -84,6 +97,7 @@ test('saveRequestFiles still keeps a safe extension', async function (t) {
   const { saved } = res.json()
   // A safe extension is preserved for type hinting.
   t.assert.match(saved[0], /\.txt$/)
+  await cleaned
   const left = fs.readdirSync(dir)
   t.assert.deepStrictEqual(left, [])
 })
