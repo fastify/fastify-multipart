@@ -144,3 +144,87 @@ test('should throw on saving request files when attach fields to body is true bu
   res.resume()
   await once(res, 'end')
 })
+
+test('should store file on disk, remove on response when attach fields to body is keyValues', async function (t) {
+  t.plan(26)
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.register(multipart, {
+    attachFieldsToBody: 'keyValues'
+  })
+
+  fastify.post('/', async function (req, reply) {
+    t.assert.ok(req.isMultipart())
+    t.assert.ok(Buffer.isBuffer(req.body.upload[0]))
+    t.assert.ok(Buffer.isBuffer(req.body.other))
+
+    const { files, values } = await req.saveRequestFiles()
+
+    t.assert.strictEqual(files.length, 3)
+    t.assert.ok(files[0].filepath)
+    t.assert.strictEqual(files[0].type, 'file')
+    t.assert.strictEqual(files[0].fieldname, 'upload')
+    t.assert.strictEqual(files[0].filename, 'README.md')
+    t.assert.strictEqual(files[0].encoding, '7bit')
+    t.assert.strictEqual(files[0].mimetype, 'text/markdown')
+    t.assert.ok(files[1].filepath)
+    t.assert.strictEqual(files[1].type, 'file')
+    t.assert.strictEqual(files[1].fieldname, 'upload')
+    t.assert.strictEqual(files[1].filename, 'README.md')
+    t.assert.strictEqual(files[1].encoding, '7bit')
+    t.assert.strictEqual(files[1].mimetype, 'text/markdown')
+    t.assert.ok(files[2].filepath)
+    t.assert.strictEqual(files[2].type, 'file')
+    t.assert.strictEqual(files[2].fieldname, 'other')
+    t.assert.strictEqual(files[2].filename, 'README.md')
+    t.assert.strictEqual(files[2].encoding, '7bit')
+    t.assert.strictEqual(files[2].mimetype, 'text/markdown')
+
+    t.assert.strictEqual(values, req.body)
+
+    await access(files[0].filepath, fs.constants.F_OK)
+    await access(files[1].filepath, fs.constants.F_OK)
+    await access(files[2].filepath, fs.constants.F_OK)
+
+    reply.code(200).send()
+  })
+  const ee = new EventEmitter()
+
+  // ensure that file is removed after response
+  fastify.addHook('onResponse', async (request) => {
+    try {
+      await access(request.tmpUploads[0], fs.constants.F_OK)
+    } catch (error) {
+      t.assert.strictEqual(error.code, 'ENOENT')
+      t.assert.ok('Temp file was removed after response')
+      ee.emit('response')
+    }
+  })
+
+  await fastify.listen({ port: 0 })
+  // request
+  const form = new FormData()
+  const opts = {
+    protocol: 'http:',
+    hostname: 'localhost',
+    port: fastify.server.address().port,
+    path: '/',
+    headers: form.getHeaders(),
+    method: 'POST'
+  }
+
+  const req = http.request(opts)
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('upload', fs.createReadStream(filePath))
+  form.append('other', fs.createReadStream(filePath))
+
+  form.pipe(req)
+
+  const [res] = await once(req, 'response')
+  t.assert.strictEqual(res.statusCode, 200)
+  res.resume()
+  await once(res, 'end')
+  await once(ee, 'response')
+})
