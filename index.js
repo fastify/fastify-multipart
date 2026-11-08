@@ -17,6 +17,7 @@ const secureJSON = require('secure-json-parse')
 
 const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
+const kMultipartFields = Symbol('multipartFields')
 const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
 const kResponseEnded = Symbol('responseEnded')
 
@@ -87,6 +88,8 @@ function fastifyMultipart (fastify, options, done) {
           }
         }
       }
+
+      req[kMultipartFields] = req.body
 
       if (attachFieldsToBody === 'keyValues') {
         const body = {}
@@ -189,6 +192,7 @@ function fastifyMultipart (fastify, options, done) {
   fastify.addContentTypeParser('multipart/form-data', setMultipart)
   fastify.decorateRequest(kMultipart, false)
   fastify.decorateRequest(kMultipartHandler, handleMultipart)
+  fastify.decorateRequest(kMultipartFields, null)
   fastify.decorateRequest(kSavedRequestFilesResult, null)
   fastify.decorateRequest(kResponseEnded, false)
 
@@ -524,7 +528,8 @@ function fastifyMultipart (fastify, options, done) {
     let values = {}
 
     if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
-      parts = this.body ? filesFromFields.call(this, this.body) : []
+      const container = this[kMultipartFields] || this.body
+      parts = container ? filesFromFields.call(this, container) : []
       values = this.body || {}
     } else {
       parts = this.parts(options)
@@ -537,7 +542,9 @@ function fastifyMultipart (fastify, options, done) {
     let target
     try {
       for await (const part of parts) {
-        values = part.fields
+        if (!attachFieldsToBody) {
+          values = part.fields
+        }
 
         if (!part.file) {
           continue
