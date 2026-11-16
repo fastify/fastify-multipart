@@ -19,6 +19,11 @@ const kMultipart = Symbol('multipart')
 const kMultipartHandler = Symbol('multipartHandler')
 const kSavedRequestFilesResult = Symbol('savedRequestFilesResult')
 const kResponseEnded = Symbol('responseEnded')
+// Private brand placed on every file wrapper the plugin itself creates from a
+// genuine multipart part, so saveRequestFiles()/filesFromFields() only ever
+// treat library-created wrappers as uploaded files, never a look-alike object
+// taken from a non-multipart (for example application/json) request body.
+const kFileField = Symbol('fileField')
 
 const PartsLimitError = createError('FST_PARTS_LIMIT', 'reach parts limit', 413)
 const FilesLimitError = createError('FST_FILES_LIMIT', 'reach files limit', 413)
@@ -437,6 +442,14 @@ function fastifyMultipart (fastify, options, done) {
         }
       }
 
+      // Brand this wrapper as library-created so filesFromFields() only accepts
+      // wrappers the plugin built, never a look-alike object taken from a
+      // non-multipart body. The brand is a module-private Symbol, so a request
+      // body cannot forge it, and it is enumerable so a shallow clone
+      // (`{ ...wrapper }`) of a genuine wrapper keeps it. Symbols are ignored by
+      // JSON.stringify and Object.keys, so the brand never leaks into responses.
+      Object.defineProperty(value, kFileField, { value: true, enumerable: true })
+
       // Attach error listener immediately to prevent uncaught exceptions
       // This is critical when there's an async operation before req.file() is called,
       // allowing the file stream to emit errors before user code can attach listeners
@@ -524,7 +537,11 @@ function fastifyMultipart (fastify, options, done) {
     let values = {}
 
     if (attachFieldsToBody === true || attachFieldsToBody === 'keyValues') {
-      parts = this.body ? filesFromFields.call(this, this.body) : []
+      // Only a genuine multipart request carries library-created file wrappers
+      // in its body. A non-multipart body (for example application/json) is
+      // never fed to filesFromFields(), so attacker JSON cannot be type-confused
+      // into an uploaded file.
+      parts = (this.isMultipart() && this.body) ? filesFromFields.call(this, this.body) : []
       values = this.body || {}
     } else {
       parts = this.parts(options)
@@ -583,7 +600,10 @@ function fastifyMultipart (fastify, options, done) {
             yield subField
           }
         }
-        if (!field.file) {
+        // Accept only wrappers the plugin itself branded while parsing a real
+        // multipart part, not any object that merely looks like one by carrying
+        // truthy `file`/`_buf` properties.
+        if (!field || typeof field !== 'object' || field[kFileField] !== true) {
           continue
         }
         if (!field._buf) {
