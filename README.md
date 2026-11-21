@@ -25,7 +25,12 @@ npm i @fastify/multipart
 ```js
 const fastify = require('fastify')()
 const fs = require('node:fs')
+const path = require('node:path')
+const { randomUUID } = require('node:crypto')
 const { pipeline } = require('node:stream/promises')
+
+const uploadDir = path.join(__dirname, 'uploads')
+fs.mkdirSync(uploadDir, { recursive: true })
 
 fastify.register(require('@fastify/multipart'))
 
@@ -48,10 +53,8 @@ fastify.post('/', async function (req, reply) {
   //
   // or
 
-  await pipeline(data.file, fs.createWriteStream(data.filename))
-
-  // be careful of permission issues on disk and not overwrite
-  // sensitive files that could cause security risks
+  // `data.filename` is chosen by the client: do not use it as a path on disk
+  await pipeline(data.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
 
   // also, consider that if the file stream is not consumed, the promise will never fulfill
 
@@ -63,6 +66,11 @@ fastify.listen({ port: 3000 }, err => {
   console.log(`server listening on ${fastify.server.address().port}`)
 })
 ```
+
+**Note** about `data.filename`: it is the name sent by the client in the `Content-Disposition` header, so treat it as untrusted input.
+Writing to it directly lets the client choose which file gets written, for example one in the current working directory.
+If you enable the `@fastify/busboy` `preservePath` option, the name is returned unchanged and can contain `../` segments or an absolute path.
+Save uploads under a name your application generates, as in the example above, and keep the original name as metadata if you need it.
 
 **Note** about `data.fields`: `busboy` consumes the multipart in serial order (stream). Therefore, the order of form fields is *VERY IMPORTANT* to how `@fastify/multipart` can display the fields to you.
 We would recommend you place the value fields first before any of the file fields.
@@ -99,7 +107,7 @@ This behavior is inherited from [`@fastify/busboy`](https://github.com/fastify/b
 
 ```js
 const data = await req.file()
-await pipeline(data.file, fs.createWriteStream(data.filename))
+await pipeline(data.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
 if (data.file.truncated) {
   // you may need to delete the part of the file that has been saved on disk
   // before the `limits.fileSize` has been reached
@@ -122,7 +130,7 @@ Additionally, you can pass per-request options to the  `req.file`, `req.files`, 
 fastify.post('/', async function (req, reply) {
   const options = { limits: { fileSize: 1000 } };
   const data = await req.file(options)
-  await pipeline(data.file, fs.createWriteStream(data.filename))
+  await pipeline(data.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
   reply.send()
 })
 ```
@@ -147,7 +155,7 @@ fastify.post('/', {
 fastify.post('/', async function (req, reply) {
   const parts = req.files()
   for await (const part of parts) {
-    await pipeline(part.file, fs.createWriteStream(part.filename))
+    await pipeline(part.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
   }
   reply.send()
 })
@@ -160,7 +168,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = req.parts()
   for await (const part of parts) {
     if (part.type === 'file') {
-      await pipeline(part.file, fs.createWriteStream(part.filename))
+      await pipeline(part.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
     } else {
       // part.type === 'field
       console.log(part)
@@ -273,7 +281,7 @@ You can also define an `onFile` handler to avoid accumulating all files in memor
 async function onFile(part) {
   // you have access to original request via `this`
   console.log(this.id)
-  await pipeline(part.file, fs.createWriteStream(part.filename))
+  await pipeline(part.file, fs.createWriteStream(path.join(uploadDir, randomUUID())))
 }
 
 fastify.register(require('@fastify/multipart'), { attachFieldsToBody: true, onFile })

@@ -160,3 +160,6 @@ CLAUDE.md
 
 # Pi files
 .pi
+
+# Uploads created when running the examples
+/examples/uploads/

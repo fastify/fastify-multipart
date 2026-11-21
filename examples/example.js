@@ -4,9 +4,15 @@ const fastify = require('fastify')()
 const fs = require('node:fs')
 const util = require('node:util')
 const path = require('node:path')
+const { randomUUID } = require('node:crypto')
 const { pipeline } = require('node:stream')
 const pump = util.promisify(pipeline)
 const form = path.join(__dirname, '..', 'form.html')
+
+// `filename` is chosen by the client, so do not use it as a path on disk.
+// Save uploads under a generated name and keep the original name as metadata.
+const uploadDir = path.join(__dirname, 'uploads')
+fs.mkdirSync(uploadDir, { recursive: true })
 
 fastify.register(require('..'))
 
@@ -16,7 +22,9 @@ fastify.get('/', function (_req, reply) {
 
 fastify.post('/upload/stream/single', async function (req, reply) {
   const data = await req.file()
-  await pump(data.file, fs.createWriteStream(data.filename))
+  const dest = path.join(uploadDir, randomUUID())
+  await pump(data.file, fs.createWriteStream(dest))
+  console.log('saved', data.filename, 'as', dest)
   reply.send()
 })
 
@@ -33,7 +41,9 @@ fastify.post('/upload/stream/single-buf', async function (req, reply) {
 fastify.post('/upload/stream/files', async function (req, reply) {
   const parts = req.files()
   for await (const part of parts) {
-    await pump(part.file, fs.createWriteStream(part.filename))
+    const dest = path.join(uploadDir, randomUUID())
+    await pump(part.file, fs.createWriteStream(dest))
+    console.log('saved', part.filename, 'as', dest)
   }
   reply.send()
 })
@@ -42,7 +52,9 @@ fastify.post('/upload/raw/any', async function (req, reply) {
   const parts = req.parts()
   for await (const part of parts) {
     if (part.type === 'file') {
-      await pump(part.file, fs.createWriteStream(part.filename))
+      const dest = path.join(uploadDir, randomUUID())
+      await pump(part.file, fs.createWriteStream(dest))
+      console.log('saved', part.filename, 'as', dest)
     } else {
       // part.type === 'field'
       console.log(part)
@@ -53,7 +65,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 
 fastify.post('/upload/files', async function (req, reply) {
   // stores files to tmp dir and return paths
-  const files = await req.saveRequestFiles()
+  const { files } = await req.saveRequestFiles()
   console.log(files.map(f => f.filepath))
   // tmp files cleaned up automatically
   reply.send()
