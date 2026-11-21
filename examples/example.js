@@ -65,7 +65,7 @@ fastify.post('/upload/raw/any', async function (req, reply) {
 
 fastify.post('/upload/files', async function (req, reply) {
   // stores files to tmp dir and return paths
-  const files = await req.saveRequestFiles()
+  const { files } = await req.saveRequestFiles()
   console.log(files.map(f => f.filepath))
   // tmp files cleaned up automatically
   reply.send()
