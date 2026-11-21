@@ -549,6 +549,9 @@ function fastifyMultipart (fastify, options, done) {
 
     this.savedRequestFiles = []
     const tmpdir = options?.tmpdir || os.tmpdir()
+    const throwFileSizeLimit = typeof options?.throwFileSizeLimit === 'boolean'
+      ? options.throwFileSizeLimit
+      : defaultThrowFileSizeLimit
     this.tmpUploads = []
     let i = 0
     let target
@@ -565,6 +568,16 @@ function fastifyMultipart (fastify, options, done) {
         this.tmpUploads.push(filepath)
         await pump(part.file, target)
         target = null
+
+        // busboy ends a file stream cleanly once it hits the fileSize limit, so
+        // fail now, like toBuffer() does, instead of saving the remaining parts
+        // and only seeing the error once the whole request has been read
+        if (part.file.truncated && throwFileSizeLimit) {
+          const err = new RequestFileTooLargeError()
+          err.part = part
+          throw err
+        }
+
         this.savedRequestFiles.push({ ...part, filepath })
       }
     } catch (err) {
